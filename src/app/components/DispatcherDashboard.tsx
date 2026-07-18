@@ -86,7 +86,7 @@ function EditModal({ carpetaNumero, sub, data, onSave, onClose }: EditModalProps
             <div style={{ fontSize: 18, fontWeight: 700, color: INK, letterSpacing: '-0.2px' }}>{sub.numero}</div>
             <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>{carpetaNumero} · Datos de despacho</div>
           </div>
-          <AppButton aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={onClose} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+          <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={onClose} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
         </div>
 
         {/* Form */}
@@ -149,7 +149,7 @@ function EditModal({ carpetaNumero, sub, data, onSave, onClose }: EditModalProps
 
           {/* Actions */}
           <div style={modalFooter}>
-            <AppButton onClick={onClose} variant="secondary" size="sm">Cancelar</AppButton>
+            <AppButton onClick={onClose} variant="secondary" size="md">Cancelar</AppButton>
             <AppButton onClick={() => onSave(form)} size="sm" icon={<Check size={14} />}>Guardar datos</AppButton>
           </div>
         </div>
@@ -176,7 +176,7 @@ function DetailView({ carpeta, dispatcherMap, onSave, onBack, isMobile }: Detail
     <div style={pageShell}>
 
       {/* Back */}
-      <AppButton variant="tertiary" size="sm" onClick={onBack} icon={<ArrowLeft size={14} />} style={{ padding: '5px 0', marginBottom: 24, fontWeight: 400 }}>
+      <AppButton variant="tertiary" size="md" onClick={onBack} icon={<ArrowLeft size={14} />} style={{ padding: '5px 0', marginBottom: 24, fontWeight: 400 }}>
         Volver al Dashboard
       </AppButton>
 

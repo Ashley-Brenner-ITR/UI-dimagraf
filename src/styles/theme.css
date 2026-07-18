@@ -28,6 +28,7 @@
 
   /* Borders */
   --hairline:      #eaecf0;
+  --control-border: #7f899b; /* 3.53:1 on white — interactive boundaries */
   --divider-soft:  rgba(16, 24, 40, 0.05);
 
   /* Elevation */
@@ -54,7 +55,7 @@
   --status-transit:  #5b21b6;   /* brand violet — en tránsito           */
   --status-customs:  #b45309;   /* amber — en aduana                    */
   --status-rojo:     #c4001a;   /* red — canal rojo / crítico           */
-  --status-ok:       #1a7a4a;   /* green — recibida OK                  */
+  --status-ok:       #177044;   /* accessible green — success           */
   --status-closed:   #6e6e73;   /* neutral — cerrada                    */
   --status-incident: #b84800;   /* orange — con incidencia              */
 
@@ -64,6 +65,8 @@
   --foreground: var(--ink);
   --card: var(--canvas);
   --card-foreground: var(--ink);
+  --popover: var(--canvas);
+  --popover-foreground: var(--ink);
   --primary: var(--brand-green);
   --primary-foreground: #ffffff;
   --secondary: var(--parchment);
@@ -71,7 +74,7 @@
   --muted: var(--parchment);
   --muted-foreground: var(--text-muted);
   --border: var(--hairline);
-  --input: var(--hairline);
+  --input: var(--control-border);
   --input-background: var(--canvas);
   --ring: var(--brand-green);
   --radius: var(--r-lg);
@@ -89,8 +92,27 @@
   --radius-lg: var(--r-lg);
 }
 
-button, input, textarea, select {
-  outline: none;
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+:where(button, input, textarea, select, a, [role="button"], [role="tab"], [role="combobox"]):focus-visible {
+  outline: 2px solid var(--brand-green) !important;
+  outline-offset: 2px;
+}
+
+:where(input, textarea, select):not(:disabled) {
+  border-color: var(--control-border) !important;
+}
+
+:where(input, textarea, select)[aria-invalid="true"] {
+  border-color: var(--status-rojo) !important;
+}
+
+[data-slot="select-trigger"] {
+  border-color: var(--control-border) !important;
 }
 
 @layer base {

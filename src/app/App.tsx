@@ -1,24 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState, type ComponentType } from 'react';
 import { Layout, type AccessRole, type NotificationAnchorRect } from './components/Layout';
-import { OperatorDashboard } from './components/OperatorDashboard';
-import { CarpetaDetail } from './components/CarpetaDetail';
-import { DirectorDashboard } from './components/DirectorDashboard';
-import { CommercialArrivals } from './components/CommercialArrivals';
-import { TreasuryCashFlow } from './components/TreasuryCashFlow';
-import { WarehouseReception } from './components/WarehouseReception';
-import { AdminDashboard } from './components/AdminDashboard';
-import { DesignSystemPage } from './components/DesignSystemPage';
-import { DispatcherDashboard } from './components/DispatcherDashboard';
 import { NotificationPanel } from './components/NotificationPanel';
 import { LoginScreen } from './components/LoginScreen';
 import { PasswordRecoveryPage } from './components/PasswordRecoveryPage';
 import { AppLoaderSkeleton } from './components/LoadingState';
 import { ErrorStatePage } from './components/ErrorStatePage';
-import { AccountSettingsPage, type MailReportConfig } from './components/AccountSettingsPage';
-import { VencimientosPage } from './components/VencimientosPage';
-import { SubcarpetaDetail } from './components/SubcarpetaDetail';
+import type { MailReportConfig } from './components/AccountSettingsPage';
 import { CARPETAS, INITIAL_NOTIFICATIONS, USERS, type Carpeta, type AppNotification, type AuditEntry, type AppUser } from './components/mockData';
 import type { Role } from './components/mockData';
+
+const lazyNamed = <TModule, TKey extends keyof TModule>(
+  loadModule: () => Promise<TModule>,
+  exportName: TKey,
+) => lazy(async () => {
+  const module = await loadModule();
+  return { default: module[exportName] as ComponentType<any> };
+});
+
+const OperatorDashboard = lazyNamed(() => import('./components/OperatorDashboard'), 'OperatorDashboard');
+const CarpetaDetail = lazyNamed(() => import('./components/CarpetaDetail'), 'CarpetaDetail');
+const DirectorDashboard = lazyNamed(() => import('./components/DirectorDashboard'), 'DirectorDashboard');
+const CommercialArrivals = lazyNamed(() => import('./components/CommercialArrivals'), 'CommercialArrivals');
+const TreasuryCashFlow = lazyNamed(() => import('./components/TreasuryCashFlow'), 'TreasuryCashFlow');
+const WarehouseReception = lazyNamed(() => import('./components/WarehouseReception'), 'WarehouseReception');
+const AdminDashboard = lazyNamed(() => import('./components/AdminDashboard'), 'AdminDashboard');
+const DesignSystemPage = lazyNamed(() => import('./components/DesignSystemPage'), 'DesignSystemPage');
+const DispatcherDashboard = lazyNamed(() => import('./components/DispatcherDashboard'), 'DispatcherDashboard');
+const AccountSettingsPage = lazyNamed(() => import('./components/AccountSettingsPage'), 'AccountSettingsPage');
+const VencimientosPage = lazyNamed(() => import('./components/VencimientosPage'), 'VencimientosPage');
+const SubcarpetaDetail = lazyNamed(() => import('./components/SubcarpetaDetail'), 'SubcarpetaDetail');
 
 type View = 'carpetas' | 'carpeta-detail' | 'subcarpeta-detail' | 'arrivals' | 'cashflow' | 'reception' | 'audit' | 'dashboard' | 'vencimientos'
           | 'admin-users' | 'admin-audit' | 'admin-articles' | 'admin-providers' | 'admin-design-system' | 'settings';
@@ -472,7 +482,7 @@ export default function App() {
       );
     }
 
-    return content;
+    return <Suspense fallback={<AppLoaderSkeleton />}>{content}</Suspense>;
   };
 
   return (
@@ -485,7 +495,7 @@ export default function App() {
         ::-webkit-scrollbar-thumb:hover { background: #b0b0b7; }
         input[type=number]::-webkit-outer-spin-button,
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input::placeholder, textarea::placeholder { color: #b0b0b7; }
+        input::placeholder, textarea::placeholder { color: #667085; opacity: 1; }
         button { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         select { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         select option { background: #ffffff; color: #1d1d1f; }

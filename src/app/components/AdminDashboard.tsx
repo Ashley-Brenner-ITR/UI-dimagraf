@@ -37,7 +37,7 @@ function RoleBadge({ role }: { role: Role }) {
 
 function DetailToggleButton({ expanded, onClick }: { expanded: boolean; onClick: () => void }) {
   return (
-    <AppButton type="button" variant="tertiary" size="xs" onClick={onClick} style={{ padding: 0 }}>
+    <AppButton type="button" variant="tertiary" size="sm" onClick={onClick} style={{ padding: 0 }}>
       <span>{expanded ? 'Ver menos' : 'Ver más'}</span>
       <ChevronDown size={12} style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s ease' }} />
     </AppButton>
@@ -48,7 +48,7 @@ function RowActionIconButton({ onClick, icon, danger = false }: { onClick: () =>
   return (
     <AppButton
       type="button"
-      size="xs"
+      size="sm"
       variant={danger ? 'danger-soft' : 'secondary'}
       onClick={onClick}
       icon={icon}
@@ -134,7 +134,7 @@ function UsersTab({ users, onUsersChange }: { users: AppUser[]; onUsersChange: (
   return (
     <div>
       <div style={{ ...pageActions, justifyContent: 'flex-end', marginBottom: 12 }}>
-        <AppButton onClick={openCreate} size="sm">
+        <AppButton onClick={openCreate} size="md">
           <Plus size={13} /> Nuevo Usuario
         </AppButton>
       </div>
@@ -624,7 +624,7 @@ function ArticlesTab() {
           <div style={{ background: CANVAS, borderRadius: 20, width: '100%', maxWidth: 480, margin: '0 16px', boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px 18px', borderBottom: `1px solid ${HAIRLINE}` }}>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>{modal.mode === 'create' ? 'Nuevo Artículo' : 'Editar Artículo'}</h2>
-              <AppButton aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={() => setModal(null)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setModal(null)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
             <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[['codigoSAP', 'CÓD. SAP *', '1000XXX'], ['descripcion', 'DESCRIPCIÓN *', 'Papel Offset 80g...']].map(([field, label, ph]) => (
@@ -661,7 +661,7 @@ function ArticlesTab() {
               </div>
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <AppButton onClick={() => setModal(null)} variant="secondary" size="sm" style={{ flex: 1 }}>Cancelar</AppButton>
-                <AppButton onClick={handleSave} disabled={!canSave} size="sm" style={{ flex: 2 }}>
+                <AppButton onClick={handleSave} disabled={!canSave} size="md" style={{ flex: 2 }}>
                   {modal.mode === 'create' ? 'Crear Artículo' : 'Guardar'}
                 </AppButton>
               </div>
@@ -839,7 +839,7 @@ function ProvidersTab() {
           <div style={{ background: CANVAS, borderRadius: 20, width: '100%', maxWidth: 500, margin: '0 16px', boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px 18px', borderBottom: `1px solid ${HAIRLINE}` }}>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>{modal.mode === 'create' ? 'Nuevo Proveedor' : 'Editar Proveedor'}</h2>
-              <AppButton aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={() => setModal(null)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setModal(null)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
             <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -881,7 +881,7 @@ function ProvidersTab() {
               </div>
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <AppButton onClick={() => setModal(null)} variant="secondary" size="sm" style={{ flex: 1 }}>Cancelar</AppButton>
-                <AppButton onClick={handleSave} disabled={!canSave} size="sm" style={{ flex: 2 }}>
+                <AppButton onClick={handleSave} disabled={!canSave} size="md" style={{ flex: 2 }}>
                   {modal.mode === 'create' ? 'Crear Proveedor' : 'Guardar'}
                 </AppButton>
               </div>

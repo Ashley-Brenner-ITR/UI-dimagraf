@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Filter } from 'lucide-react';
 import { SearchField } from './SearchField';
 import { filterGroup } from './chromeStyles';
@@ -10,6 +10,7 @@ interface Props<Value extends string | number> {
   onSearchChange: (value: string) => void;
   searchPlaceholder: string;
   searchAriaLabel?: string;
+  searchSize?: 'default' | 'compact';
   options: readonly FilterOption<Value>[];
   value: Value;
   onValueChange: (value: Value) => void;
@@ -17,20 +18,25 @@ interface Props<Value extends string | number> {
   onExpandedChange?: (expanded: boolean) => void;
   activeColor?: string;
   getOptionCount?: (value: Value) => number;
+  trailingActions?: ReactNode;
+  children?: ReactNode;
 }
 
-export function FilterToolbar<Value extends string | number>({ search, onSearchChange, searchPlaceholder, searchAriaLabel = 'Buscar', options, value, onValueChange, expanded, onExpandedChange, activeColor = color.brand, getOptionCount }: Props<Value>) {
+export function FilterToolbar<Value extends string | number>({ search, onSearchChange, searchPlaceholder, searchAriaLabel = 'Buscar', searchSize = 'default', options, value, onValueChange, expanded, onExpandedChange, activeColor = color.brand, getOptionCount, trailingActions, children }: Props<Value>) {
   const [internalExpanded, setInternalExpanded] = useState(false);
   const isExpanded = expanded ?? internalExpanded;
   const setExpanded = onExpandedChange ?? setInternalExpanded;
+  const popoverArrowRight = trailingActions ? 62 : 14;
+  const isCompact = searchSize === 'compact';
   return <div style={{ display: 'grid', gap: 10, width: '100%' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', minWidth: 0, flexWrap: 'wrap' }}>
-      <SearchField value={search} onChange={onSearchChange} placeholder={searchPlaceholder} ariaLabel={searchAriaLabel} />
-      <button type="button" onClick={() => setExpanded(!isExpanded)} aria-expanded={isExpanded} aria-label={isExpanded ? 'Ocultar filtros' : 'Mostrar filtros'} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, padding: 0, flexShrink: 0, background: isExpanded ? activeColor : color.canvas, color: isExpanded ? '#fff' : activeColor, border: `1px solid ${isExpanded ? activeColor : color.hairline}`, borderRadius: radius.pill, cursor: 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}><Filter size={14} aria-hidden="true" /></button>
+    <div style={{ display: 'flex', alignItems: 'center', gap: isCompact ? 6 : 8, width: '100%', minWidth: 0, flexWrap: isCompact ? 'nowrap' : 'wrap' }}>
+      <SearchField value={search} onChange={onSearchChange} placeholder={searchPlaceholder} ariaLabel={searchAriaLabel} size={searchSize} />
+      <button type="button" onClick={() => setExpanded(!isExpanded)} aria-expanded={isExpanded} aria-label={isExpanded ? 'Ocultar filtros' : 'Mostrar filtros'} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: isCompact ? 38 : 40, height: isCompact ? 38 : 40, padding: 0, flexShrink: 0, background: isExpanded ? activeColor : color.canvas, color: isExpanded ? '#fff' : activeColor, border: `1px solid ${isExpanded ? activeColor : color.hairline}`, borderRadius: radius.pill, cursor: 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}><Filter size={isCompact ? 13 : 14} aria-hidden="true" /></button>
+      {trailingActions}
     </div>
     {isExpanded && <div style={{ position: 'relative', display: 'flex', justifyContent: 'stretch', width: '100%', paddingTop: 6 }}>
-      <span aria-hidden="true" style={{ position: 'absolute', top: 0, right: 14, width: 12, height: 12, background: color.canvas, borderTop: `1px solid ${color.hairline}`, borderLeft: `1px solid ${color.hairline}`, transform: 'rotate(45deg)', boxShadow: '-2px -2px 6px rgba(16,24,40,0.03)' }} />
-      <div style={{ ...filterGroup, width: '100%', padding: 10, gap: 8, background: color.canvas, border: `1px solid ${color.hairline}`, borderRadius: radius.lg, boxShadow: '0 12px 28px rgba(16,24,40,0.08)', overflow: 'visible', flexWrap: 'wrap' }}>{options.map(option => {
+      <span aria-hidden="true" style={{ position: 'absolute', top: 0, right: popoverArrowRight, width: 12, height: 12, background: color.canvas, borderTop: `1px solid ${color.hairline}`, borderLeft: `1px solid ${color.hairline}`, transform: 'rotate(45deg)', boxShadow: '-2px -2px 6px rgba(16,24,40,0.03)' }} />
+      <div style={{ ...filterGroup, width: '100%', padding: 10, gap: 8, background: color.canvas, border: `1px solid ${color.hairline}`, borderRadius: radius.md, boxShadow: '0 12px 28px rgba(16,24,40,0.08)', overflow: 'visible', flexWrap: 'wrap' }}>{options.map(option => {
       const hasCountResolver = typeof getOptionCount === 'function';
       const rawCount = typeof option.count === 'number' ? option.count : (hasCountResolver ? getOptionCount(option.value) : undefined);
       const optionCount = typeof rawCount === 'number' && Number.isFinite(rawCount) ? Math.max(0, Math.trunc(rawCount)) : 0;
@@ -57,6 +63,11 @@ export function FilterToolbar<Value extends string | number>({ search, onSearchC
           )}
         </button>
       );
-    })}</div></div>}
+    })}
+      {children && <>
+        <div style={{ width: '100%', height: 1, background: color.hairline, margin: '4px 0' }} />
+        {children}
+      </>}
+      </div></div>}
   </div>;
 }

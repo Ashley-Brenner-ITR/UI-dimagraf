@@ -121,7 +121,7 @@ const columns: DataColumn<DemoRow>[] = [
       </StatusBadge>
     ),
   },
-  { key: 'action', header: '', align: 'right', cell: () => <AppButton size="xs" variant="ghost">Ver</AppButton> },
+  { key: 'action', header: '', align: 'right', cell: () => <AppButton size="sm" variant="tertiary">Ver</AppButton> },
 ];
 
 function Section({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
@@ -234,18 +234,30 @@ export function DesignSystemPage() {
 
         <Section id="actions" title="Acciones" description="Jerarquia de botones reutilizables y patron de modal estandar.">
           <div style={{ display: 'grid', gap: 14 }}>
-            <Demo title="AppButton variantes + tamanos">
+            <Demo title="AppButton · variantes">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 <AppButton icon={<Plus size={14} />}>Primario</AppButton>
                 <AppButton variant="secondary" icon={<Download size={14} />}>Secundario</AppButton>
-                <AppButton variant="ghost">Ghost</AppButton>
                 <AppButton variant="tertiary">Terciario</AppButton>
                 <AppButton variant="danger" icon={<Trash2 size={14} />}>Eliminar</AppButton>
                 <AppButton variant="danger-soft" icon={<AlertTriangle size={14} />}>Riesgo</AppButton>
                 <AppButton variant="success-soft" icon={<Check size={14} />}>Aprobado</AppButton>
-                <AppButton size="xs">XS</AppButton>
-                <AppButton size="sm">SM</AppButton>
-                <AppButton size="md">MD</AppButton>
+              </div>
+            </Demo>
+
+            <Demo title="AppButton · tamaños y estados">
+              <div style={{ display: 'grid', gap: 12 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+                  <AppButton size="sm">SM</AppButton>
+                  <AppButton size="md">MD</AppButton>
+                  <AppButton size="lg">LG</AppButton>
+                  <AppButton size="xl">XL · Login</AppButton>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+                  <AppButton>Default</AppButton>
+                  <AppButton disabled>Disabled</AppButton>
+                  <span style={{ color: color.muted, fontSize: 12 }}>Hover: pasá el cursor sobre cualquier botón.</span>
+                </div>
               </div>
             </Demo>
 

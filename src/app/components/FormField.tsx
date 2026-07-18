@@ -7,5 +7,5 @@ export function FormField({ label, error, help, children, id }: { label: string;
 
 export function AppInput({ style, id: providedId, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   const generatedId = useId(); const id = providedId || generatedId;
-  return <input id={id} style={{ width: '100%', minHeight: 40, padding: '9px 13px', fontSize: 14, color: color.ink, background: color.surface, border: `1px solid ${props['aria-invalid'] ? color.danger : color.hairline}`, borderRadius: radius.md, outline: 'none', ...style }} {...props} />;
+  return <input id={id} style={{ width: '100%', minHeight: 40, padding: '9px 13px', fontSize: 14, color: color.ink, background: color.surface, border: `1px solid ${props['aria-invalid'] ? color.danger : color.controlBorder}`, borderRadius: radius.md, ...style }} {...props} />;
 }

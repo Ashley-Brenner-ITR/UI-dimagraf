@@ -3,7 +3,7 @@ import { Bell, FolderOpen, Ship, BarChart3, DollarSign, Boxes, Activity, Users, 
 import type { AppUser, Role } from './mockData';
 import { useIsMobile } from './ui/use-mobile';
 import { color } from './theme';
-import dimagrafLogo from '../../imports/imagen__3_.png';
+import dimagrafLogo from '../../images/image.png';
 
 const GREEN  = '#1a5c38';
 const VIOLET = '#5b21b6';
@@ -606,7 +606,7 @@ export function Layout({ role, availableRoles, setRole, view, setView, children,
         )}
 
         {/* ── Content ──────────────────────────────────────────────── */}
-        <main style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
+        <main style={{ flex: 1, overflowY: 'auto', overflowX: 'clip', background: 'transparent' }}>
           {children}
         </main>
       </div>

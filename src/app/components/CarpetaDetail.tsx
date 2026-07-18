@@ -34,6 +34,11 @@ function formatMoney(value: number, currency: string) {
   return `${symbol} ${value.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`;
 }
 
+function getCanalInlineStyle(canal: 'Pendiente' | 'Verde' | 'Rojo') {
+  const tone = canal === 'Rojo' ? '#c4001a' : canal === 'Verde' ? '#1a7a4a' : MUTED;
+  return { color: tone, dot: tone, label: canal === 'Pendiente' ? 'Pendiente' : `Canal ${canal}` };
+}
+
 type Tab = 'general' | 'articulos' | 'produccion' | 'subcarpetas' | 'documentos' | 'aduana' | 'costeo' | 'pagos';
 type CarpetaDetailRole = 'operator' | 'director' | 'commercial' | 'treasury' | 'warehouse' | 'dispatcher' | 'admin';
 type RolePermissions = {
@@ -77,7 +82,7 @@ function normalizeCarpetaState(carpeta: Carpeta): Carpeta {
   };
 }
 
-interface Props { carpetaId: string; onBack: () => void; readonly?: boolean; carpetasList?: Carpeta[]; hideImportes?: boolean; initialTab?: Tab; onUpdateCarpeta?: (carpeta: Carpeta) => void; role?: CarpetaDetailRole; onSelectSubcarpeta?: (subId: string) => void; }
+interface Props { carpetaId: string; onBack: () => void; readonly?: boolean; carpetasList?: Carpeta[]; hideImportes?: boolean; initialTab?: Tab; onUpdateCarpeta?: (carpeta: Carpeta) => void; role?: CarpetaDetailRole; onSelectSubcarpeta?: (subId: string, detailTab?: 'transito' | 'aduana' | 'costeo' | 'documentos' | 'recepcion') => void; }
 export function CarpetaDetail({ carpetaId, onBack, readonly = false, carpetasList, hideImportes = false, initialTab = 'general', onUpdateCarpeta, role = 'operator', onSelectSubcarpeta }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [activeSub, setActiveSub] = useState<string | null>(null);
@@ -149,14 +154,14 @@ export function CarpetaDetail({ carpetaId, onBack, readonly = false, carpetasLis
     <div style={pageShell}>
 
       {/* ── Back button ──────────────────────────────────────── */}
-      <AppButton variant="tertiary" size="sm" onClick={onBack} icon={<ArrowLeft size={14} />} style={{ padding: '5px 0', marginBottom: 16, fontWeight: 400 }}>
+      <AppButton variant="tertiary" size="md" onClick={onBack} icon={<ArrowLeft size={14} />} style={{ padding: '5px 0', marginBottom: 16, fontWeight: 400 }}>
         Volver al Dashboard
       </AppButton>
 
       {/* ── Welcome Banner header ─────────────────────────── */}
       <WelcomeBanner
         title={carpeta.numero}
-        subtitle={`${proveedor?.nombre || '—'}${!effectiveHideImportes ? ` · ${formatMoney(carpeta.montoTotal, carpeta.moneda)}` : ''} · ${carpeta.incoterm} · OC ${carpeta.fechaOC}`}
+        subtitle={proveedor?.nombre || '—'}
         actions={
           <>
             {!readonly && <AppButton variant="secondary" icon={<Download size={13} />}>Exportar SAP</AppButton>}
@@ -164,77 +169,31 @@ export function CarpetaDetail({ carpetaId, onBack, readonly = false, carpetasLis
         }
       />
 
-      {/* ── Tabs Selector Row (Clear Visual Separation) ──────── */}
-      <div style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        marginBottom: 20,
-        background: '#f8faf9',
-        border: `1px solid ${HAIRLINE}`,
-        borderRadius: 14,
-        padding: isMobile ? '8px' : '5px 8px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        overflowX: 'auto',
-        scrollbarWidth: 'none',
-        boxShadow: '0 4px 12px rgba(16,24,40,0.06)',
-      }}>
-        {tabs.map(t => {
-          const active = activeTab === t.id;
-          return (
-            <button
-              type="button"
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                flex: 'none',
-                padding: '8px 16px',
-                fontSize: 13,
-                fontWeight: active ? 600 : 500,
-                color: active ? GREEN : MUTED,
-                background: active ? 'rgba(26,92,56,0.08)' : 'transparent',
-                border: 'none',
-                borderRadius: 10,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease',
-                outline: 'none',
-              }}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
       {/* ── Consistent Observaciones / Reclamos Banner ─────────────────── */}
       {carpeta.observaciones && (
         <div style={{
           marginBottom: 16,
-          padding: '14px 18px',
-          background: '#fffbeb',
-          border: '1px solid #fde68a',
+          padding: '12px 16px',
+          background: '#fffdf7',
+          border: '1px solid #f6e7b0',
           borderRadius: 14,
           display: 'flex',
-          gap: 12,
+          gap: 10,
           alignItems: 'start',
-          boxShadow: '0 2px 8px rgba(251,191,36,0.05)',
+          boxShadow: 'none',
         }}>
-          <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: 2 }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#b45309', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Observaciones, Comentarios o Reclamos de la Carpeta
+          <AlertTriangle size={16} color="#d97706" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: '#b45309', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Observaciones
             </div>
-            <div style={{ fontSize: 13.5, color: '#92400e', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13, color: '#92400e', lineHeight: 1.45 }}>
               {carpeta.observaciones}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Tab Content Container Card ─────────────────────────── */}
       <div style={{
         background: CANVAS,
         border: `1px solid ${HAIRLINE}`,
@@ -242,13 +201,57 @@ export function CarpetaDetail({ carpetaId, onBack, readonly = false, carpetasLis
         overflow: 'hidden',
         boxShadow: '0 4px 18px rgba(16,24,40,0.03)',
       }}>
+        {/* ── Tabs Selector Row (Flat docs-style tabs) ──────── */}
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          borderBottom: `1px solid ${HAIRLINE}`,
+          background: '#fbfcfb',
+          padding: isMobile ? '0 10px' : '0 14px',
+        }}>
+          {tabs.map(t => {
+            const active = activeTab === t.id;
+            return (
+              <button
+                type="button"
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  flex: 'none',
+                  minHeight: 42,
+                  padding: isMobile ? '10px 12px 9px' : '10px 14px 9px',
+                  fontSize: 12.5,
+                  fontWeight: active ? 600 : 500,
+                  color: active ? GREEN : MUTED,
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: active ? `2px solid ${GREEN}` : '2px solid transparent',
+                  borderRadius: 0,
+                  marginBottom: -1,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease',
+                  outline: 'none',
+                }}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
         <div>
           {activeTab === 'general'     && <GeneralTab     carpeta={carpeta} subs={subs} proveedor={proveedor} hideImportes={effectiveHideImportes} canEditGeneral={canEditOriginalOc} ocLockReason={ocLockReason} onUpdateGeneral={(patch: Partial<Carpeta>) => commitCarpeta(current => ({ ...current, ...patch }))} onSelectSubcarpeta={(subId: string) => { setTab('subcarpetas'); setActiveSub(subId); }} />}
           {activeTab === 'articulos'   && <ArticulosTab   carpeta={carpeta} hideImportes={effectiveHideImportes} readonly={readonly} canEditOriginalOc={canEditOriginalOc} onUpdateArticulos={(articulos: Carpeta['articulos']) => commitCarpeta(current => ({ ...current, articulos }))} />}
           {activeTab === 'subcarpetas' && <SubcarpetasTab carpeta={carpeta} subs={subs} nextLetter={nextLetter} activeSub={activeSub} setActiveSub={setActiveSub} readonly={readonly} hideImportes={effectiveHideImportes} onCreateSubcarpeta={(subcarpeta: Subcarpeta) => commitCarpeta(current => ({ ...current, subcarpetas: [...current.subcarpetas, subcarpeta] }))} onSelectSubcarpeta={onSelectSubcarpeta} />}
           {activeTab === 'produccion'  && <ProduccionTab  carpeta={carpeta} proveedor={proveedor} editable={canEditProduccion} onUpdateProduccion={(patch: Partial<Carpeta>) => commitCarpeta(current => ({ ...current, ...patch }))} />}
-          {activeTab === 'aduana'      && <AduanaTab      carpeta={carpeta} subs={subs} editable={canEditAduana} hideImportes={effectiveHideImportes} onUpdateSubcarpeta={(subId: string, patch: Partial<Subcarpeta>) => commitCarpeta(current => ({ ...current, subcarpetas: current.subcarpetas.map(sub => sub.id === subId ? { ...sub, ...patch } : sub) }))} onUpdateCarpeta={(patch: Partial<Carpeta>) => commitCarpeta(current => ({ ...current, ...patch }))} />}
-          {activeTab === 'costeo'      && <CosteoTab      carpeta={carpeta} subs={subs} editable={canEditCosteo} onUpdateSubcarpeta={(subId: string, patch: Partial<Subcarpeta>) => commitCarpeta(current => ({ ...current, subcarpetas: current.subcarpetas.map(sub => sub.id === subId ? { ...sub, ...patch } : sub) }))} onUpdateCosteo={(patch: Partial<Carpeta>) => commitCarpeta(current => ({ ...current, ...patch }))} />}
+          {activeTab === 'aduana'      && <AduanaTab      carpeta={carpeta} subs={subs} editable={canEditAduana} hideImportes={effectiveHideImportes} onUpdateSubcarpeta={(subId: string, patch: Partial<Subcarpeta>) => commitCarpeta(current => ({ ...current, subcarpetas: current.subcarpetas.map(sub => sub.id === subId ? { ...sub, ...patch } : sub) }))} onUpdateCarpeta={(patch: Partial<Carpeta>) => commitCarpeta(current => ({ ...current, ...patch }))} onSelectSubcarpeta={onSelectSubcarpeta} />}
+          {activeTab === 'costeo'      && <CosteoTab      carpeta={carpeta} subs={subs} editable={canEditCosteo} hideImportes={effectiveHideImportes} onUpdateSubcarpeta={(subId: string, patch: Partial<Subcarpeta>) => commitCarpeta(current => ({ ...current, subcarpetas: current.subcarpetas.map(sub => sub.id === subId ? { ...sub, ...patch } : sub) }))} onUpdateCosteo={(patch: Partial<Carpeta>) => commitCarpeta(current => ({ ...current, ...patch }))} onSelectSubcarpeta={onSelectSubcarpeta} />}
           {activeTab === 'documentos'  && <DocumentosTabV2  carpeta={carpeta} subs={subs} readonly={readonly} role={role} onAddDocumento={(doc: Documento, subId: string | 'madre') => commitCarpeta(current => subId === 'madre' ? ({ ...current, documentos: [...(current.documentos ?? []), doc] }) : ({ ...current, subcarpetas: current.subcarpetas.map(sub => sub.id === subId ? ({ ...sub, documentos: [...sub.documentos, doc] }) : sub) }))} onUpdateCarpeta={onUpdateCarpeta} />}
           {activeTab === 'pagos'       && <PagosTab       carpeta={carpeta} editable={canEditPagos} onUpdatePagos={(pagosList: any[]) => commitCarpeta(current => ({ ...current, pagos: pagosList }))} />}
         </div>
@@ -272,31 +275,25 @@ function Input({ label, defaultValue, type = 'text', placeholder, color }: { lab
   );
 }
 
-function TabEditModal({ title, children, onClose, onSave, saveLabel = 'Guardar cambios' }: { title: string; children: ReactNode; onClose: () => void; onSave: () => void; saveLabel?: string }) {
+function TabIntro({
+  title,
+  subtitle,
+  actions,
+}: {
+  title: string;
+  subtitle?: string;
+  actions?: React.ReactNode;
+}) {
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 320, background: 'rgba(15, 23, 42, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ width: 'min(640px, 100%)', maxHeight: '90vh', background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 16, boxShadow: '0 22px 50px rgba(15, 23, 42, 0.22)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '14px 16px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>{title}</h2>
-          <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={onClose} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
-        </div>
-        <div style={{ padding: 16, display: 'grid', gap: 14, overflowY: 'auto' }}>
-          {children}
-        </div>
-        <div style={{ padding: '12px 16px', borderTop: `1px solid ${HAIRLINE}`, display: 'flex', justifyContent: 'flex-end', gap: 8, background: '#fff' }}>
-          <AppButton type="button" variant="secondary" size="sm" onClick={onClose}>
-            Cancelar
-          </AppButton>
-          <AppButton type="button" size="sm" onClick={onSave}>
-            {saveLabel}
-          </AppButton>
-        </div>
+    <div style={{ minHeight: 58, padding: '10px 2px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', borderBottom: `1px solid ${HAIRLINE}`, background: CANVAS }}>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{subtitle}</div>}
       </div>
+      {actions}
     </div>
   );
 }
-
-/* ── Tab components ───────────────────────────────────────────────── */
 
 function GeneralTab({ carpeta, subs, proveedor, hideImportes, canEditGeneral, ocLockReason, onUpdateGeneral, onSelectSubcarpeta }: any) {
   const isMobile = useIsMobile();
@@ -334,20 +331,21 @@ function GeneralTab({ carpeta, subs, proveedor, hideImportes, canEditGeneral, oc
 
   return (
     <div style={{ display: 'grid', gap: 16, padding: 16 }}>
+      <TabIntro
+        title="Datos generales"
+        subtitle="Cabecera comercial, referencia y datos base de la carpeta"
+        actions={canEditGeneral ? (
+          <AppButton
+            type="button"
+            size="md"
+            icon={<Pencil size={13} />}
+            onClick={() => setShowGeneralEditModal(true)}
+          >
+            Editar
+          </AppButton>
+        ) : undefined}
+      />
       <div style={{ display: 'grid', gap: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Datos de cabecera</span>
-          {canEditGeneral && (
-            <AppButton
-              type="button"
-              size="sm"
-              icon={<Pencil size={13} />}
-              onClick={() => setShowGeneralEditModal(true)}
-            >
-              Editar sección
-            </AppButton>
-          )}
-        </div>
         {!canEditGeneral && ocLockReason && (
           <div style={{ marginBottom: 12, fontSize: 12, color: MUTED }}>
             {ocLockReason}
@@ -402,8 +400,8 @@ function GeneralTab({ carpeta, subs, proveedor, hideImportes, canEditGeneral, oc
         <div style={{ position: 'fixed', inset: 0, zIndex: 320, background: 'rgba(15, 23, 42, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ width: 'min(560px, 100%)', maxHeight: '90vh', background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 16, boxShadow: '0 22px 50px rgba(15, 23, 42, 0.22)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>Editar sección General</h2>
-              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={() => setShowGeneralEditModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>Editar datos de cabecera</h2>
+              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowGeneralEditModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
 
             <div style={{ padding: 16, display: 'grid', gap: 12, overflowY: 'auto' }}>
@@ -422,10 +420,10 @@ function GeneralTab({ carpeta, subs, proveedor, hideImportes, canEditGeneral, oc
             </div>
 
             <div style={{ padding: '12px 16px', borderTop: `1px solid ${HAIRLINE}`, display: 'flex', justifyContent: 'flex-end', gap: 8, background: '#fff' }}>
-              <AppButton type="button" variant="secondary" size="sm" onClick={() => setShowGeneralEditModal(false)}>
+              <AppButton type="button" variant="secondary" size="md" onClick={() => setShowGeneralEditModal(false)}>
                 Cancelar
               </AppButton>
-              <AppButton type="button" size="sm" onClick={handleSaveGeneral}>
+              <AppButton type="button" size="md" onClick={handleSaveGeneral}>
                 Guardar cambios
               </AppButton>
             </div>
@@ -648,20 +646,20 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
         <>
           <div style={{ overflow: 'hidden', background: CANVAS }}>
             {canEditOriginalOc && (
-              <div style={{ minHeight: 52, padding: '8px 12px 8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: CANVAS, borderBottom: `1px solid ${HAIRLINE}` }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Artículos de la orden</div>
-                  <div style={{ fontSize: 12, color: MUTED }}>{articulos.length} {articulos.length === 1 ? 'ítem' : 'ítems'}</div>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <AppButton size="sm" variant="secondary" onClick={() => { setMassiveText(''); setMassiveFileName(''); setShowMassiveModal(true); }} icon={<Upload aria-hidden="true" size={14} />}>
-                    Carga masiva
-                  </AppButton>
-                  <AppButton size="sm" onClick={() => { setForm(EMPTY_ART_FORM); setEditingArticleId(null); setShowModal(true); }} icon={<Plus aria-hidden="true" size={14} />}>
-                    Agregar ítem
-                  </AppButton>
-                </div>
-              </div>
+              <TabIntro
+                title="Artículos de la orden"
+                subtitle={`${articulos.length} ${articulos.length === 1 ? 'ítem' : 'ítems'} cargados`}
+                actions={canEditOriginalOc ? (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <AppButton size="md" variant="secondary" onClick={() => { setMassiveText(''); setMassiveFileName(''); setShowMassiveModal(true); }} icon={<Upload aria-hidden="true" size={14} />}>
+                      Carga masiva
+                    </AppButton>
+                    <AppButton size="md" onClick={() => { setForm(EMPTY_ART_FORM); setEditingArticleId(null); setShowModal(true); }} icon={<Plus aria-hidden="true" size={14} />}>
+                      Agregar ítem
+                    </AppButton>
+                  </div>
+                ) : undefined}
+              />
             )}
             <div style={{ padding: '12px 14px', borderBottom: `1px solid ${HAIRLINE}`, background: '#fcfcfd' }}>
               <FilterToolbar search={query} onSearchChange={setQuery} searchPlaceholder="Buscar por código o descripción" searchAriaLabel="Buscar artículos" options={[{ value: 'todos', label: 'Todos' }, { value: 'saldo', label: 'Con saldo' }, { value: 'error', label: 'Con error' }]} value={filter} onValueChange={setFilter} />
@@ -700,10 +698,10 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
                           {a.observacionesImportacion && <div style={{ marginTop: 12, fontSize: 13, color: '#b45309' }}>{a.observacionesImportacion}</div>}
                           {canEditOriginalOc && (
                             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                              <AppButton variant="secondary" size="xs" onClick={() => handleEditArticle(a)} icon={<Pencil aria-hidden="true" size={12} />}>
+                              <AppButton variant="secondary" size="sm" onClick={() => handleEditArticle(a)} icon={<Pencil aria-hidden="true" size={12} />}>
                                 Editar
                               </AppButton>
-                              <AppButton variant="danger-soft" size="xs" onClick={() => handleDeleteArticle(a.id)} icon={<Trash2 aria-hidden="true" size={12} />}>
+                              <AppButton variant="danger-soft" size="sm" onClick={() => handleDeleteArticle(a.id)} icon={<Trash2 aria-hidden="true" size={12} />}>
                                 Eliminar
                               </AppButton>
                             </div>
@@ -715,35 +713,63 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
                 })}
               </div>
             ) : (
-              <div style={tableScrollArea}>
-                <table style={getResponsiveTableStyle(760)}>
-                  <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}><tr style={tableHeadRow}>{['Artículo', 'Solicitado', 'Asignado', 'Saldo', 'Validación', ''].map(col => <th key={col} style={{ ...tableHeadCell, textAlign: ['Solicitado', 'Asignado', 'Saldo'].includes(col) ? 'right' : 'left' }}>{col}</th>)}</tr></thead>
-                  <tbody>{displayedArticulos.map((a: any, i: number) => {
-                    const saldo = a.cantidadSolicitada - a.cantidadAsignada;
-                    const pct = a.cantidadSolicitada > 0 ? Math.min(100, (a.cantidadAsignada / a.cantidadSolicitada) * 100) : 0;
-                    return <tr key={a.id} style={{ borderBottom: i < displayedArticulos.length - 1 ? `1px solid ${HAIRLINE}` : 'none' }}>
-                      <td style={{ padding: '11px 16px' }}><div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{a.codigoSAP}</div><div style={{ marginTop: 2, maxWidth: 360, fontSize: 13, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.descripcion}</div></td>
-                      <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: 13, color: INK, fontVariantNumeric: 'tabular-nums' }}>{a.cantidadSolicitada.toLocaleString()} {a.um}</td>
-                      <td style={{ padding: '11px 16px', textAlign: 'right', minWidth: 120 }}><div style={{ fontSize: 13, color: INK }}>{a.cantidadAsignada.toLocaleString()} {a.um}</div><div style={{ height: 3, marginTop: 5, background: HAIRLINE, borderRadius: 9999, overflow: 'hidden' }}><div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#1a7a4a' : '#b45309' }} /></div></td>
-                      <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: 13, fontWeight: 700, color: saldo === 0 ? '#1a7a4a' : saldo > 0 ? '#b45309' : '#c4001a' }}>{saldo.toLocaleString()} {a.um}</td>
-                      <td style={{ padding: '11px 16px', fontSize: 12, color: a.estadoValidacion === 'Con error' ? '#c4001a' : MUTED }}>{a.estadoValidacion || '—'}</td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                        {canEditOriginalOc && (
-                          <>
-                            <AppButton type="button" size="xs" variant="secondary" icon={<Pencil aria-hidden="true" size={14} />} aria-label={`Editar ${a.codigoSAP}`} onClick={() => handleEditArticle(a)} />
-                            <AppButton type="button" size="xs" variant="danger-soft" icon={<Trash2 aria-hidden="true" size={14} />} aria-label={`Eliminar ${a.codigoSAP}`} onClick={() => handleDeleteArticle(a.id)} style={{ marginLeft: 4 }} />
-                          </>
-                        )}
-                      </td>
-                    </tr>;
-                  })}</tbody>
-                </table>
+              <div>
+                {displayedArticulos.map((a: any, i: number) => {
+                  const saldo = a.cantidadSolicitada - a.cantidadAsignada;
+                  const pct = a.cantidadSolicitada > 0 ? Math.min(100, (a.cantidadAsignada / a.cantidadSolicitada) * 100) : 0;
+                  const expanded = expandedArticleId === a.id;
+                  return (
+                    <article key={a.id} style={{ borderBottom: i < displayedArticulos.length - 1 ? `1px solid ${HAIRLINE}` : 'none', background: CANVAS }}>
+                      <button onClick={() => setExpandedArticleId(expanded ? null : a.id)} aria-expanded={expanded} style={{ width: '100%', padding: '14px 16px', display: 'grid', gridTemplateColumns: 'minmax(220px, 1.4fr) minmax(0, 1fr) auto', gap: 18, alignItems: 'center', textAlign: 'left', background: CANVAS, border: 'none', cursor: 'pointer' }}>
+                        <span style={{ minWidth: 0 }}>
+                          <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: INK }}>{a.codigoSAP}</span>
+                          <span style={{ display: 'block', marginTop: 2, fontSize: 13, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.descripcion}</span>
+                        </span>
+                        <span style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, minWidth: 0 }}>
+                          <span><span style={{ display: 'block', fontSize: 10, fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>SOLICITADO</span><span style={{ display: 'block', marginTop: 3, fontSize: 13, color: INK, fontVariantNumeric: 'tabular-nums' }}>{a.cantidadSolicitada.toLocaleString()} {a.um}</span></span>
+                          <span><span style={{ display: 'block', fontSize: 10, fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>ASIGNADO</span><span style={{ display: 'block', marginTop: 3, fontSize: 13, color: INK, fontVariantNumeric: 'tabular-nums' }}>{a.cantidadAsignada.toLocaleString()} {a.um}</span></span>
+                          <span><span style={{ display: 'block', fontSize: 10, fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>SALDO</span><span style={{ display: 'block', marginTop: 3, fontSize: 13, fontWeight: 700, color: saldo === 0 ? '#1a7a4a' : saldo > 0 ? '#b45309' : '#c4001a', fontVariantNumeric: 'tabular-nums' }}>{saldo.toLocaleString()} {a.um}</span></span>
+                          <span><span style={{ display: 'block', fontSize: 10, fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>VALIDACIÓN</span><span style={{ display: 'block', marginTop: 3, fontSize: 12, color: a.estadoValidacion === 'Con error' ? '#c4001a' : MUTED }}>{a.estadoValidacion || '—'}</span></span>
+                        </span>
+                        <ChevronDown aria-hidden="true" size={18} style={{ color: MUTED, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+                      </button>
+                      {expanded && (
+                        <div style={{ padding: '0 16px 16px', background: '#fafbfd' }}>
+                          <div style={{ height: 4, borderRadius: 9999, background: HAIRLINE, overflow: 'hidden', marginBottom: 14 }}>
+                            <div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#1a7a4a' : '#b45309' }} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 14 }}>
+                            <Field label="Línea" value={a.linea || '—'} />
+                            <Field label="Asignado" value={`${a.cantidadAsignada.toLocaleString()} ${a.um}`} />
+                            {a.ume ? <Field label="UME" value={a.ume} /> : <div />}
+                            {a.equivalencia ? <Field label="Equivalencia" value={a.equivalencia} /> : <div />}
+                            {!hideImportes ? <Field label="Precio unitario" value={a.precioUnitario.toFixed(2)} /> : <div />}
+                            {!hideImportes ? <Field label="Importe" value={(a.cantidadSolicitada * a.precioUnitario).toLocaleString()} /> : <div />}
+                            {a.origenCarga ? <Field label="Origen" value={a.origenCarga} /> : <div />}
+                            {a.estadoValidacion ? <Field label="Validación" value={a.estadoValidacion} /> : <div />}
+                          </div>
+                          {a.observacionesImportacion && <div style={{ marginTop: 12, fontSize: 13, color: '#b45309' }}>{a.observacionesImportacion}</div>}
+                          {canEditOriginalOc && (
+                            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                              <AppButton variant="secondary" size="sm" onClick={() => handleEditArticle(a)} icon={<Pencil aria-hidden="true" size={12} />}>
+                                Editar
+                              </AppButton>
+                              <AppButton variant="danger-soft" size="sm" onClick={() => handleDeleteArticle(a.id)} icon={<Trash2 aria-hidden="true" size={12} />}>
+                                Eliminar
+                              </AppButton>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
           <div style={{ minHeight: 48, padding: '8px 4px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', fontSize: 12, color: MUTED }}>
             <span>Mostrando {Math.min(visibleCount, filteredArticulos.length)} de {filteredArticulos.length} artículos</span>
-            {visibleCount < filteredArticulos.length && <AppButton variant="secondary" size="xs" onClick={() => setVisibleCount(count => count + 12)}>Mostrar 12 más</AppButton>}
+            {visibleCount < filteredArticulos.length && <AppButton variant="secondary" size="sm" onClick={() => setVisibleCount(count => count + 12)}>Mostrar 12 más</AppButton>}
           </div>
         </>
       )}
@@ -754,7 +780,7 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
           <div style={{ background: CANVAS, borderRadius: 20, width: '100%', maxWidth: 500, margin: '0 16px', boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px 18px', borderBottom: `1px solid ${HAIRLINE}` }}>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>{editingArticleId ? 'Editar artículo' : 'Nuevo artículo'}</h2>
-              <AppButton aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={resetForm} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={resetForm} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
             <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* SAP + Descripcion */}
@@ -798,8 +824,8 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
                 )}
               </div>
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-                <AppButton onClick={resetForm} variant="secondary" size="sm" style={{ flex: 1 }}>Cancelar</AppButton>
-                <AppButton onClick={handleSaveArticle} disabled={!canSave} size="sm" style={{ flex: 2 }}>
+                <AppButton onClick={resetForm} variant="secondary" size="md" style={{ flex: 1 }}>Cancelar</AppButton>
+                <AppButton onClick={handleSaveArticle} disabled={!canSave} size="md" style={{ flex: 2 }}>
                   {editingArticleId ? 'Guardar cambios' : 'Agregar artículo'}
                 </AppButton>
               </div>
@@ -816,14 +842,14 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>Carga masiva de artículos</h2>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: MUTED }}>Importá múltiples ítems copiando y pegando desde Excel o subiendo una planilla</p>
               </div>
-              <AppButton aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={() => setShowMassiveModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowMassiveModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
 
             <div style={{ padding: 24, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Plantilla Download */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10 }}>
                 <span style={{ fontSize: 13, color: INK }}>¿No tenés la plantilla? Descargá nuestro modelo Excel.</span>
-                <AppButton variant="secondary" size="xs" onClick={handleDownloadTemplate} icon={<Download size={13} />}>
+                <AppButton variant="secondary" size="sm" onClick={handleDownloadTemplate} icon={<Download size={13} />}>
                   Descargar plantilla
                 </AppButton>
               </div>
@@ -916,11 +942,11 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
             </div>
 
             <div style={{ padding: '16px 24px', borderTop: `1px solid ${HAIRLINE}`, display: 'flex', gap: 10, justifyContent: 'flex-end', background: '#fff' }}>
-              <AppButton variant="secondary" size="sm" onClick={() => setShowMassiveModal(false)}>
+              <AppButton variant="secondary" size="md" onClick={() => setShowMassiveModal(false)}>
                 Cancelar
               </AppButton>
               <AppButton
-                size="sm"
+                size="md"
                 disabled={!massiveText.trim() || parseTextToRows(massiveText).length === 0}
                 onClick={() => {
                   const rows = parseTextToRows(massiveText);
@@ -1035,15 +1061,12 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
   return (
     <>
       <div style={{ padding: isMobile ? 10 : 14, display: 'flex', flexDirection: 'column', gap: 10, background: CANVAS }}>
-        {!readonly && (
-          <div style={{ minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '10px 2px 10px 2px', background: CANVAS, borderBottom: `1px solid ${HAIRLINE}` }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Embarques Parciales</div>
-              <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
-                Registros de embarques activos de la carpeta
-              </div>
-            </div>
+        <TabIntro
+          title="Embarques parciales"
+          subtitle="Registros de embarques activos de la carpeta"
+          actions={!readonly ? (
             <AppButton
+              size="md"
               onClick={() => {
                 if (isFull) {
                   setToastMessage('Límite de embarques alcanzado: Esta carpeta ya tiene los tres parciales permitidos (A, B y C).');
@@ -1055,13 +1078,13 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
                 }
                 setShowModal(true);
               }}
-              icon={<Plus aria-hidden="true" />}
+              icon={<Plus aria-hidden="true" size={13} />}
               style={(isFull || availableArticulos.length === 0) ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
             >
               Crear embarque
             </AppButton>
-          </div>
-        )}
+          ) : undefined}
+        />
         {toastMessage && (
           <div style={{
             position: 'fixed',
@@ -1113,7 +1136,7 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
                     <div
                       onClick={() => {
                         if (onSelectSubcarpeta) {
-                          onSelectSubcarpeta(sub.id);
+                          onSelectSubcarpeta(sub.id, 'transito');
                           return;
                         }
                         setActiveSub(activeSub === sub.id ? null : sub.id);
@@ -1173,7 +1196,7 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: 13, color: MUTED }}>Letra asignada automáticamente · Solo se permiten A, B y C</p>
               </div>
-              <AppButton aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={resetModal} icon={<X size={15} style={{ color: MUTED }} />} style={{ borderRadius: 9999, flexShrink: 0 }} />
+              <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={resetModal} icon={<X size={15} style={{ color: MUTED }} />} style={{ borderRadius: 9999, flexShrink: 0 }} />
             </div>
 
             <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1254,11 +1277,11 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
               </div>
 
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-                <AppButton onClick={resetModal} variant="secondary" size="sm" style={{ flex: 1 }}>
+                <AppButton onClick={resetModal} variant="secondary" style={{ flex: 1 }}>
                   Cancelar
                 </AppButton>
-                <AppButton disabled={!canCreate} onClick={handleCreate} size="sm" style={{ flex: 2 }}>
-                  Crear Embarque
+                <AppButton disabled={!canCreate} onClick={handleCreate} style={{ flex: 2 }}>
+                  Crear embarque
                 </AppButton>
               </div>
             </div>
@@ -1424,6 +1447,11 @@ function SubcarpetaTableLine({ sub, onClick, showDivider = false, showMobileDivi
 
 function SubcarpetaExpandedPanel({ sub, carpeta, hideImportes }: { sub: Subcarpeta; carpeta: Carpeta; hideImportes: boolean }) {
   const hasInc = sub.incidencias?.length > 0;
+  const despachanteNombre = getDespachante(sub.despachante)?.nombre || '—';
+  const coefEst = sub.coeficienteEst ?? null;
+  const coefReal = sub.coeficienteReal ?? null;
+  const desvPct = coefEst && coefReal ? ((coefReal - coefEst) / coefEst) * 100 : null;
+  const desvioColor = desvPct !== null && Math.abs(desvPct) > 5 ? '#b45309' : '#1a7a4a';
 
   return (
     <div style={{ padding: '0 16px 16px', borderTop: `1px solid ${HAIRLINE}`, background: '#fafbfd' }}>
@@ -1435,9 +1463,71 @@ function SubcarpetaExpandedPanel({ sub, carpeta, hideImportes }: { sub: Subcarpe
         <Field label="Peso Neto (Kg)" value={sub.pesoNeto.toLocaleString()} />
         <Field label="Peso Bruto (Kg)" value={sub.pesoBruto.toLocaleString()} />
         <Field label="UME" value={`${sub.ume.toLocaleString()} ${sub.umeUnidad}`} />
-        <Field label="SAP Tx.55" value={sub.pedidoSAP55 || '—'} color={sub.pedidoSAP55 ? INK : MUTED} />
-        <Field label="SAP Tx.18" value={sub.ingresoSAP18 || '—'} color={sub.ingresoSAP18 ? '#1a7a4a' : MUTED} />
-        <Field label="DUA N°" value={sub.duaNum || '—'} color={sub.duaNum ? INK : MUTED} />
+      </div>
+
+      <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+        <div style={{ background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 14, padding: '16px 16px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Aduana</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+            <Field label="Despachante" value={despachanteNombre} />
+            <Field label="DUA N°" value={sub.duaNum || '—'} color={sub.duaNum ? INK : MUTED} />
+            <div>
+              <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Canal aduanero</div>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '4px 10px',
+                borderRadius: 9999,
+                fontSize: 12,
+                fontWeight: 600,
+                color: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : MUTED,
+                background: sub.canalAduana === 'Rojo' ? 'rgba(196,0,26,0.06)' : sub.canalAduana === 'Verde' ? 'rgba(26,92,56,0.08)' : 'rgba(15,23,42,0.04)',
+                border: `1px solid ${sub.canalAduana === 'Rojo' ? 'rgba(196,0,26,0.16)' : sub.canalAduana === 'Verde' ? 'rgba(26,92,56,0.18)' : 'rgba(15,23,42,0.08)'}`
+              }}>
+                {sub.canalAduana || 'Pendiente'}
+              </span>
+            </div>
+            <Field label="Pago aduana" value={(sub as any).pagoAduana || 'Pendiente'} color={(sub as any).pagoAduana ? INK : MUTED} />
+            <Field label="Pago marítima" value={(sub as any).pagoMaritima || 'Pendiente'} color={(sub as any).pagoMaritima ? INK : MUTED} />
+            <Field label="SAP Tx.55" value={sub.pedidoSAP55 || '—'} color={sub.pedidoSAP55 ? INK : MUTED} />
+            <Field label="SAP Tx.18" value={sub.ingresoSAP18 || '—'} color={sub.ingresoSAP18 ? '#1a7a4a' : MUTED} />
+          </div>
+        </div>
+
+        <div style={{ background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 14, padding: '16px 16px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Costeo</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+            <Field label="Coeficiente estimado" value={coefEst !== null ? coefEst.toFixed(2) : '—'} color={coefEst !== null ? INK : MUTED} />
+            <Field label="Coeficiente real" value={coefReal !== null ? coefReal.toFixed(2) : '—'} color={coefReal !== null ? INK : MUTED} />
+            <Field label="Gastos terminal" value={!hideImportes ? `$ ${carpeta.gastosTerminal.toLocaleString()}` : 'Oculto'} color={!hideImportes ? INK : MUTED} />
+            <Field label="Honorarios despachante" value={!hideImportes ? `$ ${carpeta.honorariosDespachante.toLocaleString()}` : 'Oculto'} color={!hideImportes ? INK : MUTED} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingTop: 2, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 12, color: MUTED }}>
+              {desvPct !== null ? 'Desvío del embarque' : 'Sin desvío calculado todavía'}
+            </div>
+            {desvPct !== null && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '4px 10px',
+                borderRadius: 9999,
+                fontSize: 12,
+                fontWeight: 600,
+                color: desvioColor,
+                background: `${desvioColor}12`,
+                border: `1px solid ${desvioColor}2b`
+              }}>
+                {desvPct > 0 ? '+' : ''}{desvPct.toFixed(1)}%
+              </span>
+            )}
+          </div>
+          {carpeta.observaciones && (
+            <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5, padding: '10px 12px', borderRadius: 10, background: PARCHMENT, border: `1px solid ${HAIRLINE}` }}>
+              {carpeta.observaciones}
+            </div>
+          )}
+        </div>
       </div>
 
       {sub.articulosEmbarque.length > 0 && (
@@ -1527,15 +1617,16 @@ function ProduccionTab({ carpeta, proveedor, editable, onUpdateProduccion }: any
   return (
     <>
     <div style={{ display: 'grid', gap: 16, padding: 16 }}>
+      <TabIntro
+        title="Producción y pre-embarque"
+        subtitle="Confirmación del proveedor y seguimiento en origen"
+        actions={editable ? (
+          <AppButton type="button" size="md" icon={<Pencil size={13} />} onClick={() => setShowEditModal(true)}>
+            Editar
+          </AppButton>
+        ) : undefined}
+      />
       <div style={{ display: 'grid', gap: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Confirmación del proveedor</span>
-          {editable && (
-            <AppButton type="button" size="sm" icon={<Pencil size={13} />} onClick={() => setShowEditModal(true)}>
-              Editar sección
-            </AppButton>
-          )}
-        </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', columnGap: 24, rowGap: 18, alignItems: 'start' }}>
           <Field label="Referencia Proveedor" value={carpeta.referenciaProveedor || '—'} />
           <div>
@@ -1589,8 +1680,8 @@ function ProduccionTab({ carpeta, proveedor, editable, onUpdateProduccion }: any
         </FormField>
         <FormField label="Control artículo por artículo">
           <div style={{ display: 'flex', gap: 8 }}>
-            <AppButton type="button" size="sm" variant={form.controlConforme ? 'success-soft' : 'secondary'} onClick={() => setForm(prev => ({ ...prev, controlConforme: true }))}>Conforme</AppButton>
-            <AppButton type="button" size="sm" variant={!form.controlConforme ? 'danger-soft' : 'secondary'} onClick={() => setForm(prev => ({ ...prev, controlConforme: false }))}>Con diferencias</AppButton>
+            <AppButton type="button" size="md" variant={form.controlConforme ? 'success-soft' : 'secondary'} onClick={() => setForm(prev => ({ ...prev, controlConforme: true }))}>Conforme</AppButton>
+            <AppButton type="button" size="md" variant={!form.controlConforme ? 'danger-soft' : 'secondary'} onClick={() => setForm(prev => ({ ...prev, controlConforme: false }))}>Con diferencias</AppButton>
           </div>
         </FormField>
         <FormField label="Observaciones / reclamos">
@@ -1639,7 +1730,7 @@ function DocumentosTab({ carpeta, subs, readonly }: any) {
                         <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{doc.nombre}</div>
                         <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{doc.subcarpeta}</div>
                       </div>
-                      <AppButton size="xs" variant="tertiary" style={{ flexShrink: 0 }}>Ver documento</AppButton>
+                      <AppButton size="sm" variant="tertiary" style={{ flexShrink: 0 }}>Ver documento</AppButton>
                     </div>
                     <div style={{ marginTop: 10 }}>
                       <span style={{ fontSize: 12, color, background: `${color}14`, border: `1px solid ${color}33`, borderRadius: 9999, padding: '3px 8px' }}>{doc.tipo}</span>
@@ -1680,7 +1771,7 @@ function DocumentosTab({ carpeta, subs, readonly }: any) {
                       <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED }}>{doc.tamano}</td>
                       <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED }}>{doc.fecha}</td>
                       <td style={{ padding: '12px 16px' }}>
-                        <AppButton size="xs" variant="tertiary">Ver documento</AppButton>
+                        <AppButton size="sm" variant="tertiary">Ver documento</AppButton>
                       </td>
                     </tr>
                   );
@@ -1882,103 +1973,76 @@ function DocumentosTabV2({
 
   return (
     <div style={{ padding: isMobile ? 10 : 14, display: 'flex', flexDirection: 'column', gap: 12, background: CANVAS }}>
-      {!readonly && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-          <AppButton
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setSelectedFile(null);
-              setReferencia('');
-              setUploadTab('manual');
-              setTipo('Packing List');
-              setTarget('madre');
-              setVisibilidad('Todos');
-              setShowUploadModal(true);
-            }}
-            icon={<Upload size={14} style={{ color: MUTED }} />}
-          >
-            Subir y Nomenclar Anexo
-          </AppButton>
-          
-          <AppButton
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              setSelectedFile(null);
-              setReferencia('');
-              setUploadTab('auto');
-              setTipo('Factura Comercial');
-              setTarget('madre');
-              setShowUploadModal(true);
-            }}
-            icon={<CheckCircle size={14} />}
-          >
-            Auditar Documento (AI)
-          </AppButton>
-        </div>
-      )}
+      <TabIntro
+        title="Anexos de la carpeta"
+        subtitle="Documentación asociada a la carpeta madre y a sus embarques"
+        actions={!readonly ? (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+            <AppButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                setSelectedFile(null);
+                setReferencia('');
+                setUploadTab('manual');
+                setTipo('Packing List');
+                setTarget('madre');
+                setVisibilidad('Todos');
+                setShowUploadModal(true);
+              }}
+              icon={<Upload size={14} style={{ color: MUTED }} />}
+            >
+              Adjuntar anexo
+            </AppButton>
+
+            <AppButton
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={() => {
+                setSelectedFile(null);
+                setReferencia('');
+                setUploadTab('auto');
+                setTipo('Factura Comercial');
+                setTarget('madre');
+                setShowUploadModal(true);
+              }}
+              icon={<CheckCircle size={14} />}
+            >
+              Auditar anexo (AI)
+            </AppButton>
+          </div>
+        ) : undefined}
+      />
 
       {filteredDocs.length > 0 ? (
-        <div style={{ overflow: 'hidden', background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 12 }}>
-          {isMobile ? (
-            <div>
-              {filteredDocs.map((doc: any, i: number) => {
-                const color = tipoColors[doc.tipo] || MUTED;
-                return (
-                  <div key={doc.id} style={{ padding: '14px 16px', borderBottom: i < filteredDocs.length - 1 ? `1px solid ${HAIRLINE}` : 'none' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{doc.nombre}</div>
-                    {doc.referencia && <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>Ref. {doc.referencia}</div>}
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                      <span style={{ fontSize: 11, color, background: `${color}14`, border: `1px solid ${color}33`, borderRadius: 9999, padding: '3px 8px' }}>{doc.tipo}</span>
-                      <span style={{ fontSize: 11, color: GREEN, background: 'rgba(26,92,56,0.08)', border: '1px solid rgba(26,92,56,0.18)', borderRadius: 9999, padding: '3px 8px' }}>{doc.origen}</span>
-                      {doc.visibilidad && doc.visibilidad !== 'Todos' && (
-                        <span style={{ fontSize: 11, color: '#d97706', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 9999, padding: '3px 8px' }}>{doc.visibilidad}</span>
-                      )}
-                      {doc.estadoValidacion && (
-                        <span style={{ fontSize: 11, color: doc.estadoValidacion === 'Con Diferencias' ? '#b45309' : '#059669', background: doc.estadoValidacion === 'Con Diferencias' ? '#fffbeb' : '#ecfdf5', border: `1px solid ${doc.estadoValidacion === 'Con Diferencias' ? '#fde68a' : '#a7f3d0'}`, borderRadius: 9999, padding: '3px 8px' }}>{doc.estadoValidacion}</span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>{doc.tamano} · {doc.fecha}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', background: CANVAS }}>
+          {filteredDocs.map((doc: any, i: number) => {
+            const color = tipoColors[doc.tipo] || MUTED;
+            return (
+              <div key={doc.id} style={{ padding: isMobile ? '14px 16px' : '14px 18px', borderBottom: i < filteredDocs.length - 1 ? `1px solid ${HAIRLINE}` : 'none', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.4fr) auto', gap: isMobile ? 10 : 16, alignItems: 'center', background: 'transparent' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nombre}</div>
+                  {doc.referencia && <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>Ref. {doc.referencia}</div>}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    <span style={{ fontSize: 11, color, background: `${color}14`, border: `1px solid ${color}33`, borderRadius: 9999, padding: '3px 8px' }}>{doc.tipo}</span>
+                    <span style={{ fontSize: 11, color: GREEN, background: 'rgba(26,92,56,0.08)', border: '1px solid rgba(26,92,56,0.18)', borderRadius: 9999, padding: '3px 8px' }}>{doc.origen}</span>
+                    {doc.visibilidad && doc.visibilidad !== 'Todos' && (
+                      <span style={{ fontSize: 11, color: '#d97706', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 9999, padding: '3px 8px' }}>{doc.visibilidad}</span>
+                    )}
+                    {doc.estadoValidacion && (
+                      <span style={{ fontSize: 11, color: doc.estadoValidacion === 'Con Diferencias' ? '#b45309' : '#059669', background: doc.estadoValidacion === 'Con Diferencias' ? '#fffbeb' : '#ecfdf5', border: `1px solid ${doc.estadoValidacion === 'Con Diferencias' ? '#fde68a' : '#a7f3d0'}`, borderRadius: 9999, padding: '3px 8px' }}>{doc.estadoValidacion}</span>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr style={tableHeadRow}>{['Origen', 'Tipo', 'Archivo', 'Visibilidad', 'Validación', 'Tamaño', 'Fecha', ''].map(col => <th key={col} style={tableHeadCell}>{col}</th>)}</tr></thead>
-              <tbody>
-                {filteredDocs.map((doc: any, i: number) => {
-                  const color = tipoColors[doc.tipo] || MUTED;
-                  return (
-                    <tr key={doc.id} style={{ borderBottom: i < filteredDocs.length - 1 ? `1px solid ${HAIRLINE}` : 'none' }}>
-                      <td style={{ padding: '12px 16px' }}><span style={{ fontSize: 12, fontWeight: 600, color: GREEN, background: 'rgba(26,92,56,0.08)', border: '1px solid rgba(26,92,56,0.18)', borderRadius: 9999, padding: '3px 8px' }}>{doc.origen}</span></td>
-                      <td style={{ padding: '12px 16px' }}><span style={{ fontSize: 12, color, background: `${color}14`, border: `1px solid ${color}33`, borderRadius: 9999, padding: '3px 8px' }}>{doc.tipo}</span></td>
-                      <td style={{ padding: '12px 16px', fontSize: 14, color: INK }}>
-                        <div>{doc.nombre}</div>
-                        {doc.referencia && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>Ref. {doc.referencia}</div>}
-                      </td>
-                      <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED }}>
-                        {doc.visibilidad || 'Todos'}
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        {doc.estadoValidacion ? (
-                          <span style={{ fontSize: 12, fontWeight: 600, color: doc.estadoValidacion === 'Con Diferencias' ? '#b45309' : '#059669', background: doc.estadoValidacion === 'Con Diferencias' ? '#fffbeb' : '#ecfdf5', border: `1px solid ${doc.estadoValidacion === 'Con Diferencias' ? '#fde68a' : '#a7f3d0'}`, borderRadius: 9999, padding: '3px 8px' }}>{doc.estadoValidacion}</span>
-                        ) : (
-                          <span style={{ fontSize: 12, color: MUTED }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED }}>{doc.tamano}</td>
-                      <td style={{ padding: '12px 16px', fontSize: 13, color: MUTED }}>{doc.fecha}</td>
-                      <td style={{ padding: '12px 16px' }}><AppButton size="xs" variant="tertiary">Ver</AppButton></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+                </div>
+                <div style={{ display: 'grid', justifyItems: isMobile ? 'start' : 'end', gap: 8 }}>
+                  <div style={{ fontSize: 12, color: MUTED }}>{doc.tamano} · {doc.fecha}</div>
+                  <AppButton size="sm" variant="tertiary">Ver</AppButton>
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div style={{ textAlign: 'center', color: MUTED, fontSize: 15, padding: '32px 0' }}>Sin anexos visibles para tu perfil.</div>
@@ -2109,26 +2173,16 @@ function DocumentosTabV2({
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: INK }}>
-                  {uploadTab === 'auto' ? 'Auditar y Validar con AI' : 'Subir y Nomenclar Anexo'}
+                  {uploadTab === 'auto' ? 'Auditar anexo con AI' : 'Adjuntar anexo'}
                 </h2>
-                <p style={{ margin: '4px 0 0 0', fontSize: 11, color: MUTED }}>
-                  {uploadTab === 'auto'
-                    ? 'Compara cantidades y precios contra la Orden de Compra para auditar desvíos automáticamente.'
-                    : 'Carga, clasifica e introduce la nomenclatura para tu documento anexo.'}
-                </p>
               </div>
-              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={() => setShowUploadModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowUploadModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
 
             {/* Modal Body / Scrollable Content */}
             <div style={{ padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {uploadTab === 'auto' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, background: 'rgba(5,150,105,0.05)', borderLeft: `3px solid ${GREEN}`, padding: '10px 12px', borderRadius: 4 }}>
-                    <strong>Carga Inteligente:</strong> Subí tu <strong>Factura Comercial</strong> o <strong>Confirmación de Pedido</strong>. El sistema comparará automáticamente cantidades y precios contra los artículos de la Orden de Compra original para auditar desvíos.
-                  </div>
-
-                  {/* Dropzone */}
                   <div
                     onDragOver={event => { event.preventDefault(); setIsDragActive(true); }}
                     onDragEnter={event => { event.preventDefault(); setIsDragActive(true); }}
@@ -2150,7 +2204,7 @@ function DocumentosTabV2({
                         }
                       }
                     }}
-                    style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 12, background: isDragActive ? 'rgba(26,92,56,0.04)' : PARCHMENT, padding: '24px 16px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                    style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 18, background: isDragActive ? 'rgba(26,92,56,0.06)' : PARCHMENT, padding: 14, transition: 'border-color 0.15s, background 0.15s' }}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <input ref={fileInputRef} type="file" onChange={event => {
@@ -2164,20 +2218,30 @@ function DocumentosTabV2({
                         }
                       }
                     }} style={{ display: 'none' }} />
-                    <Upload size={32} style={{ color: selectedFile ? GREEN : '#98a2b3', margin: '0 auto 10px auto' }} />
-                    {selectedFile ? (
-                      <div onClick={e => e.stopPropagation()}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: INK, marginBottom: 4 }}>{selectedFile.name}</div>
-                        <div style={{ fontSize: 11, color: MUTED }}>{Math.max(1, Math.round(selectedFile.size / 1024))} KB · Tipo auto-detectado: <strong>{tipo}</strong></div>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#dc2626', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Eliminar archivo</button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <div style={{ minWidth: 0 }}>
+                        {selectedFile ? (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedFile.name}</div>
+                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>{Math.max(1, Math.round(selectedFile.size / 1024))} KB · Tipo detectado: <strong>{tipo}</strong></div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Sin archivo adjunto</div>
+                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>Arrastrá un PDF, XML o XLSX, o adjuntalo desde tu equipo.</div>
+                          </>
+                        )}
                       </div>
-                    ) : (
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: INK, marginBottom: 4 }}>Arrastrá tu archivo acá o hacé click</div>
-                        <div style={{ fontSize: 11, color: MUTED, marginBottom: 12 }}>Formatos admitidos: PDF, XML, XLSX</div>
-                        <AppButton type="button" size="sm">Seleccionar archivo</AppButton>
-                      </div>
-                    )}
+                      {!selectedFile ? (
+                        <button type="button" onClick={event => { event.stopPropagation(); fileInputRef.current?.click(); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 38, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${GREEN}`, background: CANVAS, color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          <Upload size={14} /> Adjuntar anexo
+                        </button>
+                      ) : (
+                        <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, borderRadius: 9999, border: 'none', background: 'rgba(196,0,26,0.06)', color: '#c4001a', cursor: 'pointer' }}>
+                          ×
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {selectedFile && (
@@ -2209,7 +2273,7 @@ function DocumentosTabV2({
                   )}
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                    <AppButton type="button" variant="ghost" onClick={() => setShowUploadModal(false)}>Cancelar</AppButton>
+                    <AppButton type="button" variant="tertiary" onClick={() => setShowUploadModal(false)}>Cancelar</AppButton>
                     <AppButton
                       type="button"
                       disabled={!selectedFile}
@@ -2225,7 +2289,6 @@ function DocumentosTabV2({
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {/* Dropzone */}
                   <div
                     onDragOver={event => { event.preventDefault(); setIsDragActive(true); }}
                     onDragEnter={event => { event.preventDefault(); setIsDragActive(true); }}
@@ -2240,24 +2303,34 @@ function DocumentosTabV2({
                       const file = event.dataTransfer.files?.[0];
                       if (file) setSelectedFile(file);
                     }}
-                    style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 12, background: isDragActive ? 'rgba(26,92,56,0.04)' : PARCHMENT, padding: '24px 16px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                    style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 18, background: isDragActive ? 'rgba(26,92,56,0.06)' : PARCHMENT, padding: 14, transition: 'border-color 0.15s, background 0.15s' }}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <input ref={fileInputRef} type="file" onChange={event => setSelectedFile(event.target.files?.[0] ?? null)} style={{ display: 'none' }} />
-                    <Upload size={32} style={{ color: selectedFile ? GREEN : '#98a2b3', margin: '0 auto 10px auto' }} />
-                    {selectedFile ? (
-                      <div onClick={e => e.stopPropagation()}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: INK, marginBottom: 4 }}>{selectedFile.name}</div>
-                        <div style={{ fontSize: 11, color: MUTED }}>{Math.max(1, Math.round(selectedFile.size / 1024))} KB</div>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#dc2626', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Eliminar archivo</button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <div style={{ minWidth: 0 }}>
+                        {selectedFile ? (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedFile.name}</div>
+                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>{Math.max(1, Math.round(selectedFile.size / 1024))} KB</div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Sin archivo adjunto</div>
+                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>Arrastrá un archivo o adjuntalo desde tu equipo.</div>
+                          </>
+                        )}
                       </div>
-                    ) : (
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: INK, marginBottom: 4 }}>Arrastrá tu archivo acá o hacé click</div>
-                        <div style={{ fontSize: 11, color: MUTED, marginBottom: 12 }}>Packing List, CRT, Certificados, etc.</div>
-                        <AppButton type="button" size="sm">Seleccionar archivo</AppButton>
-                      </div>
-                    )}
+                      {!selectedFile ? (
+                        <button type="button" onClick={event => { event.stopPropagation(); fileInputRef.current?.click(); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 38, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${GREEN}`, background: CANVAS, color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          <Upload size={14} /> Adjuntar anexo
+                        </button>
+                      ) : (
+                        <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, borderRadius: 9999, border: 'none', background: 'rgba(196,0,26,0.06)', color: '#c4001a', cursor: 'pointer' }}>
+                          ×
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <FormField label="Referencia o Nombre descriptivo">
@@ -2301,8 +2374,8 @@ function DocumentosTabV2({
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                    <AppButton type="button" variant="ghost" onClick={() => setShowUploadModal(false)}>Cancelar</AppButton>
-                    <AppButton type="button" disabled={!selectedFile} onClick={handleAttach}>Guardar y Adjuntar</AppButton>
+                    <AppButton type="button" variant="tertiary" onClick={() => setShowUploadModal(false)}>Cancelar</AppButton>
+                    <AppButton type="button" disabled={!selectedFile} onClick={handleAttach}>Adjuntar anexo</AppButton>
                   </div>
                 </div>
               )}
@@ -2314,7 +2387,7 @@ function DocumentosTabV2({
   );
 }
 
-function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, onUpdateCarpeta }: any) {
+function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, onUpdateCarpeta, onSelectSubcarpeta }: any) {
   const isMobile = useIsMobile();
   const subcarpetas = subs as Subcarpeta[];
   const [selectedSubId, setSelectedSubId] = useState<string>(subcarpetas[0]?.id ?? '');
@@ -2368,6 +2441,69 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
       pagoMaritima: (sub as any).pagoMaritima || '',
     });
   }, [sub.id, sub.despachante, sub.duaNum, sub.canalAduana, sub.despachoTipo, sub.gastosARS, sub.vepUSD, sub.fechaOficializacion, sub.fechaSalidaPuerto, sub.pedidoSAP55, (sub as any).pagoAduana, (sub as any).pagoMaritima]);
+
+  if (onSelectSubcarpeta) {
+    return (
+      <div style={{ padding: isMobile ? 10 : 14, display: 'flex', flexDirection: 'column', background: CANVAS }}>
+        <div style={{ display: 'flex', flexDirection: 'column', background: '#fafefd' }}>
+          {subcarpetas.map((item, index) => {
+            let TransportIcon = Ship;
+            if (item.transporte === 'Terrestre') TransportIcon = Truck;
+            if (item.transporte === 'Aéreo') TransportIcon = Plane;
+            const canalMeta = getCanalInlineStyle(item.canalAduana);
+
+            return (
+              <div key={item.id} style={{ borderBottom: index < subcarpetas.length - 1 ? `1px solid ${GREEN_HAIRLINE_SOFT}` : 'none' }}>
+                <div
+                  onClick={() => onSelectSubcarpeta(item.id, 'aduana')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 16px 12px',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.1s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fafbfa'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(26,92,56,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <TransportIcon size={16} color={GREEN} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: INK }}>{item.numero}</div>
+                      <div style={{ fontSize: 12, color: MUTED }}>{item.transporte} · ETA {item.eta || '—'}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ textTransform: 'uppercase', fontSize: 11, color: MUTED, fontWeight: 500 }}>{item.contenedores || 0} cont.</div>
+                    <NeonBadge estado={item.estado as any} size="xs" />
+                    <ChevronRight size={14} style={{ color: '#98a2b3' }} />
+                  </div>
+                </div>
+                <div style={{ padding: '2px 16px 16px 60px', background: 'transparent' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1.1fr 1fr 1fr 1fr', gap: 18, alignItems: 'start' }}>
+                    <Field label="Despachante" value={getDespachante(item.despachante)?.nombre || '—'} />
+                    <Field label="DUA" value={item.duaNum || '—'} color={item.duaNum ? INK : MUTED} />
+                    <Field label="Pago aduana" value={(item as any).pagoAduana || 'Pendiente'} color={(item as any).pagoAduana ? INK : MUTED} />
+                    <div>
+                      <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Canal</div>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 600, color: canalMeta.color, fontSize: 12.5 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: canalMeta.dot }} />
+                        {canalMeta.label}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   const saveAduana = () => {
     onUpdateSubcarpeta(sub.id, {
@@ -2470,31 +2606,30 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
 
   return (
     <div>
-      <div style={{ minHeight: 64, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', borderBottom: `1px solid ${HAIRLINE}`, background: '#f8faf9' }}>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Embarque Seleccionado</div>
-          <div style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: INK }}>{sub.numero} · {sub.estado}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+      <div style={{ padding: '16px 20px 0', background: CANVAS }}>
+        <TabIntro
+          title="Gestión aduanera"
+          subtitle="Estado aduanero, costos e imputaciones por embarque"
+          actions={<div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
           {subcarpetas.length > 1 && (
             <Select value={selectedSubId} onValueChange={setSelectedSubId}>
-              <SelectTrigger aria-label="Seleccionar embarque" style={{ width: isMobile ? '100%' : 220, minHeight: 38, borderRadius: 10, background: CANVAS }}><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label="Seleccionar embarque" style={{ width: isMobile ? '100%' : 220, minHeight: 38, borderRadius: 10, background: CANVAS }}><SelectValue placeholder="Seleccionar embarque" /></SelectTrigger>
               <SelectContent>{subcarpetas.map(item => <SelectItem key={item.id} value={item.id}>{item.numero} · {item.estado}</SelectItem>)}</SelectContent>
             </Select>
           )}
           
-          <AppButton type="button" size="sm" variant="secondary" icon={<Download size={13} />} onClick={() => handleExportSAP(sub)}>
+          <AppButton type="button" variant="secondary" icon={<Download size={13} />} onClick={() => handleExportSAP(sub)}>
             Exportar a SAP
           </AppButton>
           
-          {editable && <AppButton type="button" size="sm" icon={<Pencil size={13} />} onClick={() => setShowEditModal(true)}>Editar aduana</AppButton>}
-        </div>
+          {editable && <AppButton type="button" icon={<Pencil size={13} />} onClick={() => setShowEditModal(true)}>Editar</AppButton>}
+        </div>}
+        />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', padding: '20px 24px', gap: 24 }}>
         {/* Section 1: Estado Aduanero AFIP */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Estado Aduanero AFIP</div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))', gap: 16 }}>
             <Field label="Despachante Aduanero" value={getDespachante(sub.despachante)?.nombre || '—'} />
             <Field label="N° Declaración Detallada (DUA)" value={sub.duaNum || '—'} color={sub.duaNum ? INK : MUTED} />
@@ -2550,7 +2685,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: d.saldoFavor > 0 ? '#1a7a4a' : MUTED }}>$ {d.saldoFavor.toLocaleString()}</span>
                     {d.saldoFavor > 0 && (
-                      <AppButton size="xs" variant="secondary" onClick={() => openApplySaldo(d)}>
+                      <AppButton size="sm" variant="secondary" onClick={() => openApplySaldo(d)}>
                         Aplicar saldo
                       </AppButton>
                     )}
@@ -2590,7 +2725,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
           <FormField label="Canal aduanero">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {(['Pendiente', 'Verde', 'Rojo'] as const).map(option => (
-                <AppButton key={option} type="button" size="sm" variant={form.canalAduana === option ? (option === 'Rojo' ? 'danger-soft' : option === 'Verde' ? 'success-soft' : 'secondary') : 'secondary'} onClick={() => setForm(prev => ({ ...prev, canalAduana: option }))}>
+                <AppButton key={option} type="button" size="md" variant={form.canalAduana === option ? (option === 'Rojo' ? 'danger-soft' : option === 'Verde' ? 'success-soft' : 'secondary') : 'secondary'} onClick={() => setForm(prev => ({ ...prev, canalAduana: option }))}>
                   {option}
                 </AppButton>
               ))}
@@ -2647,7 +2782,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
                 <Landmark size={18} color={GREEN} />
                 <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: INK }}>Imputación Contable de Saldo a Favor</h2>
               </div>
-              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={() => setShowSaldoModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowSaldoModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
 
             {saldoSuccess ? (
@@ -2733,12 +2868,12 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
                 </div>
 
                 <div style={{ padding: '12px 16px', borderTop: `1px solid ${HAIRLINE}`, display: 'flex', justifyContent: 'flex-end', gap: 8, background: '#fff' }}>
-                  <AppButton type="button" variant="secondary" size="sm" onClick={() => setShowSaldoModal(false)}>
+                  <AppButton type="button" variant="secondary" size="md" onClick={() => setShowSaldoModal(false)}>
                     Cancelar
                   </AppButton>
                   <AppButton
                     type="button"
-                    size="sm"
+                    size="md"
                     disabled={!saldoForm.monto || isNaN(Number(saldoForm.monto)) || Number(saldoForm.monto) <= 0 || Number(saldoForm.monto) > selectedDespachante.saldoFavor}
                     onClick={confirmApplySaldo}
                   >
@@ -2754,7 +2889,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
   );
 }
 
-function CosteoTab({ carpeta, subs = [], editable, onUpdateSubcarpeta, onUpdateCosteo }: any) {
+function CosteoTab({ carpeta, subs = [], editable, hideImportes, onUpdateSubcarpeta, onUpdateCosteo, onSelectSubcarpeta }: any) {
   const isMobile = useIsMobile();
   const subcarpetas = subs as Subcarpeta[];
   const [selectedSubId, setSelectedSubId] = useState<string>(subcarpetas[0]?.id ?? '');
@@ -2821,18 +2956,77 @@ function CosteoTab({ carpeta, subs = [], editable, onUpdateSubcarpeta, onUpdateC
     setShowEditModal(false);
   };
 
+  if (onSelectSubcarpeta) {
+    return (
+      <div style={{ padding: isMobile ? 10 : 14, display: 'flex', flexDirection: 'column', background: CANVAS }}>
+        <div style={{ display: 'flex', flexDirection: 'column', background: '#fafefd' }}>
+          {subcarpetas.map((item, index) => {
+            const itemCoefEst = item.coeficienteEst ?? null;
+            const itemCoefReal = item.coeficienteReal ?? null;
+            const itemDesvPct = itemCoefEst && itemCoefReal ? ((itemCoefReal - itemCoefEst) / itemCoefEst) * 100 : null;
+            const itemAlertColor = itemDesvPct !== null && Math.abs(itemDesvPct) > 5 ? '#b45309' : '#1a7a4a';
+            let TransportIcon = Ship;
+            if (item.transporte === 'Terrestre') TransportIcon = Truck;
+            if (item.transporte === 'Aéreo') TransportIcon = Plane;
+
+            return (
+              <div key={item.id} style={{ borderBottom: index < subcarpetas.length - 1 ? `1px solid ${GREEN_HAIRLINE_SOFT}` : 'none' }}>
+                <div
+                  onClick={() => onSelectSubcarpeta(item.id, 'costeo')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 16px 12px',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.1s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fafbfa'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(26,92,56,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <TransportIcon size={16} color={GREEN} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: INK }}>{item.numero}</div>
+                      <div style={{ fontSize: 12, color: MUTED }}>{item.transporte} · ETA {item.eta || '—'}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ textTransform: 'uppercase', fontSize: 11, color: MUTED, fontWeight: 500 }}>{item.contenedores || 0} cont.</div>
+                    <NeonBadge estado={item.estado as any} size="xs" />
+                    <ChevronRight size={14} style={{ color: '#98a2b3' }} />
+                  </div>
+                </div>
+                <div style={{ padding: '2px 16px 16px 60px', background: 'transparent' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))', gap: 18, alignItems: 'start' }}>
+                    <Field label="Coeficiente estimado" value={itemCoefEst !== null ? itemCoefEst.toFixed(2) : '—'} color={itemCoefEst !== null ? INK : MUTED} />
+                    <Field label="Coeficiente real" value={itemCoefReal !== null ? itemCoefReal.toFixed(2) : '—'} color={itemCoefReal !== null ? INK : MUTED} />
+                    <Field label="Importe embarque" value={!hideImportes ? formatMoney(item.importeTotal, carpeta.moneda) : 'Oculto'} color={!hideImportes ? INK : MUTED} />
+                    <Field label="Desvío" value={itemDesvPct !== null ? `${itemDesvPct > 0 ? '+' : ''}${itemDesvPct.toFixed(1)}%` : 'Pendiente'} color={itemDesvPct !== null ? itemAlertColor : MUTED} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-    <div style={{ minHeight: 64, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', borderBottom: `1px solid ${HAIRLINE}`, background: '#f8faf9' }}>
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Embarque Seleccionado</div>
-        <div style={{ marginTop: 2, fontSize: 14, fontWeight: 700, color: INK }}>{sub.numero} · {sub.estado}</div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+    <div style={{ padding: '16px 20px 0', background: CANVAS }}>
+      <TabIntro
+        title="Costeo de importación"
+        subtitle="Coeficientes, costos locales y observaciones por embarque"
+        actions={<div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
         {subcarpetas.length > 1 && (
           <Select value={selectedSubId} onValueChange={setSelectedSubId}>
             <SelectTrigger aria-label="Seleccionar embarque" style={{ width: isMobile ? '100%' : 220, minHeight: 38, borderRadius: 10, background: CANVAS }}>
-              <SelectValue />
+              <SelectValue placeholder="Seleccionar embarque" />
             </SelectTrigger>
             <SelectContent>
               {subcarpetas.map(item => <SelectItem key={item.id} value={item.id}>{item.numero} · {item.estado}</SelectItem>)}
@@ -2840,17 +3034,17 @@ function CosteoTab({ carpeta, subs = [], editable, onUpdateSubcarpeta, onUpdateC
           </Select>
         )}
         {editable && (
-          <AppButton type="button" size="sm" icon={<Pencil size={13} />} onClick={() => setShowEditModal(true)}>
-            Editar costeo
+          <AppButton type="button" icon={<Pencil size={13} />} onClick={() => setShowEditModal(true)}>
+            Editar
           </AppButton>
         )}
-      </div>
+      </div>}
+      />
     </div>
 
     <div style={{ display: 'flex', flexDirection: 'column', padding: '20px 24px', gap: 24 }}>
       {/* Section 1: Coeficientes de Costo */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Coeficientes de Costo</div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
           <Field label="Coeficiente Estimado" value={coefEst.toFixed(2)} />
           <Field label="Coeficiente Real" value={coefReal ? coefReal.toFixed(2) : '—'} color={coefReal ? alertColor : MUTED} />
@@ -2871,12 +3065,6 @@ function CosteoTab({ carpeta, subs = [], editable, onUpdateSubcarpeta, onUpdateC
             </div>
           )}
         </div>
-        {desvPct !== null && Math.abs(desvPct) > 5 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b45309', fontSize: 13, fontWeight: 500, marginTop: 4 }}>
-            <AlertTriangle size={15} />
-            <span>Alerta: El desvío de costo real supera el umbral de tolerancia del 5%</span>
-          </div>
-        )}
       </div>
 
       {/* Section 2: Desglose de Costos Locales */}
@@ -2955,6 +3143,9 @@ function PagosTab({
 
   // Read the payments list from global folder state if present, or initialize with defaults
   const pagos = (carpeta as any).pagos || defaultPagos;
+  const nextPendingPago = pagos
+    .filter((p: any) => p.estado === 'Pendiente')
+    .sort((a: any, b: any) => String(a.vencimiento).localeCompare(String(b.vencimiento)))[0] ?? null;
 
   const handleUpdatePagosList = (newList: any[]) => {
     if (onUpdatePagos) {
@@ -3035,56 +3226,49 @@ function PagosTab({
   }, {} as Record<string, { paid: number; pending: number }>);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', padding: '20px 24px', gap: 24 }}>
-      {/* Section 1: Estado de Fondos de Importaciones */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Estado de Fondos de Importaciones</div>
-        <div style={{
-          padding: '14px 16px',
-          background: fondosDisponibles ? 'rgba(26,122,74,0.06)' : 'rgba(180,35,24,0.06)',
-          border: `1px solid ${fondosDisponibles ? 'rgba(26,122,74,0.2)' : 'rgba(180,35,24,0.2)'}`,
-          borderRadius: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: fondosDisponibles ? 'rgba(26,122,74,0.12)' : 'rgba(180,35,24,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {fondosDisponibles
-              ? <CheckCircle size={18} color="#1a7a4a" />
-              : <AlertTriangle size={18} color="#b42318" />
-            }
-          </div>
+    <div style={{ display: 'grid', gap: 16, padding: 16 }}>
+      <TabIntro
+        title="Pagos de la carpeta"
+        subtitle="Fondos proyectados, compromisos y registro de pagos"
+        actions={editable ? (
+          <AppButton
+            type="button"
+            size="md"
+            onClick={() => setShowNewPaymentModal(true)}
+            icon={<Plus size={14} />}
+          >
+            Registrar pago
+          </AppButton>
+        ) : undefined}
+      />
+      <div style={{ display: 'grid', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', columnGap: 24, rowGap: 18, alignItems: 'start' }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: fondosDisponibles ? '#1a7a4a' : '#b42318' }}>
-              {fondosDisponibles ? 'Hay fondos proyectados disponibles' : 'Falta de cobertura cambiaria'}
-            </div>
-            <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
-              {fondosDisponibles
-                ? 'Los pagos planificados están cubiertos por las proyecciones financieras vigentes en Tesorería.'
-                : 'Se requiere intervención del sector Tesorería para asegurar cobertura cambiaria de próximos giros.'}
-            </div>
+            <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Estado de fondos</div>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: fondosDisponibles ? '#1a7a4a' : '#b42318' }}>
+              {fondosDisponibles ? <CheckCircle size={15} /> : <AlertTriangle size={15} />}
+              {fondosDisponibles ? 'Con cobertura disponible' : 'Cobertura pendiente'}
+            </span>
           </div>
+          <Field label="Condición de pago" value={carpeta.condPago || 'Giro 30 días'} />
+          <Field label="Próximo vencimiento" value={nextPendingPago ? `${nextPendingPago.vencimiento} · ${nextPendingPago.concepto}` : 'Sin pagos pendientes'} color={nextPendingPago ? INK : MUTED} />
         </div>
       </div>
 
       {/* Section 2: Resumen de Compromisos por Divisa */}
-      <div style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 16, display: 'grid', gap: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Resumen de Compromisos por Divisa</div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', columnGap: 24, rowGap: 18, alignItems: 'start' }}>
           {currencies.map(curr => {
             const { paid, pending } = totalsByCurrency[curr];
             const hasActivity = paid > 0 || pending > 0;
             if (!hasActivity) return null;
             return (
-              <div key={curr} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: GREEN, borderBottom: `1px solid ${HAIRLINE}`, paddingBottom: 4 }}>Divisa: {curr}</div>
+              <div key={curr} style={{ display: 'grid', gap: 12 }}>
+                <Field label="Divisa" value={curr} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <Field label="Pagado" value={`${curr} ${paid.toLocaleString()}`} color={paid > 0 ? '#1a7a4a' : MUTED} />
-                  <Field label="Pendiente" value={`${curr} ${pending.toLocaleString()}`} color={pending > 0 ? '#b45309' : MUTED} />
+                  <Field label="Pagado" value={`${curr} ${paid.toLocaleString()}`} color={INK} />
+                  <Field label="Pendiente" value={`${curr} ${pending.toLocaleString()}`} color={pending > 0 ? INK : MUTED} />
                 </div>
               </div>
             );
@@ -3093,24 +3277,8 @@ function PagosTab({
       </div>
 
       {/* Section 3: Detalle y Registro de Pagos */}
-      <div style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 16, display: 'grid', gap: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Detalle y Registro de Pagos</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-          <div style={{ fontSize: 13, color: MUTED }}>
-            Condición de pago pactada: <strong>{carpeta.condPago || 'Giro 30 días'}</strong>
-          </div>
-          {editable && (
-            <AppButton
-              type="button"
-              size="sm"
-              onClick={() => setShowNewPaymentModal(true)}
-              icon={<Plus size={14} />}
-            >
-              Registrar Nuevo Pago
-            </AppButton>
-          )}
-        </div>
-
         {pagos.length === 0 ? (
           <div style={{ textAlign: 'center', color: MUTED, fontSize: 15, padding: '32px 0' }}>Sin registros de pagos en esta carpeta.</div>
         ) : isMobile ? (
@@ -3136,7 +3304,7 @@ function PagosTab({
                 )}
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   {editable && pago.estado === 'Pendiente' && (
-                    <AppButton type="button" size="xs" onClick={() => openPaymentModal(pago.id)}>
+                    <AppButton type="button" size="sm" onClick={() => openPaymentModal(pago.id)}>
                       Confirmar pago
                     </AppButton>
                   )}
@@ -3144,7 +3312,7 @@ function PagosTab({
                     <AppButton
                       type="button"
                       variant="danger-soft"
-                      size="xs"
+                      size="sm"
                       onClick={() => handleDeletePayment(pago.id)}
                       icon={<Trash2 size={13} />}
                       style={{ width: 28, height: 28, padding: 0, minHeight: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -3187,7 +3355,7 @@ function PagosTab({
                     <td style={{ padding: '12px 14px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                         {editable && pago.estado === 'Pendiente' && (
-                          <AppButton type="button" size="xs" onClick={() => openPaymentModal(pago.id)}>
+                          <AppButton type="button" size="sm" onClick={() => openPaymentModal(pago.id)}>
                             Confirmar pago
                           </AppButton>
                         )}
@@ -3195,7 +3363,7 @@ function PagosTab({
                           <AppButton
                             type="button"
                             variant="danger-soft"
-                            size="xs"
+                            size="sm"
                             onClick={() => handleDeletePayment(pago.id)}
                             icon={<Trash2 size={13} />}
                             style={{ width: 28, height: 28, padding: 0, minHeight: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}

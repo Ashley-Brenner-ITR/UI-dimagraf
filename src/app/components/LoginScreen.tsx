@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import fondoBackground from '../../styles/fondo.svg';
-import dimagrafLogo from '../../imports/imagen__3_.png';
+import dimagrafLogo from '../../images/image.png';
 import { AppButton } from './AppButton';
 import { color } from './theme';
 
-const { ink: INK, muted: MUTED, hairline: HAIRLINE, surface: CANVAS, brand: GREEN, mintWash: MINT_WASH } = color;
+const { ink: INK, muted: MUTED, hairline: HAIRLINE, controlBorder: CONTROL_BORDER, surface: CANVAS, brand: GREEN, mintWash: MINT_WASH } = color;
 
 interface LoginScreenProps {
   error?: string;
@@ -28,6 +28,8 @@ export function LoginScreen({ error, onLogin }: LoginScreenProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [usernameFocused, setUsernameFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -85,12 +87,32 @@ export function LoginScreen({ error, onLogin }: LoginScreenProps) {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src={dimagrafLogo} alt="Dimagraf" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: MUTED, fontSize: 12, fontWeight: 600, letterSpacing: '0.01em' }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: GREEN, display: 'inline-block' }} />
-            Comex/Importaciones
-          </span>
         </div>
       </header>
+      {error && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            top: 84,
+            right: 24,
+            zIndex: 4,
+            maxWidth: 320,
+            padding: '12px 14px',
+            borderRadius: 14,
+            border: '1px solid rgba(196,0,26,0.18)',
+            background: 'rgba(255,255,255,0.96)',
+            boxShadow: '0 12px 24px rgba(16,24,40,0.12)',
+            color: '#9f1239',
+            fontSize: 13,
+            lineHeight: 1.4,
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          {error}
+        </div>
+      )}
       <div style={{
         position: 'relative',
         zIndex: 1,
@@ -113,26 +135,32 @@ export function LoginScreen({ error, onLogin }: LoginScreenProps) {
               <label style={{ display: 'block', marginBottom: 6, color: MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
                 USUARIO
               </label>
-              <input
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                placeholder="Ingresá tu usuario"
-                autoFocus
-                style={{ width: '100%', padding: '13px 15px', borderRadius: 14, border: `1px solid ${HAIRLINE}`, background: CANVAS, color: INK, fontSize: 14, outline: 'none', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}
-              />
+              <div style={{ width: '100%', borderRadius: 14, border: 'none', background: CANVAS, overflow: 'hidden', boxShadow: `inset 0 0 0 1px ${usernameFocused ? GREEN : CONTROL_BORDER}`, transition: 'box-shadow .18s ease' }}>
+                <input
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  onFocus={() => setUsernameFocused(true)}
+                  onBlur={() => setUsernameFocused(false)}
+                  placeholder="Ingresá tu usuario"
+                  autoFocus
+                  style={{ width: '100%', padding: '13px 15px', borderRadius: 14, border: 'none', background: 'transparent', color: INK, fontSize: 14, outline: 'none', boxShadow: 'none', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }}
+                />
+              </div>
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: 6, color: MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
                 CONTRASEÑA
               </label>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', width: '100%', borderRadius: 14, border: 'none', background: CANVAS, overflow: 'hidden', boxShadow: `inset 0 0 0 1px ${passwordFocused ? GREEN : CONTROL_BORDER}`, transition: 'box-shadow .18s ease' }}>
                 <input
                   value={password}
                   onChange={e => setPassword(e.target.value)}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Ingresá tu contraseña"
-                  style={{ width: '100%', padding: '13px 46px 13px 15px', borderRadius: 14, border: `1px solid ${HAIRLINE}`, background: CANVAS, color: INK, fontSize: 14, outline: 'none', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}
+                  style={{ width: '100%', padding: '13px 46px 13px 15px', borderRadius: 14, border: 'none', background: 'transparent', color: INK, fontSize: 14, outline: 'none', boxShadow: 'none', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }}
                 />
                 <button
                   type="button"
@@ -179,14 +207,7 @@ export function LoginScreen({ error, onLogin }: LoginScreenProps) {
                 </button>
               </div>
             </div>
-
-            {error && (
-              <div style={{ padding: '12px 14px', borderRadius: 14, border: '1px solid rgba(196,0,26,0.2)', background: 'rgba(196,0,26,0.05)', color: '#9f1239', fontSize: 13 }}>
-                {error}
-              </div>
-            )}
-
-            <AppButton type="submit" style={{ width: '100%', marginTop: 4, padding: '14px 18px', borderRadius: 14, fontSize: 14, fontWeight: 700, boxShadow: '0 8px 20px rgba(26,92,56,0.16)' }}>
+            <AppButton type="submit" size="xl" style={{ width: '100%', marginTop: 4 }}>
               Ingresar
             </AppButton>
           </form>

@@ -73,7 +73,7 @@ export function WarehouseReception() {
       {view !== 'agenda' && (
         <AppButton
           variant="tertiary"
-          size="sm"
+          size="md"
           onClick={() => { setView('agenda'); setSelectedRec(null); setShowIncident(false); }}
           icon={<ArrowLeft size={14} />}
           style={{ padding: '5px 0', marginBottom: 20, fontWeight: 400 }}
@@ -95,7 +95,7 @@ export function WarehouseReception() {
         </div>
         {view === 'agenda' && (
           <div style={pageActions}>
-            <AppButton size="sm" icon={<Download size={13} />}>Exportar</AppButton>
+            <AppButton size="md" icon={<Download size={13} />}>Exportar</AppButton>
           </div>
         )}
       </div>
@@ -415,7 +415,7 @@ export function WarehouseReception() {
             {/* Modal header */}
             <div style={modalHeader}>
               <h2 style={{ fontSize: 18, fontWeight: 600, color: INK, margin: 0, letterSpacing: '-0.374px' }}>Registro de Incidencia</h2>
-              <AppButton aria-label="Cerrar" title="Cerrar" variant="ghost" size="xs" onClick={() => setShowIncident(false)} icon={<X size={15} style={{ color: MUTED }} />} style={{ borderRadius: 9999 }} />
+              <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowIncident(false)} icon={<X size={15} style={{ color: MUTED }} />} style={{ borderRadius: 9999 }} />
             </div>
 
             <div style={{ ...modalBody, padding: '20px 24px' }}>

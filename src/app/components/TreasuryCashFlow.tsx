@@ -120,7 +120,7 @@ export function TreasuryCashFlow() {
       <WelcomeBanner
         title="Flujo de caja"
         subtitle="Proyección de pagos de importaciones"
-        actions={<AppButton size="sm" icon={<Download size={13} />}>Exportar</AppButton>}
+        actions={<AppButton size="md" icon={<Download size={13} />}>Exportar</AppButton>}
       />
 
       {/* ── KPI strip ────────────────────────────────────────── */}

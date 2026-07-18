@@ -1,11 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Ship, FileText, DollarSign, Package, AlertTriangle, CheckCircle } from 'lucide-react';
 import type { Subcarpeta, Carpeta } from './mockData';
 import { getDespachante } from './mockData';
 import { NeonBadge, CanalBadge } from './NeonBadge';
 import { useIsMobile } from './ui/use-mobile';
-import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AppButton } from './AppButton';
 import { InfoField as Field } from './InfoField';
 import { SectionCard as Card } from './SectionCard';
@@ -35,12 +33,17 @@ interface Props {
   onAddDocumento?: (doc: any) => void;
   readonly?: boolean;
   hideImportes?: boolean;
+  initialTab?: SubTab;
 }
 
-export function SubcarpetaDetail({ subcarpeta, carpeta, onBack, onAddDocumento, readonly = false, hideImportes = false }: Props) {
-  const [tab, setTab] = useState<SubTab>(() => getInitialSubTab(subcarpeta, hideImportes));
+export function SubcarpetaDetail({ subcarpeta, carpeta, onBack, onAddDocumento, readonly = false, hideImportes = false, initialTab }: Props) {
+  const [tab, setTab] = useState<SubTab>(() => initialTab ?? getInitialSubTab(subcarpeta, hideImportes));
   const isMobile = useIsMobile();
   const despachante = getDespachante(subcarpeta.despachante || '');
+
+  useEffect(() => {
+    setTab(initialTab ?? getInitialSubTab(subcarpeta, hideImportes));
+  }, [initialTab, subcarpeta.id, hideImportes]);
 
   const allTabs: { id: SubTab; label: string }[] = [
     { id: 'transito',   label: 'Tránsito' },
@@ -54,7 +57,7 @@ export function SubcarpetaDetail({ subcarpeta, carpeta, onBack, onAddDocumento, 
   return (
     <div style={{ maxWidth: 1380, margin: '0 auto', padding: 'clamp(20px, 4vw, 48px) clamp(14px, 3vw, 32px)' }}>
       {/* Back */}
-      <AppButton variant="tertiary" size="sm" onClick={onBack} icon={<ArrowLeft size={14} />} style={{ padding: '5px 0', marginBottom: 16, fontWeight: 400 }}>
+      <AppButton variant="tertiary" size="md" onClick={onBack} icon={<ArrowLeft size={14} />} style={{ padding: '5px 0', marginBottom: 16, fontWeight: 400 }}>
         Volver a {carpeta.numero}
       </AppButton>
 
@@ -97,35 +100,58 @@ export function SubcarpetaDetail({ subcarpeta, carpeta, onBack, onAddDocumento, 
         </div>
       ))}
 
-      {/* Tabs */}
-      <div style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 16, overflow: 'hidden', background: CANVAS }}>
-        {isMobile ? (
-          <div style={{ padding: 12, borderBottom: `1px solid ${HAIRLINE}`, background: '#fafbfd' }}>
-            <Select value={tab} onValueChange={v => setTab(v as SubTab)}>
-              <SelectTrigger style={{ width: '100%', height: 40, borderRadius: 10, border: `1px solid ${HAIRLINE}`, background: CANVAS }}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {tabs.map(t => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : (
-          <Tabs value={tab} onValueChange={v => setTab(v as SubTab)}>
-            <TabsList style={{ display: 'flex', gap: 0, width: '100%', minHeight: 46, height: 46, justifyContent: 'flex-start', padding: '0 10px', borderBottom: `1px solid ${HAIRLINE}`, borderRadius: 0, background: '#fafbfd', flexWrap: 'nowrap', overflowX: 'auto' }}>
-              {tabs.map(t => (
-                <TabsTrigger key={t.id} value={t.id} style={{
-                  flex: 'none', padding: '0 14px', fontSize: 13, fontWeight: tab === t.id ? 600 : 500,
-                  color: tab === t.id ? GREEN : MUTED, background: 'transparent', border: 'none', borderRadius: 0,
-                  borderBottom: tab === t.id ? `2px solid ${GREEN}` : '2px solid transparent',
-                  boxShadow: 'none', height: 46, cursor: 'pointer', whiteSpace: 'nowrap', outline: 'none',
-                }}>{t.label}</TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        )}
-
-        <div style={{ background: CANVAS }}>
+      <div style={{
+        background: CANVAS,
+        border: `1px solid ${HAIRLINE}`,
+        borderRadius: 18,
+        overflow: 'hidden',
+        boxShadow: '0 4px 18px rgba(16,24,40,0.03)',
+      }}>
+        {/* Tabs */}
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          borderBottom: `1px solid ${HAIRLINE}`,
+          background: '#fbfcfb',
+          padding: isMobile ? '0 10px' : '0 14px',
+        }}>
+          {tabs.map(t => {
+            const active = tab === t.id;
+            return (
+              <button
+                type="button"
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  flex: 'none',
+                  minHeight: 42,
+                  padding: isMobile ? '10px 12px 9px' : '10px 14px 9px',
+                  fontSize: 12.5,
+                  fontWeight: active ? 600 : 500,
+                  color: active ? GREEN : MUTED,
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: active ? `2px solid ${GREEN}` : '2px solid transparent',
+                  borderRadius: 0,
+                  marginBottom: -1,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease',
+                  outline: 'none',
+                }}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+        <div>
           {tab === 'transito' && <TransitoSectionFlat sub={subcarpeta} />}
           {tab === 'aduana' && <AduanaSection sub={subcarpeta} despachante={despachante} />}
           {tab === 'costeo' && <CosteoSection sub={subcarpeta} carpeta={carpeta} />}
@@ -358,6 +384,7 @@ function DocumentosSectionV2({ sub, readonly, onAddDocumento }: { sub: Subcarpet
   const isMobile = useIsMobile();
   const [referencia, setReferencia] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [tipo, setTipo] = useState('Factura Comercial');
@@ -380,52 +407,75 @@ function DocumentosSectionV2({ sub, readonly, onAddDocumento }: { sub: Subcarpet
     });
     setReferencia('');
     setSelectedFile(null);
+    setIsComposerOpen(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
     <div style={{ padding: 16, display: 'grid', gap: 12 }}>
       {!readonly && (
-        <div style={{ display: 'grid', gap: 12, padding: 12, border: `1px dashed ${HAIRLINE}`, borderRadius: 12, background: '#fafbfd' }}>
-          <div
-            onDragOver={event => { event.preventDefault(); setIsDragActive(true); }}
-            onDragEnter={event => { event.preventDefault(); setIsDragActive(true); }}
-            onDragLeave={event => {
-              event.preventDefault();
-              const nextTarget = event.relatedTarget as Node | null;
-              if (!nextTarget || !event.currentTarget.contains(nextTarget)) setIsDragActive(false);
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <AppButton
+            type="button"
+            variant={isComposerOpen ? 'tertiary' : 'secondary'}
+            size="md"
+            onClick={() => {
+              setIsComposerOpen(open => {
+                const next = !open;
+                if (!next) {
+                  setSelectedFile(null);
+                  setReferencia('');
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }
+                return next;
+              });
             }}
-            onDrop={event => {
-              event.preventDefault();
-              setIsDragActive(false);
-              const file = event.dataTransfer.files?.[0];
-              if (file) setSelectedFile(file);
-            }}
-            style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 18, background: isDragActive ? 'rgba(26,92,56,0.06)' : PARCHMENT, padding: 14, transition: 'border-color 0.15s, background 0.15s' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ minWidth: 0 }}>
-                {selectedFile ? (
-                  <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedFile.name}</div>
+            {isComposerOpen ? 'Cancelar carga' : 'Adjuntar anexo'}
+          </AppButton>
+        </div>
+      )}
+      <div style={{ overflow: 'hidden', background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 12 }}>
+        {!readonly && isComposerOpen && (
+          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${HAIRLINE}`, background: '#fcfcfd', display: 'grid', gap: 12 }}>
+            <div
+              onDragOver={event => { event.preventDefault(); setIsDragActive(true); }}
+              onDragEnter={event => { event.preventDefault(); setIsDragActive(true); }}
+              onDragLeave={event => {
+                event.preventDefault();
+                const nextTarget = event.relatedTarget as Node | null;
+                if (!nextTarget || !event.currentTarget.contains(nextTarget)) setIsDragActive(false);
+              }}
+              onDrop={event => {
+                event.preventDefault();
+                setIsDragActive(false);
+                const file = event.dataTransfer.files?.[0];
+                if (file) setSelectedFile(file);
+              }}
+              style={{ border: `1px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 14, background: isDragActive ? 'rgba(26,92,56,0.06)' : CANVAS, padding: 14, transition: 'border-color 0.15s, background 0.15s' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0 }}>
+                  {selectedFile ? (
+                    <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedFile.name}</div>
+                  ) : (
+                    <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Sin archivo adjunto</div>
+                  )}
+                  <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>Arrastrá un archivo o adjuntalo desde tu equipo.</div>
+                </div>
+                {!selectedFile ? (
+                  <button type="button" onClick={() => fileInputRef.current?.click()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${GREEN}`, background: CANVAS, color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    Seleccionar archivo
+                  </button>
                 ) : (
-                  <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Sin archivo adjunto</div>
+                  <button type="button" onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, borderRadius: 9999, border: 'none', background: 'rgba(196,0,26,0.06)', color: '#c4001a', cursor: 'pointer' }}>
+                    ×
+                  </button>
                 )}
-                {!selectedFile && <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>Arrastrá un archivo o adjuntalo desde tu equipo.</div>}
               </div>
-              {!selectedFile ? (
-                <button type="button" onClick={() => fileInputRef.current?.click()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 38, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${GREEN}`, background: CANVAS, color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                  Adjuntar archivo
-                </button>
-              ) : (
-                <button type="button" onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, borderRadius: 9999, border: 'none', background: 'rgba(196,0,26,0.06)', color: '#c4001a', cursor: 'pointer' }}>
-                  ×
-                </button>
-              )}
+              <input ref={fileInputRef} type="file" onChange={event => setSelectedFile(event.target.files?.[0] ?? null)} style={{ display: 'none' }} />
             </div>
-            <input ref={fileInputRef} type="file" onChange={event => setSelectedFile(event.target.files?.[0] ?? null)} style={{ display: 'none' }} />
-          </div>
-          {selectedFile && (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(180px, 1fr) minmax(160px, 0.5fr) auto', gap: 10, alignItems: 'end', paddingTop: 2 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(180px, 1fr) minmax(160px, 0.5fr) auto', gap: 10, alignItems: 'end' }}>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 6, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Referencia</label>
                 <input value={referencia} onChange={event => setReferencia(event.target.value)} placeholder="Nombre de referencia" style={{ width: '100%', minHeight: 38, padding: '9px 12px', fontSize: 13, color: INK, background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
@@ -441,34 +491,37 @@ function DocumentosSectionV2({ sub, readonly, onAddDocumento }: { sub: Subcarpet
                   </SelectContent>
                 </Select>
               </div>
-              <AppButton type="button" size="sm" disabled={!canAttach} onClick={handleAttach} style={{ minHeight: 38 }}>Adjuntar</AppButton>
+              <AppButton type="button" size="md" disabled={!canAttach} onClick={handleAttach} style={{ minHeight: 38 }}>Adjuntar anexo</AppButton>
             </div>
-          )}
-        </div>
-      )}
-      <div style={{ fontSize: 12, color: MUTED }}>Todo anexo cargado acá queda asociado a <strong>{sub.numero}</strong> y en la carpeta madre aparece con ese tag.</div>
-      {sub.documentos.length === 0 ? (
-        <div style={{ padding: 32, textAlign: 'center', color: MUTED, fontSize: 13, border: `1px solid ${HAIRLINE}`, borderRadius: 12 }}>Sin anexos cargados para este embarque.</div>
-      ) : (
-        <div style={{ display: 'grid', gap: 6 }}>
-          {sub.documentos.map(doc => {
-            const color = tipoColors[doc.tipo] || MUTED;
+          </div>
+        )}
+        {sub.documentos.length === 0 ? (
+          <div style={{ padding: 32, textAlign: 'center', color: MUTED, fontSize: 13 }}>Sin anexos cargados para este embarque.</div>
+        ) : (
+          sub.documentos.map((doc, index) => {
+            const itemColor = tipoColors[doc.tipo] || MUTED;
             return (
-              <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: PARCHMENT, border: `1px solid ${HAIRLINE}` }}>
-                <FileText size={16} color={MUTED} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nombre}</span>
-                    <span style={{ fontSize: 11, color, background: `${color}14`, border: `1px solid ${color}33`, borderRadius: 9999, padding: '2px 7px' }}>{doc.tipo}</span>
+              <div key={doc.id} style={{ padding: isMobile ? '14px 16px' : '14px 18px', borderBottom: index < sub.documentos.length - 1 ? `1px solid ${HAIRLINE}` : 'none', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.35fr) auto', gap: isMobile ? 10 : 16, alignItems: 'center' }}>
+                <div style={{ minWidth: 0, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <FileText size={16} color={MUTED} style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nombre}</div>
+                    {doc.referencia && <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>Ref. {doc.referencia}</div>}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                      <span style={{ fontSize: 11, color: itemColor, background: `${itemColor}14`, border: `1px solid ${itemColor}33`, borderRadius: 9999, padding: '3px 8px' }}>{doc.tipo}</span>
+                      <span style={{ fontSize: 11, color: GREEN, background: 'rgba(26,92,56,0.08)', border: '1px solid rgba(26,92,56,0.18)', borderRadius: 9999, padding: '3px 8px' }}>{sub.numero}</span>
+                    </div>
                   </div>
-                  {doc.referencia && <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>Ref. {doc.referencia}</div>}
-                  <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{doc.tamano} · {doc.fecha}</div>
+                </div>
+                <div style={{ display: 'grid', justifyItems: isMobile ? 'start' : 'end', gap: 8 }}>
+                  <div style={{ fontSize: 12, color: MUTED }}>{doc.tamano} · {doc.fecha}</div>
+                  <AppButton size="sm" variant="tertiary">Ver</AppButton>
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 }

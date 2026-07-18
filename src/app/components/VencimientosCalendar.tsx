@@ -264,16 +264,18 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
           <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: INK, letterSpacing: '-0.02em' }}>Calendario de vencimientos</h3>
           <p style={{ margin: '4px 0 0', fontSize: 12, color: MUTED }}>Seguimiento de obligaciones y fechas de pago</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: 3, borderRadius: 11, border: `1px solid ${HAIRLINE}`, background: PARCHMENT, width: isMobile ? '100%' : 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
           <button
             onClick={() => setViewMode('calendar')}
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '6px 12px', borderRadius: radius.sm,
-              border: 'none',
+              minHeight: 30,
+              padding: '5px 10px', borderRadius: 9999,
+              border: viewMode === 'calendar' ? `1px solid ${HAIRLINE}` : '1px solid transparent',
               background: viewMode === 'calendar' ? CANVAS : 'transparent',
               color: viewMode === 'calendar' ? GREEN : MUTED,
-              fontSize: 12, fontWeight: 600, cursor: 'pointer', flex: isMobile ? 1 : undefined, justifyContent: 'center',
+              fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flex: isMobile ? 1 : undefined, justifyContent: 'center',
+              boxShadow: viewMode === 'calendar' ? '0 1px 2px rgba(16,24,40,0.04)' : 'none',
             }}
           >
             <CalendarDays size={13} /> Calendario
@@ -282,11 +284,13 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
             onClick={() => setViewMode('list')}
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '6px 12px', borderRadius: radius.sm,
-              border: 'none',
+              minHeight: 30,
+              padding: '5px 10px', borderRadius: 9999,
+              border: viewMode === 'list' ? `1px solid ${HAIRLINE}` : '1px solid transparent',
               background: viewMode === 'list' ? CANVAS : 'transparent',
               color: viewMode === 'list' ? GREEN : MUTED,
-              fontSize: 12, fontWeight: 600, cursor: 'pointer', flex: isMobile ? 1 : undefined, justifyContent: 'center',
+              fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flex: isMobile ? 1 : undefined, justifyContent: 'center',
+              boxShadow: viewMode === 'list' ? '0 1px 2px rgba(16,24,40,0.04)' : 'none',
             }}
           >
             <List size={13} /> Lista
@@ -303,7 +307,7 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
             <label style={{ display: 'grid', gap: 6, minWidth: 0, width: isMobile ? '100%' : undefined, flex: isMobile ? '1 1 100%' : '1 1 190px' }}><span style={{ paddingLeft: 2, fontSize: 11, fontWeight: 600, color: MUTED }}>Estado del vencimiento</span><Select value={statusFilter} onValueChange={value => setStatusFilter(value as typeof statusFilter)}><SelectTrigger className="h-10 w-full rounded-[10px] border-[#eaecf0] bg-white px-3 text-xs text-[#1d1d1f] shadow-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl border-[#eaecf0] bg-white p-1 shadow-xl"><SelectItem value="Todos">Todos los estados</SelectItem><SelectItem value="Pendiente de Pago">Pendiente de pago</SelectItem><SelectItem value="Transferencia Emitida">Transferencia emitida</SelectItem></SelectContent></Select></label>
             <label style={{ display: 'grid', gap: 6, minWidth: 0, width: isMobile ? '100%' : undefined, flex: isMobile ? '1 1 100%' : '1 1 220px' }}><span style={{ paddingLeft: 2, fontSize: 11, fontWeight: 600, color: MUTED }}>Concepto de pago</span><Select value={typeFilter} onValueChange={setTypeFilter}><SelectTrigger className="h-10 w-full rounded-[10px] border-[#eaecf0] bg-white px-3 text-xs text-[#1d1d1f] shadow-none"><SelectValue /></SelectTrigger><SelectContent className="max-h-72 rounded-xl border-[#eaecf0] bg-white p-1 shadow-xl">{types.map(type => <SelectItem key={type} value={type}>{type === 'Todos' ? 'Todos los conceptos' : type}</SelectItem>)}</SelectContent></Select></label>
-            {(search || statusFilter !== 'Todos' || typeFilter !== 'Todos') && <button onClick={() => { setSearch(''); setStatusFilter('Todos'); setTypeFilter('Todos'); }} style={{ minHeight: 38, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${HAIRLINE}`, background: CANVAS, color: GREEN, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Limpiar</button>}
+            {(search || statusFilter !== 'Todos' || typeFilter !== 'Todos') && <button onClick={() => { setSearch(''); setStatusFilter('Todos'); setTypeFilter('Todos'); }} style={{ minHeight: 40, padding: '9px 12px', borderRadius: 9999, border: `1px solid ${HAIRLINE}`, background: CANVAS, color: GREEN, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Limpiar</button>}
           </div>
         )}
       </div>

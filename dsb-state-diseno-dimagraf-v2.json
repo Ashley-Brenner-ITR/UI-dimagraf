@@ -1,0 +1,92 @@
+{
+  "runId": "dimagraf-flows-v2-2026-07-18",
+  "fileKey": "E6BY4zpmFYWNBLxlATHo2y",
+  "phase": "phase4",
+  "step": "accessibility-contrast-complete",
+  "entities": {
+    "collections": {
+      "primitives": "VariableCollectionId:15:2",
+      "color": "VariableCollectionId:15:3",
+      "spacing": "VariableCollectionId:15:4",
+      "radius": "VariableCollectionId:15:5"
+    },
+    "variables": {
+      "primitiveCount": 32,
+      "semanticCount": 32,
+      "spacingCount": 20,
+      "radiusCount": 7
+    },
+    "styles": {
+      "textCount": 8,
+      "effectCount": 3
+    },
+    "pages": {
+      "login": "0:1",
+      "importaciones": "13:2",
+      "foundations": "17:2",
+      "components": "17:3"
+    },
+    "components": {
+      "appButton": {
+        "componentSetIds": {
+          "primary": "36:29",
+          "secondary": "37:29",
+          "tertiary": "38:29",
+          "danger": "38:57",
+          "dangerSoft": "38:85",
+          "successSoft": "38:113"
+        },
+        "variantCount": 72,
+        "sizes": ["SM", "MD", "LG", "XL"],
+        "states": ["Default", "Hover", "Disabled"],
+        "sectionId": "35:2",
+        "codeSource": "src/app/components/AppButton.tsx",
+        "loginUsesPrimaryXL": true,
+        "ghostRemoved": true,
+        "validated": true
+      }
+    },
+    "accessibility": {
+      "standard": "WCAG 2.2 AA",
+      "controlBorderVariableId": "VariableID:48:3",
+      "focusRingVariableId": "VariableID:49:2",
+      "controlBorderContrastOnWhite": 3.527,
+      "focusRingContrastOnWhite": 7.979,
+      "placeholderContrastOnWhite": 4.975,
+      "activeTextViolations": {
+        "login": 0,
+        "importaciones": 0,
+        "foundations": 0,
+        "components": 0
+      },
+      "validated": true
+    },
+    "screens": {}
+  },
+  "pendingValidations": [
+    "phase3:component-library"
+  ],
+  "completedSteps": [
+    "phase0",
+    "phase1:collections-4",
+    "phase1:variables-52",
+    "phase1:text-styles-8",
+    "phase1:effect-styles-3",
+    "phase1:validated",
+    "phase2:pages-created",
+    "phase2:foundations-documented",
+    "phase2:auto-layout-validated",
+    "phase2:screenshots-reviewed",
+    "phase3:button-api-unified-code",
+    "phase3:button-build-validated",
+    "phase3:app-button-figma-72-variants",
+    "phase3:login-button-unified",
+    "phase3:ghost-removed",
+    "phase3:button-validated",
+    "phase4:accessible-color-tokens-code",
+    "phase4:accessible-color-tokens-figma",
+    "phase4:focus-visible-code",
+    "phase4:contrast-audit-zero-active-violations",
+    "phase4:production-build-validated"
+  ]
+}

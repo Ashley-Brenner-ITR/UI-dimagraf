@@ -54,7 +54,7 @@ export function DirectorDashboard({ onViewCarpeta, carpetasList, section, onSect
             <button onClick={() => onSectionChange('kpi')} style={getSegmentButtonStyle(section === 'kpi')}>KPIs</button>
             <button onClick={() => onSectionChange('audit')} style={getSegmentButtonStyle(section === 'audit')}>Auditoría Costos</button>
           </div>
-          <AppButton size="sm" icon={<Download size={13} />}>Exportar</AppButton>
+          <AppButton size="md" icon={<Download size={13} />}>Exportar</AppButton>
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export function DirectorDashboard({ onViewCarpeta, carpetasList, section, onSect
                       </div>
                       <span style={{ fontSize: 13, color: MUTED, flex: 1, minWidth: isMobile ? '100%' : 120 }}>{c.ultimoHito}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
-                        <AppButton size="xs" variant="secondary" icon={<Eye size={12} />} onClick={() => onViewCarpeta(c.id)} style={{ flexShrink: 0 }}>
+                        <AppButton size="sm" variant="secondary" icon={<Eye size={12} />} onClick={() => onViewCarpeta(c.id)} style={{ flexShrink: 0 }}>
                           Ver carpeta
                         </AppButton>
                       </div>
@@ -189,7 +189,7 @@ function AuditPanel({ onViewCarpeta, list }: { onViewCarpeta: (id: string) => vo
                       <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.observaciones || '(sin observaciones)'}</div>
                     </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                      <AppButton type="button" size="xs" variant="tertiary" icon={<Eye size={14} />} onClick={() => onViewCarpeta(c.id)} aria-label={`Ver carpeta ${c.numero}`} />
+                      <AppButton type="button" size="sm" variant="tertiary" icon={<Eye size={14} />} onClick={() => onViewCarpeta(c.id)} aria-label={`Ver carpeta ${c.numero}`} />
                     </td>
                   </tr>
                 );

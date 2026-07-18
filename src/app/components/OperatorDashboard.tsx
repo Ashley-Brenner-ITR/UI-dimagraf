@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Plus, ChevronRight, ChevronLeft, CheckCircle, X, Upload, FileText, AlertTriangle, Trash2, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, ArrowLeft, Layers, ChevronDown, ChevronUp } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Plus, ChevronRight, ChevronLeft, CheckCircle, X, Upload, FileText, AlertTriangle, Trash2, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, ArrowLeft, Layers, ChevronDown, ChevronUp, FolderOpen, Ship } from 'lucide-react';
 import { fieldLabel, formInput, formTextarea, getAutoFitGridStyle, getModalPrimaryButtonStyle, getModalSecondaryButtonStyle, getResponsiveTableStyle, getModalShellStyle, modalCloseButton, modalFooter, modalHeader, modalOverlay, pageActions, pageHeader, pageShell, tableHeadCell, tableHeadRow, tableScrollArea, tableShell } from './chromeStyles';
 import { read, utils, writeFileXLSX } from 'xlsx';
 import { PROVEEDORES, getEstadoColor, type EstadoCarpeta, type Carpeta, type Subcarpeta } from './mockData';
@@ -140,14 +140,14 @@ function SubcarpetaLine({ sub, onClick, showDivider = false, showMobileDivider =
       onClick={onClick}
       style={{
         width: '100%',
-        minHeight: compact ? 56 : 36,
+        minHeight: compact ? (mobileStacked ? 48 : 46) : 36,
         display: 'grid',
         gridTemplateColumns: mobileStacked ? 'minmax(0, 1fr) auto 20px' : 'minmax(0, 1fr) auto 20px',
         gridTemplateRows: mobileStacked ? 'auto auto' : undefined,
         alignItems: 'center',
-        columnGap: mobileStacked ? 12 : compact ? 12 : 10,
-        rowGap: compact ? 4 : 2,
-        padding: mobileStacked ? '10px 16px 10px 12px' : (compact || desktopSingleWidth ? '10px 16px' : '10px 16px 10px 12px'),
+        columnGap: mobileStacked ? 10 : compact ? 12 : 10,
+        rowGap: compact ? 2 : 2,
+        padding: mobileStacked ? '6px 16px' : (compact ? '6px 16px' : desktopSingleWidth ? '8px 16px' : '8px 16px 8px 12px'),
         position: 'relative',
         border: 'none',
         borderRadius: 0,
@@ -160,10 +160,41 @@ function SubcarpetaLine({ sub, onClick, showDivider = false, showMobileDivider =
       }}
     >
       {showDivider && <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 1, background: HAIRLINE, borderRadius: 0 }} />}
-      {showMobileDivider && <span aria-hidden="true" style={{ position: 'absolute', left: 12, right: 12, top: 0, height: 1, background: GREEN_HAIRLINE_SOFT }} />}
-      <span style={{ minWidth: 0, display: 'grid', gap: compact ? 4 : 2, gridColumn: mobileStacked ? '1 / 2' : undefined, gridRow: mobileStacked ? '1 / 3' : undefined }}>
-        <span style={{ fontSize: 11.5, fontWeight: 600, color: INK, whiteSpace: compact ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: compact ? 'clip' : 'ellipsis', overflowWrap: 'anywhere', minWidth: 0 }}>{sub.numero}</span>
-        <span style={{ fontSize: 11, color: MUTED, overflow: 'hidden', textOverflow: compact ? 'clip' : 'ellipsis', whiteSpace: compact ? 'normal' : 'nowrap', lineHeight: compact ? 1.35 : 1.2 }}>ETA {sub.eta || '-'} · {sub.contenedores || 0} cont.</span>
+      {showMobileDivider && <span aria-hidden="true" style={{ position: 'absolute', left: 16, right: 16, top: 0, height: 1, background: GREEN_HAIRLINE_SOFT }} />}
+      <span style={{ minWidth: 0, display: 'grid', gap: mobileStacked ? 4 : compact ? 6 : 2, gridColumn: mobileStacked ? '1 / 2' : undefined, gridRow: mobileStacked ? '1 / 3' : undefined }}>
+        {mobileStacked ? (
+          <>
+            <span style={{ fontSize: 12, fontWeight: 700, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{sub.numero}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 10, minWidth: 0, flexWrap: 'nowrap' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>ETA</span>
+                <span style={{ fontSize: 11, color: INK, lineHeight: 1.2 }}>{sub.eta || '—'}</span>
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                <span style={{ fontSize: 11, color: INK, lineHeight: 1.2 }}>{sub.contenedores || 0}</span>
+                <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em' }}>cont.</span>
+              </span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{sub.numero}</span>
+            {compact ? (
+              <span style={{ display: 'grid', gridTemplateColumns: 'auto auto', alignItems: 'baseline', columnGap: 10, minWidth: 0, justifyContent: 'start' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, minWidth: 0, whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>ETA</span>
+                  <span style={{ fontSize: 10.5, color: INK, lineHeight: 1.2 }}>{sub.eta || '—'}</span>
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <span style={{ fontSize: 10.5, color: INK, lineHeight: 1.2 }}>{sub.contenedores || 0}</span>
+                  <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em' }}>cont.</span>
+                </span>
+              </span>
+            ) : (
+              <span style={{ fontSize: 11, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>ETA {sub.eta || '-'} · {sub.contenedores || 0} cont.</span>
+            )}
+          </>
+        )}
       </span>
       {mobileStacked && (
         <>
@@ -289,7 +320,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const tableShellRef = useRef<HTMLDivElement | null>(null);
   const isNarrowViewport = useIsMobile();
-  const useCompactTableLayout = isNarrowViewport || tableShellWidth < (hideImportes ? 820 : 960);
+  const useCompactTableLayout = isNarrowViewport || (tableShellWidth > 0 && tableShellWidth < (hideImportes ? 820 : 960));
   const modalHorizontalPadding = isNarrowViewport ? 18 : 28;
   const modalSectionPadding = `${isNarrowViewport ? 20 : 24}px ${modalHorizontalPadding}px`;
   const wizardSteps = WIZARD_STEPS[creationMode];
@@ -351,8 +382,30 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
     measureTableViewport();
     window.addEventListener('resize', measureTableViewport);
 
-    return () => window.removeEventListener('resize', measureTableViewport);
+    const shellElement = tableShellRef.current;
+    const resizeObserver = typeof ResizeObserver !== 'undefined' && shellElement
+      ? new ResizeObserver(() => {
+          measureTableViewport();
+        })
+      : null;
+
+    if (resizeObserver && shellElement) {
+      resizeObserver.observe(shellElement);
+    }
+
+    return () => {
+      window.removeEventListener('resize', measureTableViewport);
+      resizeObserver?.disconnect();
+    };
   }, [isNarrowViewport]);
+
+  useEffect(() => {
+    const shellRect = tableShellRef.current?.getBoundingClientRect();
+    if (!shellRect) return;
+
+    const nextWidth = shellRect.width;
+    setTableShellWidth(currentWidth => Math.abs(currentWidth - nextWidth) > 1 ? nextWidth : currentWidth);
+  });
 
   useEffect(() => {
     setCurrentPage(1);
@@ -559,7 +612,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       sortKey: 'proveedor',
       render: (carpeta, proveedorNombre, proveedorPais) => {
         return (
-          <div style={{ ...primaryTableTextStyle, display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, maxWidth: '100%' }}>
+          <div style={{ ...primaryTableTextStyle, display: 'flex', alignItems: 'flex-start', gap: 6, minWidth: 0, maxWidth: '100%' }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{proveedorNombre || '—'}</span>
             {proveedorPais && <CountryFlag country={proveedorPais} />}
           </div>
@@ -580,7 +633,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
           label: 'MONTO OC',
           hint: 'Importe y moneda',
           sortKey: 'montoTotal' as SortKey,
-          render: (carpeta: Carpeta) => <span style={primaryTableNumericTextStyle}>{`${carpeta.moneda} ${carpeta.montoTotal.toLocaleString()}`}</span>,
+          render: (carpeta: Carpeta) => <div style={primaryTableNumericTextStyle}>{`${carpeta.moneda} ${carpeta.montoTotal.toLocaleString()}`}</div>,
         }]),
     {
       key: 'ultimoHito',
@@ -594,13 +647,13 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       label: 'ACTUALIZ.',
       hint: 'Último cambio',
       sortKey: 'lastUpdate',
-      render: carpeta => <span style={primaryTableNumericTextStyle}>{formatCompactDate(carpeta.lastUpdate)}</span>,
+      render: carpeta => <div style={primaryTableNumericTextStyle}>{formatCompactDate(carpeta.lastUpdate)}</div>,
     },
     {
       key: 'fechaOC',
       label: 'FECHA OC',
       hint: 'Alta de la orden',
-      render: carpeta => <span style={primaryTableNumericTextStyle}>{formatCompactDate(carpeta.fechaOC)}</span>,
+      render: carpeta => <div style={primaryTableNumericTextStyle}>{formatCompactDate(carpeta.fechaOC)}</div>,
     },
     {
       key: 'referenciaProveedor',
@@ -612,7 +665,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       key: 'incoterm',
       label: 'INCOTERM',
       hint: 'Condición logística',
-      render: carpeta => <span style={primaryTableTextStyle}>{carpeta.incoterm || '—'}</span>,
+      render: carpeta => <div style={primaryTableTextStyle}>{carpeta.incoterm || '—'}</div>,
     },
     {
       key: 'condPago',
@@ -624,13 +677,13 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       key: 'fechaEmbarqueEst',
       label: 'EMB. EST.',
       hint: 'Embarque estimado',
-      render: carpeta => <span style={primaryTableNumericTextStyle}>{formatCompactDate(carpeta.fechaEmbarqueEst)}</span>,
+      render: carpeta => <div style={primaryTableNumericTextStyle}>{formatCompactDate(carpeta.fechaEmbarqueEst)}</div>,
     },
     {
       key: 'embarques',
       label: 'EMBARQUES',
       hint: 'Aperturas activas',
-      render: carpeta => <span style={primaryTableTextStyle}>{carpeta.subcarpetas.length || '—'}</span>,
+      render: carpeta => <div style={primaryTableTextStyle}>{carpeta.subcarpetas.length || '—'}</div>,
     },
   ];
   const sortableColumns = allConfigurableColumns.filter((column): column is typeof column & { sortKey: SortKey } => Boolean(column.sortKey));
@@ -985,18 +1038,19 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
   return (
     <div style={{ ...pageShell, background: MINT_WASH, borderRadius: 24 }}>
 
-      <WelcomeBanner
-        title="Carpetas"
-        subtitle="Operaciones activas"
-        actions={
-          <>
-            <AppButton variant="secondary">Exportar</AppButton>
-            {!hideImportes && (
-              <AppButton onClick={handleOpenWizard} icon={<Plus size={14} />}>Nueva Carpeta</AppButton>
-            )}
-          </>
-        }
-      />
+      <div style={{ padding: isNarrowViewport ? '0 12px' : '0 14px' }}>
+        <WelcomeBanner
+          title="Carpetas"
+          actions={
+            <>
+              <AppButton variant="secondary">Exportar</AppButton>
+              {!hideImportes && (
+                <AppButton onClick={handleOpenWizard} icon={<Plus size={14} />}>Nueva Carpeta</AppButton>
+              )}
+            </>
+          }
+        />
+      </div>
 
       {/* Table */}
         <div ref={tableShellRef} style={{ ...tableShell, border: 'none', background: 'transparent', boxShadow: 'none', borderRadius: 0, overflow: 'visible' }}>
@@ -1011,7 +1065,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
             boxShadow: isNarrowViewport ? '0 4px 12px rgba(0,0,0,0.04)' : 'none',
           }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {activeContextChips.map(chip => (
                     <span key={chip} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 24, padding: '4px 10px', borderRadius: 9999, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, fontSize: 11, color: MUTED, fontWeight: 600 }}>
@@ -1019,213 +1073,296 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                     </span>
                   ))}
                 </div>
-                {activeContextChips.length > 0 && (
-                  <span style={{ fontSize: 11, color: MUTED }}>
-                    Ajustá la búsqueda o los filtros para ampliar el listado.
-                  </span>
-                )}
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isNarrowViewport ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) auto', alignItems: 'center', gap: 12 }}>
-              <FilterToolbar search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por Carpeta, Proveedor o Código SAP" searchAriaLabel="Buscar carpetas" options={estadoFilterOptions} value={estadoFilter} onValueChange={setEstadoFilter} expanded={showMobileFilters} onExpandedChange={setShowMobileFilters} getOptionCount={value => value === 'Todos' ? carpetasList.length : (estadoCounts[value] ?? 0)} />
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                <AppButton
-                  type="button"
-                  variant={isFlatView ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => {
-                    setIsFlatView(!isFlatView);
-                    setCurrentPage(1);
-                  }}
-                  icon={<Layers size={14} />}
-                >
-                  {isFlatView ? "Vista Plana (Aperturas)" : "Vista Agrupada"}
-                </AppButton>
-                {useCompactTableLayout ? (
-                  <AppButton aria-label="Campos" title="Campos" variant="secondary" size="sm" icon={<SlidersHorizontal size={14} />} onClick={() => setColumnsDrawerOpen(true)} style={{ flexShrink: 0 }} />
-                ) : (
-                  <AppButton aria-label="Campos" title="Campos" variant="secondary" size="sm" icon={<SlidersHorizontal size={14} />} onClick={() => setColumnsDrawerOpen(true)} style={{ flexShrink: 0 }}>
-                    Campos
-                  </AppButton>
-                )}
-              </div>
-            </div>
+            <FilterToolbar
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder={isNarrowViewport ? 'Buscar carpeta, proveedor o SAP' : 'Buscar por Carpeta, Proveedor o Código SAP'}
+              searchAriaLabel="Buscar carpetas"
+              searchSize={isNarrowViewport ? 'compact' : 'default'}
+              options={estadoFilterOptions}
+              value={estadoFilter}
+              onValueChange={setEstadoFilter}
+              expanded={showMobileFilters}
+              onExpandedChange={setShowMobileFilters}
+              getOptionCount={value => value === 'Todos' ? carpetasList.length : (estadoCounts[value] ?? 0)}
+              trailingActions={
+                <button type="button" onClick={() => setColumnsDrawerOpen(true)} aria-label="Ajustes de vista" title="Ajustes de vista" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: isNarrowViewport ? 38 : 40, height: isNarrowViewport ? 38 : 40, padding: 0, flexShrink: 0, background: columnsDrawerOpen ? GREEN : CANVAS, color: columnsDrawerOpen ? '#fff' : GREEN, border: `1px solid ${columnsDrawerOpen ? GREEN : HAIRLINE}`, borderRadius: 9999, cursor: 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
+                  <SlidersHorizontal size={isNarrowViewport ? 13 : 14} aria-hidden="true" />
+                </button>
+              }
+            />
           </div>
-          <div style={{ ...tableScrollArea, maxHeight: availableScrollAreaHeight, overflowY: 'hidden' }}>
+          <div style={{ ...tableScrollArea, maxHeight: availableScrollAreaHeight, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
             {useCompactTableLayout ? (
+              isFlatView ? (
+              <table style={{ ...getResponsiveTableStyle(hideImportes ? 640 : 760), tableLayout: 'auto', borderCollapse: 'separate', borderSpacing: '0 2px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...tableHeadCell, width: 40, padding: '10px 8px 10px 14px', position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd' }} />
+                    {visibleColumns.map(column => {
+                      const isActive = column.sortKey ? sortConfig?.key === column.sortKey : false;
+                      const ariaSort = isActive ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : ('none' as const);
+                      return (
+                        <th key={column.key} style={{ ...tableHeadCell, position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }} aria-sort={ariaSort}>
+                          {column.sortKey ? (
+                            <button type="button" onClick={() => toggleSort(column.sortKey!)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: 0, border: 'none', background: 'transparent', color: isActive ? GREEN : MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', textAlign: 'left' }}>
+                              <span>{mobileColumnLabels[column.sortKey] || column.label}</span>
+                              {isActive ? (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} style={{ opacity: 0.5 }} />}
+                            </button>
+                          ) : (
+                            <span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>{column.label}</span>
+                          )}
+                        </th>
+                      );
+                    })}
+                    <th style={{ ...tableHeadCell, position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}`, whiteSpace: 'nowrap' }}>
+                      <span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>CANAL</span>
+                    </th>
+                    <th style={{ ...tableHeadCell, width: 32, position: 'sticky', top: 0, right: 0, zIndex: 14, background: '#fafbfd', boxShadow: 'inset 1px 0 0 #eaecf0' }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedRows.map((rowItem) => {
+                    const { isSubcarpeta, carpeta: c, subcarpeta: sub } = rowItem;
+                    const prov = PROVEEDORES.find(p => p.id === c.proveedorId);
+                    return (
+                      <tr
+                        key={isSubcarpeta && sub ? sub.id : c.id}
+                        onClick={() => {
+                          if (isSubcarpeta && sub) {
+                            if (onSelectSubcarpeta) onSelectSubcarpeta(c.id, sub.id);
+                            else onSelectCarpeta(c.id);
+                          } else {
+                            onSelectCarpeta(c.id);
+                          }
+                        }}
+                        style={{ cursor: 'pointer', background: isSubcarpeta ? CANVAS : '#f8faf9', borderRadius: 8 }}
+                      >
+                        <td style={{ padding: '10px 6px 10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ width: isSubcarpeta ? 24 : 28, height: isSubcarpeta ? 24 : 28, borderRadius: isSubcarpeta ? 6 : 8, background: isSubcarpeta ? '#eff4ff' : `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {isSubcarpeta ? <Ship size={13} style={{ color: '#528bff' }} /> : <FolderOpen size={15} style={{ color: GREEN }} />}
+                          </div>
+                        </td>
+                        {visibleColumns.map(column => (
+                          <td key={column.key} style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12 }}>
+                            {isSubcarpeta && sub ? (
+                              column.key === 'numero' ? (
+                                <div>
+                                  <span style={{ fontWeight: 600, color: INK }}>{sub.numero}</span>
+                                  <span style={{ fontSize: 10.5, color: MUTED, marginLeft: 6 }}>de {c.numero}</span>
+                                </div>
+                              ) : column.key === 'pedidoSAP45' ? (
+                                <span style={{ fontSize: 11.5, color: INK }}>{sub.pedidoSAP55 || '—'}</span>
+                              ) : column.key === 'montoTotal' ? (
+                                <span style={{ fontWeight: 600, color: INK, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{c.moneda} {sub.importeTotal.toLocaleString()}</span>
+                              ) : column.key === 'ultimoHito' ? (
+                                <NeonBadge estado={sub.estado as any} size="xs" />
+                              ) : column.key === 'proveedor' ? (
+                                <span style={{ color: INK }}>{prov?.nombre || '—'}</span>
+                              ) : column.key === 'lastUpdate' ? (
+                                <span style={{ fontSize: 11, color: MUTED }}>{c.lastUpdate || '—'}</span>
+                              ) : column.render(c, prov?.nombre || '', prov?.pais || '')
+                            ) : column.render(c, prov?.nombre || '', prov?.pais || '')}
+                          </td>
+                        ))}
+                        <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5 }}>
+                          {isSubcarpeta && sub && sub.canalAduana && sub.canalAduana !== 'Pendiente' ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 600, color: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : '#9a6700', whiteSpace: 'nowrap' }}>
+                              <span style={{ width: 7, height: 7, borderRadius: '50%', background: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : '#9a6700' }} />
+                              {sub.canalAduana}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'transparent' }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '10px 12px 10px 4px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, position: 'sticky', right: 0, zIndex: 2, background: isSubcarpeta ? CANVAS : '#f8faf9', boxShadow: 'inset 1px 0 0 rgba(208,213,221,0.9)' }}>
+                          <ChevronRight size={15} style={{ color: '#98a2b3' }} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {paginatedRows.map((rowItem, i) => {
+                {paginatedRows.map((rowItem) => {
                   const { isSubcarpeta, carpeta: c, subcarpeta: sub } = rowItem;
                   const prov = PROVEEDORES.find(p => p.id === c.proveedorId);
-                  
+
                   if (isSubcarpeta && sub) {
-                    const rowStatusColor = getEstadoColor(sub.estado as any);
-                    return (
-                      <SurfaceCard key={sub.id} as="article" style={{ margin: '6px 10px', borderColor: GREEN_HAIRLINE, boxShadow: 'none', borderRadius: 10, background: '#fafefd', borderLeft: `4px solid ${rowStatusColor}` }}>
+                    const embarqueContent = (
+                      <SurfaceCard as="article" style={{ flex: 1, borderColor: GREEN_HAIRLINE, boxShadow: 'none', borderRadius: 10, margin: '6px 10px' }}>
                         <div
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: isNarrowViewport ? 'minmax(0, 1fr) 20px' : 'minmax(0, 1fr) auto',
+                            gridTemplateColumns: 'auto minmax(0, 1fr) auto 20px',
                             alignItems: 'start',
                             gap: 10,
                             width: '100%',
-                            padding: isNarrowViewport ? '10px 16px 10px 12px' : '10px 12px',
+                            padding: '16px 20px',
                           }}
                         >
+                          <div style={{ width: 24, height: 24, borderRadius: 6, background: '#eff4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                            <Ship size={13} style={{ color: '#528bff' }} />
+                          </div>
                           <div onClick={() => onSelectSubcarpeta ? onSelectSubcarpeta(c.id, sub.id) : onSelectCarpeta(c.id)} style={{ minWidth: 0, cursor: 'pointer', display: 'grid', gap: 6 }}>
-                            <div style={{ display: 'grid', gap: 3 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>
-                                  Apertura / Embarque
-                                </span>
-                                <span style={{ fontSize: 10, background: '#eef2f6', color: MUTED, padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>Subcarpeta</span>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: 14, fontWeight: 700, color: INK }}>{sub.numero}</span>
-                                <NeonBadge estado={sub.estado as any} size="xs" />
-                              </div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: INK }}>{sub.numero}</span>
+                              <span style={{ fontSize: 10, color: MUTED }}>de {c.numero}</span>
                             </div>
-                            
-                            <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? '1fr' : 'repeat(2, minmax(0, 1fr))', alignItems: 'start', gap: 8 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'repeat(2, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))', gap: 10, minWidth: 0 }}>
                               <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>
-                                  Proveedor
-                                </span>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: INK }}>
-                                  {prov?.nombre || '—'}
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Proveedor</span>
+                                <span style={{ fontSize: 11, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prov?.nombre || '—'}</span>
+                              </div>
+                              {!hideImportes ? (
+                                <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
+                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Monto</span>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{c.moneda} {sub.importeTotal.toLocaleString()}</span>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
+                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
+                                  <span style={{ fontSize: 11, color: INK }}>{sub.eta || '—'}</span>
+                                </div>
+                              )}
+                              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>SAP 55 / 18</span>
+                                <span style={{ fontSize: 10.5, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.pedidoSAP55 || '—'} / {sub.ingresoSAP18 || '—'}</span>
+                              </div>
+                              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Canal</span>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 600, color: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : '#9a6700', whiteSpace: 'nowrap' }}>
+                                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : '#9a6700' }} />
+                                  {sub.canalAduana || '—'}
                                 </span>
                               </div>
                               {!hideImportes && (
                                 <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                  <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>
-                                    Monto Embarque
-                                  </span>
-                                  <span style={{ fontSize: 11.5, fontWeight: 600, color: INK }}>{c.moneda} {sub.importeTotal.toLocaleString()}</span>
+                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
+                                  <span style={{ fontSize: 11, color: INK }}>{sub.eta || '—'}</span>
                                 </div>
                               )}
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-                              <div style={{ display: 'grid', gap: 2 }}>
-                                <span style={{ fontSize: 9, color: MUTED, fontWeight: 700 }}>SAP 55 / 18</span>
-                                <span style={{ fontSize: 11, color: INK }}>{sub.pedidoSAP55 || '—'} / {sub.ingresoSAP18 || '—'}</span>
-                              </div>
-                              <div style={{ display: 'grid', gap: 2 }}>
-                                <span style={{ fontSize: 9, color: MUTED, fontWeight: 700 }}>ETA</span>
-                                <span style={{ fontSize: 11, color: INK }}>{sub.eta || '—'}</span>
+                              <div style={{ display: 'grid', gap: 3, minWidth: 0, gridColumn: '1 / -1' }}>
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Estado operativo</span>
+                                <span style={{ fontSize: 10.5, color: INK, lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {sub.estado} · {sub.buqueForwarder || 'Sin forwarder cargado'}
+                                </span>
                               </div>
                             </div>
                           </div>
-                          <span onClick={() => onSelectSubcarpeta ? onSelectSubcarpeta(c.id, sub.id) : onSelectCarpeta(c.id)} style={{ width: isNarrowViewport ? 20 : 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', alignSelf: 'center' }}>
+                          <span onClick={() => onSelectSubcarpeta ? onSelectSubcarpeta(c.id, sub.id) : onSelectCarpeta(c.id)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: 2 }}>
+                            <NeonBadge estado={sub.estado as any} size="xs" />
+                          </span>
+                          <span onClick={() => onSelectSubcarpeta ? onSelectSubcarpeta(c.id, sub.id) : onSelectCarpeta(c.id)} style={{ width: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: 2 }}>
                             <ChevronRight size={14} style={{ color: '#98a2b3', flexShrink: 0 }} />
                           </span>
                         </div>
                       </SurfaceCard>
                     );
+
+                    return (
+                      <div key={sub.id} style={{ display: 'flex', marginLeft: 16, marginRight: 10, marginTop: -2, marginBottom: 4 }}>
+                        <div style={{ width: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                          <div style={{ width: 1, flex: 1, background: '#d0d5dd' }} />
+                        </div>
+                        {embarqueContent}
+                      </div>
+                    );
                   }
 
-                  const isCritical = c.subcarpetas.some(s => s.canalAduana === 'Rojo' || s.incidencias.length > 0);
                   const hasSubs = c.subcarpetas.length > 0;
-                  const showSubcarpetasUnderParent = hasSubs && !isFlatView;
+                  const showSubcarpetasUnderParent = hasSubs;
+                  const useCompactDesktopParentGrid = tableShellWidth >= 900;
 
                   return (
                     <SurfaceCard key={c.id} as="article" style={{ margin: '6px 10px', borderColor: GREEN_HAIRLINE, boxShadow: 'none', borderRadius: 10 }}>
-                      {/* Parent row */}
                       <div
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: isNarrowViewport ? 'minmax(0, 1fr) 20px' : 'minmax(0, 1fr) auto',
+                          gridTemplateColumns: useCompactDesktopParentGrid ? 'minmax(0, 1fr) 20px' : 'minmax(0, 1fr) auto',
                           alignItems: 'start',
                           gap: 10,
                           width: '100%',
-                          padding: isNarrowViewport ? '10px 16px 10px 12px' : '10px 12px',
+                          padding: useCompactDesktopParentGrid ? '18px 24px 16px' : '16px 20px',
                           background: CANVAS,
                         }}
                       >
-                        <div onClick={() => onSelectCarpeta(c.id)} style={{ minWidth: 0, cursor: 'pointer', display: 'grid', gap: 6 }}>
-                          <div style={{ display: 'grid', gap: 3 }}>
-                            <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>
-                              Carpeta
-                            </span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 14, fontWeight: 700, color: INK }}>{c.numero}</span>
-                              {hasSubs && <span style={{ fontSize: 11, color: MUTED }}>{c.subcarpetas.length} embarque{c.subcarpetas.length > 1 ? 's' : ''}</span>}
-                            </div>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? '1fr' : (isNarrowViewport ? 'minmax(0, 1fr) max-content' : 'repeat(2, minmax(0, 1fr))'), alignItems: 'start', columnGap: isNarrowViewport ? 12 : 8, rowGap: 8 }}>
-                            <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                              <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>
-                                Proveedor
-                              </span>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, fontSize: 12, color: INK, whiteSpace: 'normal', overflowWrap: 'anywhere', lineHeight: 1.35 }}>
-                                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov?.nombre || '—'}</span>
-                                {prov?.pais && <CountryFlag country={prov.pais} />}
-                              </span>
-                            </div>
-                            {!hideImportes && (
-                              <div style={{ display: 'grid', gap: 3, minWidth: 0, justifyItems: isNarrowViewport ? 'end' : 'start', textAlign: isNarrowViewport ? 'right' : 'left' }}>
-                                <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>
-                                  Monto OC
-                                </span>
-                                <span style={{ fontSize: 12, fontWeight: 500, color: INK, fontVariantNumeric: 'tabular-nums', lineHeight: 1.2 }}>{getCurrencySymbol(c.moneda)} {c.montoTotal.toLocaleString()}</span>
+                        <div onClick={() => onSelectCarpeta(c.id)} style={{ minWidth: 0, cursor: 'pointer', display: 'grid', gap: useCompactDesktopParentGrid ? 6 : 6 }}>
+                          {useCompactDesktopParentGrid ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'minmax(140px, 0.95fr) minmax(220px, 1.25fr) minmax(126px, 0.85fr) minmax(96px, 0.7fr)' : 'minmax(140px, 0.95fr) minmax(220px, 1.25fr) minmax(126px, 0.85fr) minmax(126px, 0.85fr) minmax(96px, 0.7fr)', columnGap: 12, rowGap: 10, alignItems: 'start' }}>
+                              <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Carpeta</span>
+                                <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, minWidth: 0, whiteSpace: 'nowrap' }}>
+                                  <span style={{ fontSize: 14, lineHeight: '16px', fontWeight: 700, color: INK }}>{c.numero}</span>
+                                  {hasSubs && <span style={{ fontSize: 10, color: MUTED, whiteSpace: 'nowrap' }}>{c.subcarpetas.length} embarque{c.subcarpetas.length > 1 ? 's' : ''}</span>}
+                                </div>
                               </div>
-                            )}
-                          </div>
+                              <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Proveedor</span>
+                                <div style={{ minHeight: 16, display: 'flex', alignItems: 'flex-start', overflow: 'hidden' }}>
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, lineHeight: '16px', color: INK, display: 'inline-flex', alignItems: 'flex-start', gap: 4 }}>
+                                  {prov?.nombre || '—'}
+                                  {prov?.pais && <CountryFlag country={prov.pais} />}
+                                  </span>
+                                </div>
+                              </div>
+                              <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>SAP 45</span>
+                                <div style={{ fontSize: 10.5, lineHeight: '16px', color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.pedidoSAP45 || '—'}</div>
+                              </div>
+                              {!hideImportes && (
+                                <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
+                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Monto OC</span>
+                                  <div style={{ fontSize: 11, lineHeight: '16px', fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{getCurrencySymbol(c.moneda)} {c.montoTotal.toLocaleString()}</div>
+                                </div>
+                              )}
+                              <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
+                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Actualiz.</span>
+                                <div style={{ fontSize: 10.5, lineHeight: '16px', color: INK, whiteSpace: 'nowrap' }}>{formatCompactDate(c.lastUpdate)}</div>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', alignItems: 'start', columnGap: 10, rowGap: 6 }}>
+                                <div style={{ width: 28, height: 28, borderRadius: 8, background: `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <FolderOpen size={15} style={{ color: GREEN }} />
+                                </div>
+                                <div style={{ minWidth: 0, display: 'grid', gap: 4 }}>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: INK, lineHeight: 1.2 }}>{c.numero}</span>
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: INK, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                    {prov?.nombre || '—'}
+                                    {prov?.pais && <CountryFlag country={prov.pais} />}
+                                  </span>
+                                  <span style={{ fontSize: 9.5, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>SAP {c.pedidoSAP45 || '—'}</span>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
-                        <span onClick={() => onSelectCarpeta(c.id)} style={{ width: isNarrowViewport ? 20 : 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', alignSelf: 'center' }}>
-                          <ChevronRight size={14} style={{ color: '#98a2b3', flexShrink: 0 }} />
-                        </span>
-                      </div>
-                      
-                      {/* Inline Articles Collapsible list */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(29, 29, 31, 0.02)', borderTop: `1px solid ${HAIRLINE}` }}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedCarpetaArticles(prev => ({
-                              ...prev,
-                              [c.id]: !prev[c.id]
-                            }));
-                          }}
-                          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: GREEN, fontWeight: 600, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-                        >
-                          {expandedCarpetaArticles[c.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                          {expandedCarpetaArticles[c.id] ? "Ocultar Artículos" : `Ver Artículos (${c.articulos.length})`}
-                        </button>
-                      </div>
-
-                      {expandedCarpetaArticles[c.id] && (
-                        <div style={{ padding: '10px 12px', background: '#fafbfc', borderTop: `1px solid ${HAIRLINE}`, display: 'grid', gap: 8 }}>
-                          {c.articulos.map(art => (
-                            <div key={art.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8, fontSize: 11.5, paddingBottom: 6, borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}` }}>
-                              <div>
-                                <div style={{ fontWeight: 600, color: INK }}>{art.codigoSAP} · {art.descripcion}</div>
-                                <div style={{ fontSize: 10, color: MUTED }}>Línea: {art.linea}</div>
-                              </div>
-                              <div style={{ textAlign: 'right', fontWeight: 500, color: INK }}>
-                                {art.cantidadAsignada.toLocaleString()} / {art.cantidadSolicitada.toLocaleString()} {art.um}
-                              </div>
-                            </div>
-                          ))}
+                        <div style={{ display: 'grid', justifyItems: 'end', alignContent: 'start', gap: 10 }}>
+                          {!useCompactDesktopParentGrid && !hideImportes && (
+                            <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.2, color: INK, whiteSpace: 'nowrap' }}>{getCurrencySymbol(c.moneda)} {c.montoTotal.toLocaleString()}</span>
+                          )}
+                          <span onClick={() => onSelectCarpeta(c.id)} style={{ width: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: useCompactDesktopParentGrid ? 6 : 0 }}>
+                            <ChevronRight size={14} style={{ color: '#98a2b3', flexShrink: 0 }} />
+                          </span>
                         </div>
-                      )}
-
-                      {/* Sub-carpetas */}
+                      </div>
                       {showSubcarpetasUnderParent && (
-                        <div style={{ display: 'grid', gridTemplateColumns: c.subcarpetas.length === 1 ? '1fr' : c.subcarpetas.length === 2 ? (isNarrowViewport ? '1fr' : 'repeat(2, minmax(0, 1fr))') : isNarrowViewport ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: 0, padding: '4px 0', background: '#fafefd', borderTop: `1px solid ${GREEN_HAIRLINE_SOFT}` }}>
-                          {c.subcarpetas.map((sub, subIndex) => (
-                            <Fragment key={sub.id}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 0, padding: '8px 0', background: '#fafefd', borderTop: `1px solid ${GREEN_HAIRLINE_SOFT}` }}>
+                          {c.subcarpetas.map((subItem, subIndex) => (
                             <SubcarpetaLine
-                              sub={sub}
-                              onClick={() => onSelectSubcarpeta ? onSelectSubcarpeta(c.id, sub.id) : onSelectCarpeta(c.id, 'general')}
-                              compact={isNarrowViewport}
-                              mobileStacked={isNarrowViewport}
-                              fullWidth={c.subcarpetas.length === 1}
-                              showDivider={!isNarrowViewport && subIndex % (c.subcarpetas.length === 2 ? 2 : 3) !== 0}
-                              showMobileDivider={isNarrowViewport && subIndex > 0}
+                              key={subItem.id}
+                              sub={subItem}
+                              onClick={() => onSelectSubcarpeta ? onSelectSubcarpeta(c.id, subItem.id) : onSelectCarpeta(c.id, 'general')}
+                              compact
+                              mobileStacked
+                              fullWidth
+                              showMobileDivider={subIndex > 0}
                             />
-                            </Fragment>
                           ))}
                         </div>
                       )}
@@ -1233,41 +1370,111 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                   );
                 })}
               </div>
+              )
+            ) : isFlatView ? (
+              /* ── Flat view: proper table ── */
+              <table style={{ ...getResponsiveTableStyle(hideImportes ? 780 : 920), tableLayout: 'auto', borderCollapse: 'separate', borderSpacing: '0 2px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...tableHeadCell, width: 40, padding: '10px 8px 10px 14px', position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd' }} />
+                    {visibleColumns.map(column => {
+                      const isActive = column.sortKey ? sortConfig?.key === column.sortKey : false;
+                      const ariaSort = isActive ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : ('none' as const);
+                      return (
+                        <th key={column.key} style={{ ...tableHeadCell, position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }} aria-sort={ariaSort}>
+                          {column.sortKey ? (
+                            <button type="button" onClick={() => toggleSort(column.sortKey!)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: 0, border: 'none', background: 'transparent', color: isActive ? GREEN : MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer', textAlign: 'left' }}>
+                              <span>{column.label}</span>
+                              {isActive ? (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} style={{ opacity: 0.5 }} />}
+                            </button>
+                          ) : (
+                            <span style={{ color: MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>{column.label}</span>
+                          )}
+                        </th>
+                      );
+                    })}
+                    <th style={{ ...tableHeadCell, position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}`, whiteSpace: 'nowrap' }}>
+                      <span style={{ color: MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>CANAL</span>
+                    </th>
+                    <th style={{ ...tableHeadCell, width: 32, position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd' }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedRows.map((rowItem) => {
+                    const { isSubcarpeta, carpeta: c, subcarpeta: sub } = rowItem;
+                    const prov = PROVEEDORES.find(p => p.id === c.proveedorId);
+                    return (
+                      <tr
+                        key={isSubcarpeta && sub ? sub.id : c.id}
+                        onClick={() => {
+                          if (isSubcarpeta && sub) {
+                            if (onSelectSubcarpeta) onSelectSubcarpeta(c.id, sub.id);
+                            else onSelectCarpeta(c.id);
+                          } else {
+                            onSelectCarpeta(c.id);
+                          }
+                        }}
+                        style={{ cursor: 'pointer', background: isSubcarpeta ? CANVAS : '#f8faf9', borderRadius: 8 }}
+                      >
+                        <td style={{ padding: '10px 6px 10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ width: isSubcarpeta ? 24 : 28, height: isSubcarpeta ? 24 : 28, borderRadius: isSubcarpeta ? 6 : 8, background: isSubcarpeta ? '#eff4ff' : `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {isSubcarpeta ? <Ship size={13} style={{ color: '#528bff' }} /> : <FolderOpen size={15} style={{ color: GREEN }} />}
+                          </div>
+                        </td>
+                        {visibleColumns.map(column => (
+                          <td key={column.key} style={{ padding: '10px 10px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 13 }}>
+                            {isSubcarpeta && sub ? (
+                              column.key === 'numero' ? (
+                                <div>
+                                  <span style={{ fontWeight: 600, color: INK }}>{sub.numero}</span>
+                                  <span style={{ fontSize: 11, color: MUTED, marginLeft: 6 }}>de {c.numero}</span>
+                                </div>
+                              ) : column.key === 'pedidoSAP45' ? (
+                                <span style={{ fontSize: 12, color: INK }}>{sub.pedidoSAP55 || '—'}</span>
+                              ) : column.key === 'montoTotal' ? (
+                                <span style={{ fontWeight: 500, color: INK, fontVariantNumeric: 'tabular-nums' }}>{c.moneda} {sub.importeTotal.toLocaleString()}</span>
+                              ) : column.key === 'ultimoHito' ? (
+                                <NeonBadge estado={sub.estado as any} size="xs" />
+                              ) : column.key === 'proveedor' ? (
+                                <span style={{ color: INK }}>{prov?.nombre || '—'}</span>
+                              ) : column.key === 'lastUpdate' ? (
+                                <span style={{ fontSize: 12, color: MUTED }}>{c.lastUpdate || '—'}</span>
+                              ) : column.render(c, prov?.nombre || '', prov?.pais || '')
+                            ) : column.render(c, prov?.nombre || '', prov?.pais || '')}
+                          </td>
+                        ))}
+                        <td style={{ padding: '10px 10px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12 }}>
+                          {isSubcarpeta && sub && sub.canalAduana && sub.canalAduana !== 'Pendiente' ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 600, color: sub.canalAduana === 'Rojo' ? '#c4001a' : '#1a7a4a' }}>
+                              <span style={{ width: 7, height: 7, borderRadius: '50%', background: sub.canalAduana === 'Rojo' ? '#c4001a' : '#1a7a4a' }} />
+                              {sub.canalAduana}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'transparent' }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '10px 12px 10px 4px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}` }}>
+                          <ChevronRight size={15} style={{ color: '#98a2b3' }} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             ) : (
+              /* ── Grouped view: card layout ── */
               <table style={{ ...getResponsiveTableStyle(hideImportes ? 780 : 920), tableLayout: 'auto', borderCollapse: 'separate', borderSpacing: '0 6px' }}>
                 <thead style={{ display: 'none' }}>
                   <tr style={tableHeadRow}>
                     {visibleColumns.map(column => {
                       const isActive = column.sortKey ? sortConfig?.key === column.sortKey : false;
-                      const ariaSort = isActive ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : 'none';
-
+                      const ariaSort = isActive ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : ('none' as const);
                       return (
                         <th key={column.key} style={{ ...tableHeadCell, position: 'sticky', top: 0, zIndex: 12, background: '#fafbfd', boxShadow: 'inset 0 -1px 0 #eaecf0' }} aria-sort={ariaSort}>
                           {column.sortKey ? (
-                            <button
-                              type="button"
-                              onClick={() => toggleSort(column.sortKey!)}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'start',
-                                gap: 6,
-                                padding: 0,
-                                border: 'none',
-                                background: 'transparent',
-                                color: isActive ? GREEN : MUTED,
-                                fontSize: 11,
-                                fontWeight: 700,
-                                letterSpacing: '0.08em',
-                                cursor: 'pointer',
-                                textAlign: 'left',
-                              }}
-                            >
+                            <button type="button" onClick={() => toggleSort(column.sortKey!)} style={{ display: 'inline-flex', alignItems: 'start', gap: 6, padding: 0, border: 'none', background: 'transparent', color: isActive ? GREEN : MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer', textAlign: 'left' }}>
                               <span>{column.label}</span>
-                              {isActive ? (
-                                sortConfig.direction === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />
-                              ) : (
-                                <ArrowUpDown size={13} style={{ opacity: 0.7 }} />
-                              )}
+                              {isActive ? (sortConfig.direction === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={13} style={{ opacity: 0.7 }} />}
                             </button>
                           ) : (
                             <span style={{ color: MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>{column.label}</span>
@@ -1287,17 +1494,11 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                     const showSubcarpetasUnderParent = hasSubs && !isFlatView;
                     const inlineColumns = visibleColumns.filter(column => column.key !== 'ultimoHito');
                     const hitoColumn = visibleColumns.find(column => column.key === 'ultimoHito');
-                    const inlineGridColumns = `${inlineColumns.map(column => {
-                      if (column.key === 'numero') return 'minmax(150px, 0.9fr)';
-                      if (column.key === 'proveedor') return 'minmax(230px, 1.35fr)';
-                      if (column.key === 'lastUpdate') return 'minmax(110px, 0.8fr)';
-                      return 'minmax(130px, 1fr)';
-                    }).join(' ')}${showRowAction ? ' 20px' : ''}`;
 
                     return (
                       <tr key={isSubcarpeta && sub ? sub.id : c.id}>
                         <td colSpan={desktopColumnCount} style={{ padding: '3px 8px' }}>
-                          <div style={{ border: `1px solid ${GREEN_HAIRLINE}`, borderRadius: 10, background: isSubcarpeta ? '#fafefd' : CANVAS, overflow: 'hidden' }}>
+                          <div style={{ border: `1px solid ${GREEN_HAIRLINE}`, borderRadius: 10, background: CANVAS, overflow: 'hidden', marginLeft: isSubcarpeta ? 28 : 0 }}>
                             <div
                               onClick={() => {
                                 if (isSubcarpeta && sub) {
@@ -1309,55 +1510,34 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                               }}
                               style={{
                                 display: 'grid',
-                                gridTemplateColumns: inlineGridColumns,
+                                gridTemplateColumns: `auto ${inlineColumns.map(column => {
+                      if (column.key === 'numero') return 'minmax(140px, 0.9fr)';
+                      if (column.key === 'proveedor') return 'minmax(220px, 1.25fr)';
+                      if (column.key === 'lastUpdate') return 'minmax(96px, 0.7fr)';
+                      return 'minmax(120px, 0.85fr)';
+                    }).join(' ')}${showRowAction ? ' 20px' : ''}`,
                                 alignItems: 'start',
-                                columnGap: 22,
-                                rowGap: 8,
-                                padding: '10px 14px 8px',
+                                columnGap: 16,
+                                rowGap: 10,
+                                padding: '14px 16px 12px',
                                 background: 'transparent',
                                 cursor: 'pointer',
                               }}
                             >
+                              <div style={{ width: isSubcarpeta ? 24 : 28, height: isSubcarpeta ? 24 : 28, borderRadius: isSubcarpeta ? 6 : 8, background: isSubcarpeta ? '#eff4ff' : `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                                {isSubcarpeta ? <Ship size={13} style={{ color: '#528bff' }} /> : <FolderOpen size={15} style={{ color: GREEN }} />}
+                              </div>
                               {inlineColumns.map(column => (
-                                <div key={column.key} style={{ minWidth: 0, display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', gap: 3, alignContent: 'start', justifyItems: 'start', textAlign: 'left' }}>
+                                <div key={column.key} style={{ minWidth: 0, display: 'grid', gridTemplateRows: 'auto auto', gap: 5, alignContent: 'start', justifyItems: 'start', textAlign: 'left' }}>
                                   <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', width: '100%' }}>
                                     {column.label}
                                   </span>
-                                  <div style={{ minWidth: 0, width: '100%', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    {column.key === 'numero' && !isSubcarpeta && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setExpandedCarpetaArticles(prev => ({ ...prev, [c.id]: !prev[c.id] }));
-                                        }}
-                                        style={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          width: 20,
-                                          height: 20,
-                                          borderRadius: 4,
-                                          background: 'rgba(29, 29, 31, 0.05)',
-                                          border: 'none',
-                                          cursor: 'pointer',
-                                          color: GREEN,
-                                        }}
-                                        title={expandedCarpetaArticles[c.id] ? "Ocultar artículos" : "Mostrar artículos de la carpeta"}
-                                      >
-                                        <span style={{ fontSize: 13, fontWeight: 'bold', lineHeight: 1 }}>
-                                          {expandedCarpetaArticles[c.id] ? '−' : '+'}
-                                        </span>
-                                      </button>
-                                    )}
-                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ minWidth: 0, width: '100%', alignSelf: 'start' }}>
+                                  <div style={{ minWidth: 0, width: '100%', alignSelf: 'start' }}>
                                       {isSubcarpeta && column.key === 'numero' && sub ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                          <div style={{ width: 12, height: 12, borderLeft: `2px solid ${MUTED}`, borderBottom: `2px solid ${MUTED}`, transform: 'translateY(-4px)', marginRight: 2 }} />
-                                          <div>
-                                            <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{sub.numero}</div>
-                                            <span style={{ fontSize: 10, background: '#eef2f6', color: MUTED, padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Subcarpeta</span>
-                                          </div>
+                                        <div>
+                                          <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{sub.numero}</div>
+                                          <span style={{ fontSize: 10, color: MUTED }}>de {c.numero}</span>
                                         </div>
                                       ) : isSubcarpeta && column.key === 'pedidoSAP45' && sub ? (
                                         <div style={{ fontSize: 12, color: INK }}>
@@ -1371,11 +1551,6 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                                       ) : isSubcarpeta && column.key === 'ultimoHito' && sub ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                           <NeonBadge estado={sub.estado as any} size="xs" />
-                                          {sub.canalAduana && (
-                                            <span style={{ fontSize: 11, fontWeight: 600, color: sub.canalAduana === 'Rojo' ? '#c4001a' : '#1a7a4a' }}>
-                                              [{sub.canalAduana}]
-                                            </span>
-                                          )}
                                         </div>
                                       ) : (
                                         column.render(c, prov?.nombre || '', prov?.pais || '')
@@ -1391,35 +1566,6 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                               )}
                             </div>
                             
-                            {/* Desktop inline articles list */}
-                            {!isSubcarpeta && expandedCarpetaArticles[c.id] && (
-                              <div style={{ padding: '12px 14px', background: '#fafbfc', borderTop: `1px solid ${HAIRLINE}` }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Artículos de la carpeta {c.numero}</div>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                                  <thead>
-                                    <tr style={{ borderBottom: `1px solid ${HAIRLINE}`, textAlign: 'left', color: MUTED }}>
-                                      <th style={{ padding: '6px 8px', fontWeight: 600 }}>CÓDIGO SAP</th>
-                                      <th style={{ padding: '6px 8px', fontWeight: 600 }}>DESCRIPCIÓN</th>
-                                      <th style={{ padding: '6px 8px', fontWeight: 600 }}>LÍNEA</th>
-                                      <th style={{ padding: '6px 8px', fontWeight: 600, textAlign: 'right' }}>CANT. SOLICITADA</th>
-                                      <th style={{ padding: '6px 8px', fontWeight: 600, textAlign: 'right' }}>CANT. ASIGNADA</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {c.articulos.map(art => (
-                                      <tr key={art.id} style={{ borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, color: INK }}>
-                                        <td style={{ padding: '8px', fontWeight: 600 }}>{art.codigoSAP}</td>
-                                        <td style={{ padding: '8px' }}>{art.descripcion}</td>
-                                        <td style={{ padding: '8px' }}>{art.linea}</td>
-                                        <td style={{ padding: '8px', textAlign: 'right' }}>{art.cantidadSolicitada.toLocaleString()} {art.um}</td>
-                                        <td style={{ padding: '8px', textAlign: 'right' }}>{art.cantidadAsignada.toLocaleString()} {art.um}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-
                             {isSubcarpeta && sub && hitoColumn && (
                               <div style={{ padding: '0 14px 10px' }}>
                                 <div style={{ display: 'grid', gap: 2, padding: '8px 10px', background: 'rgba(29, 29, 31, 0.03)', borderRadius: 6 }}>
@@ -1479,7 +1625,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                 <AppButton
                   type="button"
                   variant="secondary"
-                  size="sm"
+                  size="md"
                   onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
                   disabled={currentPageSafe === 1}
                   aria-label="Página anterior"
@@ -1504,7 +1650,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                       <AppButton
                         type="button"
                         variant="secondary"
-                        size="sm"
+                        size="md"
                         onClick={() => setCurrentPage(pageNumber)}
                         style={{
                           minWidth: isNarrowViewport ? 30 : 34,
@@ -1525,7 +1671,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                 <AppButton
                   type="button"
                   variant="secondary"
-                  size="sm"
+                  size="md"
                   onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
                   disabled={currentPageSafe === totalPages}
                   aria-label="Página siguiente"
@@ -1562,15 +1708,52 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
           >
             <div style={{ padding: '18px 20px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
               <div>
-                <h3 id="columns-drawer-title" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: INK }}>Campos</h3>
-                <p style={{ margin: '4px 0 0', fontSize: 12, color: MUTED }}>Elegí los datos visibles en la card. Hasta {maxColumns} por ancho.</p>
+                <h3 id="columns-drawer-title" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: INK }}>Ajustes de vista</h3>
+                <p style={{ margin: '4px 0 0', fontSize: 12, color: MUTED }}>Configurá el modo de vista y los campos visibles.</p>
               </div>
-              <AppButton aria-label="Cerrar" title="Cerrar" variant="secondary" size="xs" onClick={() => setColumnsDrawerOpen(false)} icon={<X size={14} />} />
+              <AppButton aria-label="Cerrar" title="Cerrar" variant="secondary" size="sm" onClick={() => setColumnsDrawerOpen(false)} icon={<X size={14} />} />
+            </div>
+            {/* Vista mode section */}
+            <div style={{ padding: '14px 20px', borderBottom: `1px solid ${HAIRLINE}` }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Modo de vista</div>
+              <div style={{ display: 'flex', background: '#f2f4f7', borderRadius: 8, padding: 3 }}>
+                <button
+                  type="button"
+                  onClick={() => { setIsFlatView(false); setCurrentPage(1); }}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '8px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
+                    border: 'none', cursor: 'pointer',
+                    background: !isFlatView ? CANVAS : 'transparent',
+                    color: !isFlatView ? INK : MUTED,
+                    boxShadow: !isFlatView ? '0 1px 3px rgba(16,24,40,0.08)' : 'none',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <FolderOpen size={13} /> Agrupada
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsFlatView(true); setCurrentPage(1); }}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '8px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
+                    border: 'none', cursor: 'pointer',
+                    background: isFlatView ? CANVAS : 'transparent',
+                    color: isFlatView ? INK : MUTED,
+                    boxShadow: isFlatView ? '0 1px 3px rgba(16,24,40,0.08)' : 'none',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <Layers size={13} /> Plana
+                </button>
+              </div>
             </div>
             <div style={{ padding: '14px 20px 0', fontSize: 12, color: MUTED }}>
-              {activeColumnCount} activa{activeColumnCount === 1 ? '' : 's'}
+              <div style={{ fontSize: 11, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Campos visibles</div>
+              {activeColumnCount} activa{activeColumnCount === 1 ? '' : 's'} · Hasta {maxColumns} por ancho
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0 16px' }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', padding: '8px 0 16px' }}>
               <div style={{ display: 'grid' }}>
                 {allConfigurableColumns.map(column => {
                   const isHidden = hiddenColumns.has(column.key);
@@ -1613,10 +1796,10 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
               </div>
             </div>
             <div style={{ padding: '12px 16px', borderTop: `1px solid ${HAIRLINE}`, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-              <AppButton variant="secondary" size="sm" onClick={() => setHiddenColumns(new Set(DEFAULT_HIDDEN_COLUMNS))} style={{ flex: 1 }}>
+              <AppButton variant="secondary" size="md" onClick={() => setHiddenColumns(new Set(DEFAULT_HIDDEN_COLUMNS))} style={{ flex: 1 }}>
                 Restablecer
               </AppButton>
-              <AppButton size="sm" onClick={() => setColumnsDrawerOpen(false)} style={{ flex: 1 }}>
+              <AppButton size="md" onClick={() => setColumnsDrawerOpen(false)} style={{ flex: 1 }}>
                 Listo
               </AppButton>
             </div>
@@ -2001,7 +2184,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         </div>
                         {!uploadedFileName && (
                           <button onClick={() => fileInputRef.current?.click()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 38, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${GREEN}`, background: CANVAS, color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                            <Upload size={14} /> Adjuntar archivo
+                            <Upload size={14} /> Adjuntar anexo
                           </button>
                         )}
                       </div>
