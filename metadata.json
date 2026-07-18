@@ -1,0 +1,8 @@
+{
+  "name": "Dimagraf Prototipo",
+  "description": "Dimagraf Prototipo - Control de carpetas y vencimientos",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

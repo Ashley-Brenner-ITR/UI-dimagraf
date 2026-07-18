@@ -1,0 +1,30 @@
+﻿# Dependencies
+node_modules/
+node_modules_old/
+
+# Build output
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+
+.vscode/
+01_ESTADO_ACTUAL_UI.md
+02_ROLES_Y_FLUJOS.md
+03_MODULOS_Y_COBERTURA.md
+PANTALLAS_POR_PERFIL.md
+Dimagraf - Prototipo (1)/guidelines/Guidelines.md
+Dimagraf - Prototipo (1)/src/imports/pasted_text/apple-design-analysis.md
+Dimagraf - Prototipo (1)/src/imports/pasted_text/dimagraf-import-app.md
