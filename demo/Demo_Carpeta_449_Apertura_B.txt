@@ -1,0 +1,30 @@
+RHEINLAND FILM GMBH
+Shipment Opening B Confirmation
+
+Document No.: OPEN-B-RFG-2026-449
+Date: 2026-05-28
+Folder Reference: 2026/449-B
+Parent Folder: 2026/449
+
+Shipment B Summary
+Status: Pending final production release
+Estimated Shipment Date: 2026-05-28
+Transport Mode: Maritime
+Document Set: Invoice B / Packing List B / BL B
+
+Items Included in Opening B
+1. SAP 3000028
+   Description: Laminado BOPP Mate 20µm
+   Quantity: 10000 M2
+   Status: Balance shipment
+
+Operational Notes
+- This opening contains the delayed balance from the parent folder.
+- It should be managed separately from opening A.
+- Transport and invoice documents for this opening will be issued independently.
+
+Demo Notes
+1. Este documento representa la subcarpeta 2026/449-B.
+2. Sirve para mostrar cómo una demora de producción deriva en una segunda apertura.
+
+End of Document

@@ -1,0 +1,12 @@
+RHEINLAND FILM GMBH
+Shipment Opening B Confirmation
+
+Document No.: OPEN-B-RFG-2026-514
+Date: 2026-07-02
+Folder Reference: 2026/514-B
+Parent Folder: 2026/514
+
+Items Included in Opening B
+1. SAP 3000041 - 10000 M2
+
+End of Document

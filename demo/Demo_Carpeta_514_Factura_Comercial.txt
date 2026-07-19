@@ -1,0 +1,21 @@
+RHEINLAND FILM GMBH
+Commercial Invoice
+
+Invoice No.: INV-RFG-2026-514-01
+Invoice Date: 2026-06-16
+Customer Reference: Dimagraf / 2026/514
+Exporter Reference: RFG-2026-DGF-514
+
+Invoice Lines
+1  SAP 3000034  Film Polyéster Transparente 15µm  18000 M2  EUR 2.65
+2  SAP 3000041  Laminado BOPP Gloss 18µm          21000 M2  EUR 1.21
+
+Invoice Summary
+Subtotal: EUR 73110.00
+Total Invoice Amount: EUR 73110.00
+
+Additional Remarks
+- Invoice issued on released export quantity.
+- Balance of SAP 3000041 will be invoiced in a later opening.
+
+End of Document

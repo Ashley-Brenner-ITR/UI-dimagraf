@@ -1,0 +1,92 @@
+RHEINLAND FILM GMBH
+Production Status Update / Partial Shipment Plan
+
+Document No.: PROD-RFG-2026-449-02
+Date: 2026-05-03
+Customer Reference: Dimagraf / 2026/449
+Supplier Reference: RFG-2026-DGF-449
+
+Supplier
+Rheinland Film GmbH
+Am Industriepark 18
+40221 Duesseldorf
+Germany
+
+Customer
+Dimagraf S.A.
+Buenos Aires
+Argentina
+
+Subject
+Production progress update and proposed split into partial shipments.
+
+General Status
+Purchase Order / Folder: 2026/449
+PO Date: 2026-03-15
+Incoterm: CIF Buenos Aires
+Production Status: In progress
+Original Estimated Shipment Date: 2026-05-14
+Current Assessment: Partial readiness confirmed
+Reason for split: Final lamination stage for one item is delayed and will not be completed within the original shipment window.
+
+Operational Summary
+- Manufacturing started for all confirmed items.
+- Item SAP 3000021 is complete and available for packing.
+- Item SAP 3000028 is partially complete.
+- Supplier proposes dispatch in two separate shipments.
+- Final transport documents will be issued independently for each shipment.
+
+Proposed Shipment Split
+
+Opening A
+Suggested Internal Reference: 2026/449-A
+Estimated Shipment Date: 2026-05-14
+Readiness Status: Ready for packing and export release
+Documents expected: Commercial Invoice A, Packing List A, Bill of Lading A
+
+Items proposed for Opening A
+1. SAP 3000021
+   Description: Film Polyéster Metalizado 12µm
+   Quantity for shipment A: 12000 M2
+   Status: Complete
+
+2. SAP 3000028
+   Description: Laminado BOPP Mate 20µm
+   Quantity for shipment A: 15000 M2
+   Status: Partially complete and available
+
+Opening B
+Suggested Internal Reference: 2026/449-B
+Estimated Shipment Date: 2026-05-28
+Readiness Status: Pending production close-out
+Documents expected: Commercial Invoice B, Packing List B, Bill of Lading B
+
+Items proposed for Opening B
+1. SAP 3000028
+   Description: Laminado BOPP Mate 20µm
+   Quantity for shipment B: 10000 M2
+   Status: Pending final production batch
+
+Supplier Notes
+- The original committed shipment date can be maintained only for the first partial shipment.
+- The balance shipment is expected two weeks later, subject to finishing and quality release.
+- No issue is expected on article SAP 3000021.
+- Delay affects only the remaining balance of SAP 3000028.
+
+Recommended Import Follow-up
+- Confirm whether partial shipment A is operationally acceptable.
+- Open separate shipment records for A and B once approved.
+- Keep tracking the delayed balance until final export readiness.
+- Review each shipment with its own invoice and transport documents when issued.
+
+Demo Notes
+1. Este archivo sirve para cargarlo como anexo en la carpeta madre 2026/449.
+2. Representa el momento en que Importaciones detecta que la carpeta deberá abrirse en dos embarques.
+3. Es ideal para explicar por qué aparecen subcarpetas tipo 2026/449-A y 2026/449-B.
+4. También soporta el relato de seguimiento manual de producción sin alertas automáticas.
+
+Prepared by:
+Production Planning Coordinator
+Rheinland Film GmbH
+
+End of Document

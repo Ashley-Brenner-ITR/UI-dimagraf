@@ -1,0 +1,54 @@
+RHEINLAND FILM GMBH
+Order Confirmation
+
+Confirmation No.: OC-RFG-2026-449
+Confirmation Date: 2026-04-18
+Customer Reference: Dimagraf / 2026/449
+Supplier Reference: RFG-2026-DGF-449
+
+Supplier
+Rheinland Film GmbH
+Am Industriepark 18
+40221 Duesseldorf
+Germany
+
+Customer
+Dimagraf S.A.
+Buenos Aires
+Argentina
+
+Purchase Order Summary
+Purchase Order / Folder: 2026/449
+PO Date: 2026-03-15
+Incoterm: CIF Buenos Aires
+Currency: EUR
+Requested Shipment Window: May 2026
+
+Confirmed Items
+--------------------------------------------------------------------------
+Item   SAP        Description                          Qty Confirmed   UM
+1      3000021    Film Polyéster Metalizado 12µm      12000           M2
+2      3000028    Laminado BOPP Mate 20µm             25000           M2
+--------------------------------------------------------------------------
+
+Commercial Notes
+- Both items have been accepted into production.
+- Shipment planning remains subject to final production release and vessel booking.
+- Final packing split will be confirmed at pre-shipment stage.
+
+Operational Notes
+- This document confirms what the supplier acknowledges from the original purchase order.
+- It is not yet the final packing or transport document.
+- Container split and Bill of Lading references are not available at this stage.
+
+Demo Notes
+1. Este documento sirve para la primera validación funcional.
+2. Se usa para mostrar el paso donde el sistema confirma artículos y cantidades contra la OC.
+3. Todavía no define embarques ni subcarpetas.
+4. Después de este documento vienen packing list, factura comercial y BL.
+
+Authorized by:
+Sales Export Coordination
+Rheinland Film GmbH
+
+End of Document

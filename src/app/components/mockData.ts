@@ -50,6 +50,9 @@ export interface Documento {
   tipo: TipoDocumento;
   tamano: string;
   fecha: string;
+  origen?: string;
+  visibilidad?: string;
+  estadoValidacion?: 'Pendiente' | 'Aprobado' | 'Aprobado con diferencias' | 'Reclamo abierto' | 'Reclamo resuelto';
 }
 
 export interface Incidencia {
@@ -64,6 +67,7 @@ export interface Incidencia {
 export interface ArticuloEmbarque {
   articuloId: string;
   cantidad: number;
+  contenedores?: string[];
 }
 
 export interface Subcarpeta {
@@ -126,6 +130,16 @@ export interface Carpeta {
   documentos?: Documento[];
   ultimoHito: string;
   lastUpdate: string;
+}
+
+export function hasPreembarqueInvoice(carpeta: Carpeta): boolean {
+  return (carpeta.documentos ?? []).some(documento => documento.tipo === 'Factura Comercial');
+}
+
+export function shouldShowMotherPendingState(carpeta: Carpeta): boolean {
+  return carpeta.estado === 'Pendiente de embarque'
+    && carpeta.subcarpetas.length === 0
+    && !hasPreembarqueInvoice(carpeta);
 }
 
 export interface ObligacionPago {
@@ -216,8 +230,8 @@ export const CARPETAS: Carpeta[] = [
           { id: 'doc4', nombre: 'CertOrigen_UE_4831.pdf', tipo: 'Certificado de Origen', tamano: '0.4 MB', fecha: '2026-03-20' },
         ],
         articulosEmbarque: [
-          { articuloId: 'a1', cantidad: 50000 },
-          { articuloId: 'a2', cantidad: 30000 },
+          { articuloId: 'a1', cantidad: 50000, contenedores: ['MSCU-01'] },
+          { articuloId: 'a2', cantidad: 30000, contenedores: ['MSCU-02'] },
         ],
         incidencias: [],
       },
@@ -250,7 +264,7 @@ export const CARPETAS: Carpeta[] = [
           { id: 'doc6', nombre: 'BL_CMDUARG0192847.pdf', tipo: 'Bill of Lading / CRT', tamano: '0.9 MB', fecha: '2026-04-18' },
         ],
         articulosEmbarque: [
-          { articuloId: 'a3', cantidad: 12000 },
+          { articuloId: 'a3', cantidad: 12000, contenedores: ['CMDU-01'] },
         ],
         incidencias: [],
       },
@@ -346,8 +360,8 @@ export const CARPETAS: Carpeta[] = [
           { id: 'doc9', nombre: 'PackingList_UPM_0887.pdf', tipo: 'Packing List', tamano: '0.6 MB', fecha: '2026-03-22' },
         ],
         articulosEmbarque: [
-          { articuloId: 'a4', cantidad: 15000 },
-          { articuloId: 'a5', cantidad: 8000 },
+          { articuloId: 'a4', cantidad: 15000, contenedores: ['MAEU-01'] },
+          { articuloId: 'a5', cantidad: 8000, contenedores: ['MAEU-01'] },
         ],
         incidencias: [],
       },
@@ -437,8 +451,8 @@ export const CARPETAS: Carpeta[] = [
           { id: 'doc13', nombre: 'CertOrigen_IT_0199.pdf', tipo: 'Certificado de Origen', tamano: '0.3 MB', fecha: '2026-04-25' },
         ],
         articulosEmbarque: [
-          { articuloId: 'a8', cantidad: 18000 },
-          { articuloId: 'a9', cantidad: 10000 },
+          { articuloId: 'a8', cantidad: 18000, contenedores: ['MSCU-01'] },
+          { articuloId: 'a9', cantidad: 10000, contenedores: ['MSCU-01'] },
         ],
         incidencias: [],
       },
@@ -499,7 +513,7 @@ export const CARPETAS: Carpeta[] = [
           { id: 'doc15', nombre: 'CRT-TAC-2026-0892.pdf', tipo: 'Bill of Lading / CRT', tamano: '0.6 MB', fecha: '2026-05-07' },
         ],
         articulosEmbarque: [
-          { articuloId: 'a10', cantidad: 8000 },
+          { articuloId: 'a10', cantidad: 8000, contenedores: ['Unidad-01', 'Unidad-02', 'Unidad-03'] },
         ],
         incidencias: [
           { id: 'inc1', tipo: 'Faltante de Producto', cantidadAfectada: 120, comentario: 'Camión llegó con sello roto. 3 pallets abiertos, 120 rollos faltantes.', fecha: '2026-05-12', resuelta: false },
@@ -560,12 +574,41 @@ export const CARPETAS: Carpeta[] = [
         coeficienteReal: 1.88,
         documentos: [],
         articulosEmbarque: [
-          { articuloId: 'a11', cantidad: 45000 },
-          { articuloId: 'a12', cantidad: 20000 },
+          { articuloId: 'a11', cantidad: 45000, contenedores: ['EGLV-01', 'EGLV-02'] },
+          { articuloId: 'a12', cantidad: 20000, contenedores: ['EGLV-03'] },
         ],
         incidencias: [],
       },
     ],
+  },
+  {
+    id: 'c_demo_514',
+    numero: '2026/514',
+    fechaOC: '2026-04-22',
+    proveedorId: 'p3',
+    pedidoSAP45: '4500014524',
+    montoTotal: 74450,
+    moneda: 'EUR',
+    estado: 'Pendiente de embarque',
+    incoterm: 'CIF',
+    condPago: '60 días desde BL',
+    referenciaProveedor: 'RFG-2026-DGF-514',
+    controlConforme: true,
+    observaciones: '',
+    fechaEmbarqueEst: '2026-06-18',
+    coeficienteEst: 1.81,
+    coeficienteReal: null,
+    vep: 0,
+    gastosTerminal: 0,
+    honorariosDespachante: 0,
+    ultimoHito: 'OC emitida — Esperando confirmación del proveedor y avance de producción.',
+    lastUpdate: '2026-06-01',
+    articulos: [
+      { id: 'a_demo_514_1', codigoSAP: '3000034', descripcion: 'Film Polyéster Transparente 15µm', linea: 'LDA', cantidadSolicitada: 18000, um: 'M2', precioUnitario: 2.65, cantidadAsignada: 0 },
+      { id: 'a_demo_514_2', codigoSAP: '3000041', descripcion: 'Laminado BOPP Gloss 18µm', linea: 'LDA', cantidadSolicitada: 22000, um: 'M2', precioUnitario: 1.21, cantidadAsignada: 0 },
+    ],
+    subcarpetas: [],
+    documentos: [],
   },
 ];
 
@@ -585,6 +628,8 @@ CARPETAS.push(
     const sequence = 470 + index;
     const articleId = `a_extra_${index + 1}_1`;
     const canalAduana: CanalAduana = estado === 'Arribado Aduana' ? 'Pendiente' : 'Verde';
+    const hasOperationalShipment = estado !== 'Pendiente de embarque';
+    const requestedQuantity = 8000 + index * 450;
 
     return {
       id: `c_extra_${index + 1}`,
@@ -612,13 +657,13 @@ CARPETAS.push(
           codigoSAP: `90${String(1000 + index).padStart(4, '0')}`,
           descripcion: `Artículo de prueba ${index + 1}`,
           linea: index % 2 === 0 ? 'LCA' : 'LDA',
-          cantidadSolicitada: 8000 + index * 450,
+          cantidadSolicitada: requestedQuantity,
           um: 'Kg',
           precioUnitario: 1.1 + index * 0.08,
-          cantidadAsignada: 8000 + index * 450,
+          cantidadAsignada: hasOperationalShipment ? requestedQuantity : 0,
         },
       ],
-      subcarpetas: [
+      subcarpetas: hasOperationalShipment ? [
         {
           id: `s_extra_${index + 1}_1`,
           numero: `2026/${sequence}-A`,
@@ -640,19 +685,25 @@ CARPETAS.push(
           eta: `2026-07-${String((index % 18) + 8).padStart(2, '0')}`,
           fechaEmbarqueReal: `2026-06-${String((index % 18) + 1).padStart(2, '0')}`,
           documentos: [],
-          articulosEmbarque: [{ articuloId: articleId, cantidad: 8000 + index * 450 }],
+          articulosEmbarque: [{ articuloId: articleId, cantidad: requestedQuantity, contenedores: [`CONT-${String((index % 2) + 1).padStart(2, '0')}`] }],
           incidencias: [],
           pedidoSAP55: `550001${String(100 + index).padStart(3, '0')}`,
           ingresoSAP18: estado === 'En Stock' ? `18260${String(500 + index).padStart(4, '0')}` : '',
           coeficienteEst: 1.25 + index * 0.03,
           coeficienteReal: index % 3 === 0 ? 1.32 + index * 0.02 : null,
         },
-      ],
+      ] : [],
       ultimoHito: EXTRA_CARPETA_HITOS[index % EXTRA_CARPETA_HITOS.length],
       lastUpdate: `2026-06-${String((index % 20) + 4).padStart(2, '0')}`,
     };
   }),
 );
+
+const demoCarpetaIndex = CARPETAS.findIndex(carpeta => carpeta.id === 'c_demo_514');
+if (demoCarpetaIndex > 0) {
+  const [demoCarpeta] = CARPETAS.splice(demoCarpetaIndex, 1);
+  CARPETAS.unshift(demoCarpeta);
+}
 
 export const OBLIGACIONES_PAGO: ObligacionPago[] = [
   { id: 'op1', carpetaNumero: '2026/437', subcarpetaNumero: '2026/437-A', proveedor: 'Europacel Ibérica S.A.', vencimiento: '2026-06-01', tipo: 'Factura Proveedor Exterior', moneda: 'EUR', importe: 85500, importeARS: 96916500, estado: 'Pendiente de Pago', referenciaTransferencia: '' },

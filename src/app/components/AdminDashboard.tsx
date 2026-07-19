@@ -11,6 +11,7 @@ import { SearchField, normalizeSearchTerm } from './SearchField';
 import { color } from './theme';
 import { AppButton } from './AppButton';
 import { FilterToolbar } from './FilterToolbar';
+import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectValue } from './ui/select';
 
 const { ink: INK, muted: MUTED, parchment: PARCHMENT, hairline: HAIRLINE, brand: GREEN, violet: VIOLET, canvas: CANVAS, surface: STICKY_ACTION_BACKGROUND } = color;
 
@@ -270,7 +271,7 @@ function UsersTab({ users, onUsersChange }: { users: AppUser[]; onUsersChange: (
               </button>
             </div>
             <div style={modalBody}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
                 {[['nombre', 'NOMBRE *', 'Juan'], ['apellido', 'APELLIDO *', 'García']].map(([field, label, ph]) => (
                   <div key={field}>
                     <label style={fieldLabel}>{label}</label>
@@ -279,17 +280,19 @@ function UsersTab({ users, onUsersChange }: { users: AppUser[]; onUsersChange: (
                   </div>
                 ))}
               </div>
-              <div>
-                <label style={fieldLabel}>USUARIO *</label>
-                <input value={form.username} onChange={f('username')} placeholder="importaciones"
-                  style={{ ...formInput, fontSize: 13 }} />
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+                <div>
+                  <label style={fieldLabel}>USUARIO *</label>
+                  <input value={form.username} onChange={f('username')} placeholder="importaciones"
+                    style={{ ...formInput, fontSize: 13 }} />
+                </div>
+                <div>
+                  <label style={fieldLabel}>EMAIL *</label>
+                  <input value={form.email} onChange={f('email')} type="email" placeholder="usuario@dimagraf.com"
+                    style={{ ...formInput, fontSize: 13 }} />
+                </div>
               </div>
-              <div>
-                <label style={fieldLabel}>EMAIL *</label>
-                <input value={form.email} onChange={f('email')} type="email" placeholder="usuario@dimagraf.com"
-                  style={{ ...formInput, fontSize: 13 }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.6fr) minmax(180px, 0.8fr)', gap: 14 }}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 8, letterSpacing: '0.04em' }}>ROLES ASIGNADOS</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -319,10 +322,15 @@ function UsersTab({ users, onUsersChange }: { users: AppUser[]; onUsersChange: (
                 </div>
                 <div>
                   <label style={fieldLabel}>ESTADO</label>
-                  <select value={form.estado} onChange={f('estado')} style={formInput}>
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                  </select>
+                  <Select value={form.estado} onValueChange={value => setForm(prev => ({ ...prev, estado: value as UserFormState['estado'] }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent>
+                      <AppSelectItem value="Activo">Activo</AppSelectItem>
+                      <AppSelectItem value="Inactivo">Inactivo</AppSelectItem>
+                    </AppSelectContent>
+                  </Select>
                 </div>
               </div>
               <div style={modalFooter}>
@@ -637,15 +645,26 @@ function ArticlesTab() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>LÍNEA</label>
-                  <select value={form.linea} onChange={f('linea')} style={{ width: '100%', padding: '10px 12px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}>
-                    <option>LCA</option><option>LDA</option>
-                  </select>
+                  <Select value={form.linea} onValueChange={value => setForm(prev => ({ ...prev, linea: value }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent>
+                      <AppSelectItem value="LCA">LCA</AppSelectItem>
+                      <AppSelectItem value="LDA">LDA</AppSelectItem>
+                    </AppSelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>U.M.</label>
-                  <select value={form.um} onChange={f('um')} style={{ width: '100%', padding: '10px 12px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}>
-                    {['Kg', 'Mill.', 'Unid.', 'Resma', 'm²'].map(u => <option key={u}>{u}</option>)}
-                  </select>
+                  <Select value={form.um} onValueChange={value => setForm(prev => ({ ...prev, um: value }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent>
+                      {['Kg', 'Mill.', 'Unid.', 'Resma', 'm²'].map(u => <AppSelectItem key={u} value={u}>{u}</AppSelectItem>)}
+                    </AppSelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>PRECIO REF. $</label>
@@ -655,9 +674,15 @@ function ArticlesTab() {
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>ESTADO</label>
-                <select value={form.estado} onChange={f('estado')} style={{ width: '100%', padding: '10px 14px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}>
-                  <option>Activo</option><option>Inactivo</option>
-                </select>
+                <Select value={form.estado} onValueChange={value => setForm(prev => ({ ...prev, estado: value as ArtForm['estado'] }))}>
+                  <AppSelectTrigger style={{ width: '100%' }}>
+                    <SelectValue />
+                  </AppSelectTrigger>
+                  <AppSelectContent>
+                    <AppSelectItem value="Activo">Activo</AppSelectItem>
+                    <AppSelectItem value="Inactivo">Inactivo</AppSelectItem>
+                  </AppSelectContent>
+                </Select>
               </div>
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <AppButton onClick={() => setModal(null)} variant="secondary" size="sm" style={{ flex: 1 }}>Cancelar</AppButton>
@@ -854,15 +879,26 @@ function ProvidersTab() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>INCOTERM</label>
-                  <select value={form.incoterm} onChange={f('incoterm')} style={{ width: '100%', padding: '10px 14px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}>
-                    {['FOB', 'CIF', 'EXW', 'FCA', 'DAP', 'DDP', 'CFR'].map(t => <option key={t}>{t}</option>)}
-                  </select>
+                  <Select value={form.incoterm} onValueChange={value => setForm(prev => ({ ...prev, incoterm: value }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent>
+                      {['FOB', 'CIF', 'EXW', 'FCA', 'DAP', 'DDP', 'CFR'].map(t => <AppSelectItem key={t} value={t}>{t}</AppSelectItem>)}
+                    </AppSelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>MONEDA</label>
-                  <select value={form.moneda} onChange={f('moneda')} style={{ width: '100%', padding: '10px 14px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}>
-                    <option value="EUR">EUR</option><option value="USD">USD</option>
-                  </select>
+                  <Select value={form.moneda} onValueChange={value => setForm(prev => ({ ...prev, moneda: value as ProvForm['moneda'] }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent>
+                      <AppSelectItem value="EUR">EUR</AppSelectItem>
+                      <AppSelectItem value="USD">USD</AppSelectItem>
+                    </AppSelectContent>
+                  </Select>
                 </div>
               </div>
               <div>

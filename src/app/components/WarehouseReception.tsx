@@ -7,6 +7,7 @@ import { TransportModeIcon } from './TransportModeIcon';
 import { SearchField, normalizeSearchTerm } from './SearchField';
 import { color } from './theme';
 import { AppButton } from './AppButton';
+import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectValue } from './ui/select';
 
 const INK = color.ink;
 const MUTED = color.muted;
@@ -419,27 +420,30 @@ export function WarehouseReception() {
             </div>
 
             <div style={{ ...modalBody, padding: '20px 24px' }}>
-              <div>
-                <label style={fieldLabel}>TIPO DE INCIDENCIA</label>
-                <select
-                  value={incidentTipo}
-                  onChange={e => setIncidentTipo(e.target.value)}
-                  style={{ ...formInput, minHeight: 42 }}
-                >
-                  <option>Faltante de Producto</option>
-                  <option>Mercadería Dañada / Rota</option>
-                  <option>Error de SKU / Producto Equivocado</option>
-                </select>
-              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
+                <div>
+                  <label style={fieldLabel}>TIPO DE INCIDENCIA</label>
+                  <Select value={incidentTipo} onValueChange={setIncidentTipo}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent>
+                      <AppSelectItem value="Faltante de Producto">Faltante de Producto</AppSelectItem>
+                      <AppSelectItem value="Mercadería Dañada / Rota">Mercadería Dañada / Rota</AppSelectItem>
+                      <AppSelectItem value="Error de SKU / Producto Equivocado">Error de SKU / Producto Equivocado</AppSelectItem>
+                    </AppSelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <label style={fieldLabel}>CANTIDAD AFECTADA</label>
-                <input
-                  type="number"
-                  value={incidentCant}
-                  onChange={e => setIncidentCant(parseInt(e.target.value) || 0)}
-                  style={{ ...formInput, minHeight: 42, fontWeight: 600, color: '#c4001a', border: '1px solid rgba(196,0,26,0.3)' }}
-                />
+                <div>
+                  <label style={fieldLabel}>CANTIDAD AFECTADA</label>
+                  <input
+                    type="number"
+                    value={incidentCant}
+                    onChange={e => setIncidentCant(parseInt(e.target.value) || 0)}
+                    style={{ ...formInput, minHeight: 42, fontWeight: 600, color: '#c4001a', border: '1px solid rgba(196,0,26,0.3)' }}
+                  />
+                </div>
               </div>
 
               <div>

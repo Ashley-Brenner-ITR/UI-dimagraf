@@ -1,0 +1,72 @@
+RHEINLAND FILM GMBH
+Ocean Bill of Lading
+
+Carrier: Hapag-Lloyd
+Bill of Lading No.: HLCUBA4492026
+Booking No.: HAM-BUE-2026-4491
+Issue Date: 2026-05-16
+
+Shipper
+Rheinland Film GmbH
+Am Industriepark 18
+40221 Duesseldorf
+Germany
+
+Consignee
+Dimagraf S.A.
+Av. de los Importadores 2450
+Buenos Aires
+Argentina
+
+Notify Party
+Dimagraf S.A. - Import Department
+Internal Folder Reference: 2026/449
+
+Voyage Information
+Port of Loading: Hamburg, Germany
+Port of Discharge: Buenos Aires, Argentina
+Place of Receipt: Duesseldorf
+Place of Delivery: Buenos Aires
+Vessel / Voyage: Hansa Liberty V.082W
+On Board Date: 2026-05-15
+ETA Buenos Aires: 2026-06-14
+Freight Term: CIF
+
+Cargo Information
+Marks & Numbers: DIMAGRAF / 2026-449
+Packages: 38 pallets
+Description of Goods: Flexible packaging films and laminates
+Gross Weight: 8,960.00 kg
+Measurement: 41.80 m3
+
+Container Details
+Container 1
+Container No.: HLXU-449001-2
+Seal No.: SEAL-44901
+Content Summary:
+- SAP 3000021 / Film Polyéster Metalizado 12µm / 12000 M2
+- Partial packaging loaded and secured.
+
+Container 2
+Container No.: HLXU-449002-7
+Seal No.: SEAL-44902
+Content Summary:
+- SAP 3000028 / Laminado BOPP Mate 20µm / 23750 M2
+- Balance of packed cargo loaded and secured.
+
+Document Notes
+1. This BL is issued after shipment booking confirmation.
+2. Container split is now defined at shipment level.
+3. Final packed quantities match shipper declaration at loading date.
+4. Any operational discrepancy must be reviewed against the Packing List and the Purchase Order.
+
+Demo Notes
+1. Este documento sirve para la segunda parte de la demo de la carpeta 2026/449.
+2. A diferencia del Packing List, acá ya aparece la división física por contenedor.
+3. El BL permite contar la historia de cuándo la operación deja de ser solo carpeta madre y pasa a tener estructura de embarque.
+4. Está preparado para mostrar el vínculo entre documento, contenedor y artículo.
+
+Issued by:
+Hapag-Lloyd Documentation Center
+
+End of Document

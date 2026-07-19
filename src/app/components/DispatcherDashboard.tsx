@@ -10,6 +10,7 @@ import { SearchField, normalizeSearchTerm } from './SearchField';
 import { color } from './theme';
 import { FormField as Field } from './FormField';
 import { AppButton } from './AppButton';
+import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectValue } from './ui/select';
 
 const INK = color.ink;
 const MUTED = color.muted;
@@ -70,6 +71,7 @@ interface EditModalProps {
 }
 
 function EditModal({ carpetaNumero, sub, data, onSave, onClose }: EditModalProps) {
+  const isMobile = useIsMobile();
   const [form, setForm] = useState<DispatcherData>({ ...data });
 
   const set = (field: keyof DispatcherData) =>
@@ -117,14 +119,18 @@ function EditModal({ carpetaNumero, sub, data, onSave, onClose }: EditModalProps
 
           {/* Despacho tipo */}
           <Field label="DESPACHO / ZFI / ZFE">
-            <select value={form.despachoTipo} onChange={set('despachoTipo')} style={inputStyle}>
-              <option value="">Seleccionar tipo...</option>
-              {DESPACHO_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
+            <Select value={form.despachoTipo} onValueChange={value => setForm(prev => ({ ...prev, despachoTipo: value as DespachoTipo | '' }))}>
+              <AppSelectTrigger style={{ width: '100%' }}>
+                <SelectValue placeholder="Seleccionar tipo..." />
+              </AppSelectTrigger>
+              <AppSelectContent>
+                {DESPACHO_OPTS.map(o => <AppSelectItem key={o} value={o}>{o}</AppSelectItem>)}
+              </AppSelectContent>
+            </Select>
           </Field>
 
           {/* Montos */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
             <Field label="GASTOS AR$ (ESTIMADO)">
               <input type="number" value={form.gastosARS} onChange={set('gastosARS')} placeholder="0"
                 style={inputStyle} />
@@ -136,7 +142,7 @@ function EditModal({ carpetaNumero, sub, data, onSave, onClose }: EditModalProps
           </div>
 
           {/* Fechas */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
             <Field label="FECHA OFICIALIZACIÓN">
               <input type="date" value={form.fechaOficializacion} onChange={set('fechaOficializacion')}
                 style={inputStyle} />

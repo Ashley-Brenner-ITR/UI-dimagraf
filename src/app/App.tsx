@@ -6,7 +6,7 @@ import { PasswordRecoveryPage } from './components/PasswordRecoveryPage';
 import { AppLoaderSkeleton } from './components/LoadingState';
 import { ErrorStatePage } from './components/ErrorStatePage';
 import type { MailReportConfig } from './components/AccountSettingsPage';
-import { CARPETAS, INITIAL_NOTIFICATIONS, USERS, type Carpeta, type AppNotification, type AuditEntry, type AppUser } from './components/mockData';
+import { CARPETAS, INITIAL_NOTIFICATIONS, USERS, type Carpeta, type EstadoCarpeta, type AppNotification, type AuditEntry, type AppUser } from './components/mockData';
 import type { Role } from './components/mockData';
 
 const lazyNamed = <TModule, TKey extends keyof TModule>(
@@ -33,6 +33,7 @@ const SubcarpetaDetail = lazyNamed(() => import('./components/SubcarpetaDetail')
 type View = 'carpetas' | 'carpeta-detail' | 'subcarpeta-detail' | 'arrivals' | 'cashflow' | 'reception' | 'audit' | 'dashboard' | 'vencimientos'
           | 'admin-users' | 'admin-audit' | 'admin-articles' | 'admin-providers' | 'admin-design-system' | 'settings';
 type DetailTabTarget = 'general' | 'articulos';
+type SubDetailTabTarget = 'transito' | 'aduana' | 'costeo' | 'documentos' | 'recepcion';
 
 type SessionState =
   | { kind: 'abm'; userId: string; activeRole: Role }
@@ -64,6 +65,18 @@ const DEFAULT_MAIL_CONFIG: MailReportConfig = {
   selectedReports: ['arrivals', 'vencimientos'],
 };
 
+const DEFAULT_CARPETA_ESTADO: EstadoCarpeta = 'Pendiente de embarque';
+const LEGACY_DEMO_OBSERVACION = 'Carpeta de demo preparada para mostrar validación documental, seguimiento de producción y aperturas parciales.';
+
+function normalizeCarpeta(carpeta: Carpeta): Carpeta {
+  return {
+    ...carpeta,
+    estado: carpeta.estado || DEFAULT_CARPETA_ESTADO,
+    observaciones: carpeta.observaciones === LEGACY_DEMO_OBSERVACION ? '' : carpeta.observaciones,
+    ultimoHito: carpeta.ultimoHito || 'Carpeta creada · Pendiente de gestión operativa',
+  };
+}
+
 export default function App() {
   const isRecoveryMode = new URLSearchParams(window.location.search).get('recovery') === '1';
   const forcedErrorParam = new URLSearchParams(window.location.search).get('error');
@@ -75,7 +88,9 @@ export default function App() {
   const [selectedCarpetaId, setSelectedCarpetaId] = useState<string | null>(null);
   const [selectedSubcarpetaId, setSelectedSubcarpetaId] = useState<string | null>(null);
   const [selectedDetailTab, setSelectedDetailTab] = useState<DetailTabTarget>('general');
-  const [carpetasList, setCarpetasList] = useState<Carpeta[]>([...CARPETAS]);
+  const [selectedSubDetailTab, setSelectedSubDetailTab] = useState<SubDetailTabTarget | undefined>();
+  const [subcarpetaBackView, setSubcarpetaBackView] = useState<View>('carpeta-detail');
+  const [carpetasList, setCarpetasList] = useState<Carpeta[]>(() => CARPETAS.map(normalizeCarpeta));
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifAnchorRect, setNotifAnchorRect] = useState<NotificationAnchorRect | null>(null);
@@ -83,6 +98,10 @@ export default function App() {
   const [mailConfigByUser, setMailConfigByUser] = useState<Record<string, MailReportConfig>>({});
   const [lastContentView, setLastContentView] = useState<View>('carpetas');
   const [isContentLoading, setIsContentLoading] = useState(false);
+
+  useEffect(() => {
+    setCarpetasList(prev => prev.map(normalizeCarpeta));
+  }, []);
 
   const currentUser = useMemo(
     () => session?.kind === 'abm' ? users.find(user => user.id === session.userId) ?? null : null,
@@ -323,29 +342,41 @@ export default function App() {
   };
 
   const handleCreateCarpeta = (carpeta: Carpeta) => {
-    setCarpetasList(prev => [carpeta, ...prev]);
+    const normalizedCarpeta = normalizeCarpeta(carpeta);
+    setCarpetasList(prev => [normalizedCarpeta, ...prev]);
     addNotification({
       type: 'success',
       title: 'Carpeta creada',
-      message: `Carpeta ${carpeta.numero} abierta · ${carpeta.moneda} ${carpeta.montoTotal.toLocaleString()}`,
+      message: `Carpeta ${normalizedCarpeta.numero} abierta · ${normalizedCarpeta.moneda} ${normalizedCarpeta.montoTotal.toLocaleString()}`,
       role: 'operator',
-      entityId: carpeta.id,
+      entityId: normalizedCarpeta.id,
     });
     addAuditEntry({
       userId: 'u2', userName: 'Marcos Delgado', userRole: 'operator',
       action: 'Creó carpeta',
-      entity: 'Carpeta', entityId: carpeta.numero,
-      detail: `${carpeta.moneda} ${carpeta.montoTotal.toLocaleString()}`,
+      entity: 'Carpeta', entityId: normalizedCarpeta.numero,
+      detail: `${normalizedCarpeta.moneda} ${normalizedCarpeta.montoTotal.toLocaleString()} · ${normalizedCarpeta.estado}`,
     });
   };
 
   const handleUpdateCarpeta = (updatedCarpeta: Carpeta) => {
-    setCarpetasList(prev => prev.map(carpeta => carpeta.id === updatedCarpeta.id ? updatedCarpeta : carpeta));
+    const normalizedCarpeta = normalizeCarpeta(updatedCarpeta);
+    setCarpetasList(prev => prev.map(carpeta => carpeta.id === normalizedCarpeta.id ? normalizedCarpeta : carpeta));
   };
 
   const handleSelectSubcarpeta = (carpetaId: string, subcarpetaId: string) => {
     setSelectedCarpetaId(carpetaId);
     setSelectedSubcarpetaId(subcarpetaId);
+    setSelectedSubDetailTab(undefined);
+    setSubcarpetaBackView('carpeta-detail');
+    setView('subcarpeta-detail');
+  };
+
+  const handleSelectSubcarpetaFromArrivals = (carpetaId: string, subcarpetaId: string) => {
+    setSelectedCarpetaId(carpetaId);
+    setSelectedSubcarpetaId(subcarpetaId);
+    setSelectedSubDetailTab('transito');
+    setSubcarpetaBackView('arrivals');
     setView('subcarpeta-detail');
   };
 
@@ -383,8 +414,13 @@ export default function App() {
             carpeta={carpeta}
             readonly={role !== 'operator'}
             hideImportes={role === 'commercial'}
+            initialTab={selectedSubDetailTab}
             onAddDocumento={(doc: any) => handleUpdateCarpeta({ ...carpeta, subcarpetas: carpeta.subcarpetas.map(item => item.id === sub.id ? ({ ...item, documentos: [...item.documentos, doc] }) : item) })}
-            onBack={() => { setView('carpeta-detail'); setSelectedSubcarpetaId(null); }}
+            onBack={() => {
+              setView(subcarpetaBackView);
+              setSelectedSubcarpetaId(null);
+              setSelectedSubDetailTab(undefined);
+            }}
           />
         );
       }
@@ -397,7 +433,7 @@ export default function App() {
       }
       if (view === 'carpeta-detail' && selectedCarpetaId)
         return <CarpetaDetail carpetaId={selectedCarpetaId} carpetasList={carpetasList} onBack={handleBack} onUpdateCarpeta={handleUpdateCarpeta} initialTab={selectedDetailTab} role={role} onSelectSubcarpeta={(subId: string) => { setSelectedSubcarpetaId(subId); setView('subcarpeta-detail' as View); }} />;
-      if (view === 'arrivals') return <CommercialArrivals />;
+      if (view === 'arrivals') return <CommercialArrivals onSelectSubcarpeta={handleSelectSubcarpetaFromArrivals} />;
       if (view === 'vencimientos') return <VencimientosPage canManagePayments={false} />;
       return <OperatorDashboard carpetasList={carpetasList} onSelectCarpeta={handleSelectCarpeta} onSelectSubcarpeta={handleSelectSubcarpeta} onCreateCarpeta={handleCreateCarpeta} />;
     }
@@ -421,7 +457,7 @@ export default function App() {
         return <CarpetaDetail carpetaId={selectedCarpetaId} carpetasList={carpetasList} onBack={handleBack} onUpdateCarpeta={handleUpdateCarpeta} readonly hideImportes initialTab={selectedDetailTab} role={role} />;
       if (view === 'carpetas')
         return <OperatorDashboard carpetasList={carpetasList} onSelectCarpeta={handleSelectCarpeta} onSelectSubcarpeta={handleSelectSubcarpeta} onCreateCarpeta={handleCreateCarpeta} hideImportes />;
-      return <CommercialArrivals />;
+      return <CommercialArrivals onSelectSubcarpeta={handleSelectSubcarpetaFromArrivals} />;
     }
     if (role === 'treasury') {
       if (view === 'vencimientos') return <VencimientosPage canManagePayments={true} />;

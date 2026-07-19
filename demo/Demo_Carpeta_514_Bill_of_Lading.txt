@@ -1,0 +1,26 @@
+RHEINLAND FILM GMBH
+Ocean Bill of Lading
+
+Carrier: MSC
+Bill of Lading No.: MSCUBA5142026
+Booking No.: HAM-BUE-2026-5141
+Issue Date: 2026-06-19
+Internal Folder Reference: 2026/514
+
+Voyage Information
+Port of Loading: Hamburg, Germany
+Port of Discharge: Buenos Aires, Argentina
+Vessel / Voyage: MSC Verona V.119W
+On Board Date: 2026-06-18
+ETA Buenos Aires: 2026-07-16
+
+Container Details
+Container 1
+Container No.: MSCU-514001-4
+- SAP 3000034 / 18000 M2
+
+Container 2
+Container No.: MSCU-514002-9
+- SAP 3000041 / 21000 M2
+
+End of Document

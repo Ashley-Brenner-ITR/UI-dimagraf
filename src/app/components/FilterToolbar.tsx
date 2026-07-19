@@ -20,9 +20,10 @@ interface Props<Value extends string | number> {
   getOptionCount?: (value: Value) => number;
   trailingActions?: ReactNode;
   children?: ReactNode;
+  showChildrenDivider?: boolean;
 }
 
-export function FilterToolbar<Value extends string | number>({ search, onSearchChange, searchPlaceholder, searchAriaLabel = 'Buscar', searchSize = 'default', options, value, onValueChange, expanded, onExpandedChange, activeColor = color.brand, getOptionCount, trailingActions, children }: Props<Value>) {
+export function FilterToolbar<Value extends string | number>({ search, onSearchChange, searchPlaceholder, searchAriaLabel = 'Buscar', searchSize = 'default', options, value, onValueChange, expanded, onExpandedChange, activeColor = color.brand, getOptionCount, trailingActions, children, showChildrenDivider = true }: Props<Value>) {
   const [internalExpanded, setInternalExpanded] = useState(false);
   const isExpanded = expanded ?? internalExpanded;
   const setExpanded = onExpandedChange ?? setInternalExpanded;
@@ -65,7 +66,7 @@ export function FilterToolbar<Value extends string | number>({ search, onSearchC
       );
     })}
       {children && <>
-        <div style={{ width: '100%', height: 1, background: color.hairline, margin: '4px 0' }} />
+        {showChildrenDivider && <div style={{ width: '100%', height: 1, background: color.hairline, margin: '4px 0' }} />}
         {children}
       </>}
       </div></div>}

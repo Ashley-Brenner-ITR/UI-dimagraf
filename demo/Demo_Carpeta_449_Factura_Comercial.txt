@@ -1,0 +1,72 @@
+RHEINLAND FILM GMBH
+Commercial Invoice
+
+Invoice No.: INV-RFG-2026-449-01
+Invoice Date: 2026-05-14
+Customer Reference: Dimagraf / 2026/449
+Exporter Reference: RFG-2026-DGF-449
+
+Seller
+Rheinland Film GmbH
+Am Industriepark 18
+40221 Duesseldorf
+Germany
+VAT ID: DE-44792018
+
+Buyer
+Dimagraf S.A.
+Buenos Aires
+Argentina
+
+Commercial Terms
+Incoterm: CIF Buenos Aires
+Payment Terms: 60 days from Bill of Lading date
+Currency: EUR
+Country of Origin: Germany
+
+Shipment Data
+Mode of Transport: Maritime
+Expected Departure: 2026-05-15
+Expected Arrival: 2026-06-14
+Packing List Ref.: PL-RFG-2026-449-01
+Bill of Lading Ref.: HLCUBA4492026
+
+Invoice Lines
+--------------------------------------------------------------------------
+Item   SAP        Description                          Qty      UM   Unit EUR
+1      3000021    Film Polyéster Metalizado 12µm      12000    M2   2.85
+2      3000028    Laminado BOPP Mate 20µm             23750    M2   1.42
+--------------------------------------------------------------------------
+
+Line Totals
+1. SAP 3000021
+   Quantity: 12000 M2
+   Unit Price: EUR 2.85
+   Total: EUR 34200.00
+
+2. SAP 3000028
+   Quantity: 23750 M2
+   Unit Price: EUR 1.42
+   Total: EUR 33725.00
+
+Invoice Summary
+Subtotal: EUR 67925.00
+Insurance: Included
+Freight: Included
+Total Invoice Amount: EUR 67925.00
+
+Additional Remarks
+- Invoice issued based on released export quantity.
+- Final quantity for SAP 3000028 is lower than original purchase order quantity pending supplier close-out.
+- This invoice should be reviewed against the purchase order and packing list before confirmation.
+
+Demo Notes
+1. Esta factura comercial cierra la secuencia de demo de la carpeta 2026/449.
+2. Mantiene la diferencia del artículo 3000028 para que puedas mostrar validación de cantidades también en el documento financiero.
+3. Está pensada para usarla en la carpeta madre, antes de definir completamente el reparto por embarques.
+
+Authorized Signature
+Rheinland Film GmbH
+Commercial Export Department
+
+End of Document

@@ -1,0 +1,104 @@
+RHEINLAND FILM GMBH
+Packing List
+
+Document No.: PL-RFG-2026-449-01
+Commercial Ref.: RFG-2026-DGF-449
+Date: 2026-05-12
+
+Seller
+Rheinland Film GmbH
+Am Industriepark 18
+40221 Duesseldorf
+Germany
+VAT ID: DE-44792018
+
+Consignee
+Dimagraf S.A.
+Av. de los Importadores 2450
+Buenos Aires
+Argentina
+
+Notify Party
+Dimagraf S.A. - Import Department
+Ref. Internal Folder: 2026/449
+
+Purchase Order Information
+PO / Carpeta Madre: 2026/449
+PO Date: 2026-03-15
+Currency: EUR
+Incoterm: CIF Buenos Aires
+Expected Shipment Window: Week 20 / 2026
+Country of Origin: Germany
+
+Shipment Information
+Mode of Transport: Maritime
+Shipment Status: Ready for Shipment
+Estimated Port of Loading: Hamburg, Germany
+Estimated Port of Discharge: Buenos Aires, Argentina
+Estimated Shipping Date: 2026-05-14
+Estimated Time of Arrival: Pending final booking
+Forwarder: To be confirmed
+Container Status: Pending assignment
+Bill of Lading: Not issued yet
+
+Package Summary
+Total Packages: 38 pallets
+Gross Weight: 8,960.00 kg
+Net Weight: 8,430.00 kg
+Total Volume: 41.80 m3
+
+Packed Goods Detail
+
+Line 1
+SAP Code: 3000021
+Material Description: Film Polyéster Metalizado 12µm
+Product Line: LDA
+Ordered Quantity: 12000 M2
+Packed Quantity: 12000 M2
+Unit of Measure: M2
+Package Type: Pallets
+Package Count: 18 pallets
+Net Weight: 3,920.00 kg
+Gross Weight: 4,150.00 kg
+Volume: 18.60 m3
+Remarks: Full ordered quantity packed and ready.
+
+Line 2
+SAP Code: 3000028
+Material Description: Laminado BOPP Mate 20µm
+Product Line: LDA
+Ordered Quantity: 25000 M2
+Packed Quantity: 23750 M2
+Unit of Measure: M2
+Package Type: Pallets
+Package Count: 20 pallets
+Net Weight: 4,510.00 kg
+Gross Weight: 4,810.00 kg
+Volume: 23.20 m3
+Remarks: Balance pending final production release.
+
+Summary by Article
+------------------------------------------------------------------
+SAP        Description                              Qty Packed   UM
+3000021    Film Polyéster Metalizado 12µm          12000        M2
+3000028    Laminado BOPP Mate 20µm                 23750        M2
+------------------------------------------------------------------
+Total packed quantity: 35750 M2
+
+Operational Notes
+1. This packing list is intended for pre-shipment review.
+2. Container split has not been defined yet.
+3. Final Bill of Lading and container references will be issued after booking confirmation.
+4. Any discrepancy against the purchase order must be reviewed before shipment confirmation.
+
+Demo Notes
+1. Este documento está preparado para subirlo en la carpeta madre 2026/449.
+2. Sirve para mostrar el paso donde se compara el documento contra la operación completa antes de abrir embarques o subcarpetas.
+3. La línea 3000028 quedó con cantidad menor que la OC para que la demo muestre una diferencia.
+4. El documento aclara que todavía no existe división por contenedor ni BL emitido, para reforzar ese punto del flujo.
+
+Prepared by:
+Logistics Coordination Office
+Rheinland Film GmbH
+
+End of Document

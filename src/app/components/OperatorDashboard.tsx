@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from '
 import { Plus, ChevronRight, ChevronLeft, CheckCircle, X, Upload, FileText, AlertTriangle, Trash2, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, ArrowLeft, Layers, ChevronDown, ChevronUp, FolderOpen, Ship } from 'lucide-react';
 import { fieldLabel, formInput, formTextarea, getAutoFitGridStyle, getModalPrimaryButtonStyle, getModalSecondaryButtonStyle, getResponsiveTableStyle, getModalShellStyle, modalCloseButton, modalFooter, modalHeader, modalOverlay, pageActions, pageHeader, pageShell, tableHeadCell, tableHeadRow, tableScrollArea, tableShell } from './chromeStyles';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { PROVEEDORES, getEstadoColor, type EstadoCarpeta, type Carpeta, type Subcarpeta } from './mockData';
+import { PROVEEDORES, getEstadoColor, shouldShowMotherPendingState, type EstadoCarpeta, type Carpeta, type Subcarpeta } from './mockData';
 import { NeonBadge } from './NeonBadge';
 import { useIsMobile } from './ui/use-mobile';
 import { AppButton } from './AppButton';
@@ -11,6 +11,7 @@ import { FilterToolbar } from './FilterToolbar';
 import { WelcomeBanner } from './WelcomeBanner';
 import { SurfaceCard } from './SurfaceCard';
 import { color, radius } from './theme';
+import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectValue } from './ui/select';
 
 const INK       = '#1d1d1f';
 const MUTED     = '#6e6e73';
@@ -414,7 +415,9 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
   const estadoCounts = carpetasList.reduce<Partial<Record<EstadoCarpeta, number>>>((counts, carpeta) => {
     ESTADO_FILTERS.forEach(option => {
       if (option.value === 'Todos') return;
-      if (carpeta.subcarpetas.some(sub => sub.estado === option.value)) {
+      const hasMatchingSubcarpeta = carpeta.subcarpetas.some(sub => sub.estado === option.value);
+      const hasMatchingMotherPending = option.value === 'Pendiente de embarque' && shouldShowMotherPendingState(carpeta);
+      if (hasMatchingSubcarpeta || hasMatchingMotherPending) {
         counts[option.value] = (counts[option.value] ?? 0) + 1;
       }
     });
@@ -437,7 +440,10 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
     const visibleSubcarpetas = estadoFilter === 'Todos'
       ? c.subcarpetas
       : c.subcarpetas.filter(sub => sub.estado === estadoFilter);
-    const matchEstado = estadoFilter === 'Todos' || visibleSubcarpetas.length > 0;
+    const showMotherPendingState = shouldShowMotherPendingState(c);
+    const matchEstado = estadoFilter === 'Todos'
+      || visibleSubcarpetas.length > 0
+      || (estadoFilter === 'Pendiente de embarque' && showMotherPendingState);
 
     if (!matchSearch || !matchEstado) {
       return [];
@@ -600,7 +606,10 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>{carpeta.numero}</div>
+            <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {shouldShowMotherPendingState(carpeta) && <NeonBadge estado="Pendiente de embarque" size="xs" />}
             {carpeta.subcarpetas.length > 0 && <div style={{ marginTop: 2, fontSize: 10, color: MUTED, whiteSpace: 'nowrap' }}>{carpeta.subcarpetas.length} embarque{carpeta.subcarpetas.length > 1 ? 's' : ''}</div>}
+            </div>
           </div>
         </div>
       ),
@@ -1299,6 +1308,11 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                                   <span style={{ fontSize: 14, lineHeight: '16px', fontWeight: 700, color: INK }}>{c.numero}</span>
                                   {hasSubs && <span style={{ fontSize: 10, color: MUTED, whiteSpace: 'nowrap' }}>{c.subcarpetas.length} embarque{c.subcarpetas.length > 1 ? 's' : ''}</span>}
                                 </div>
+                                {shouldShowMotherPendingState(c) && (
+                                  <div style={{ marginTop: 2 }}>
+                                    <NeonBadge estado="Pendiente de embarque" size="xs" />
+                                  </div>
+                                )}
                               </div>
                               <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
                                 <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Proveedor</span>
@@ -1332,6 +1346,11 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                                 </div>
                                 <div style={{ minWidth: 0, display: 'grid', gap: 4 }}>
                                   <span style={{ fontSize: 14, fontWeight: 700, color: INK, lineHeight: 1.2 }}>{c.numero}</span>
+                                  {shouldShowMotherPendingState(c) && (
+                                    <span style={{ marginTop: 2, display: 'inline-flex' }}>
+                                      <NeonBadge estado="Pendiente de embarque" size="xs" />
+                                    </span>
+                                  )}
                                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: INK, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                                     {prov?.nombre || '—'}
                                     {prov?.pais && <CountryFlag country={prov.pais} />}
@@ -1855,79 +1874,95 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
 
             {/* Step 1 - form */}
             {step === 1 && (
-              <div style={{ padding: modalSectionPadding, display: 'flex', flexDirection: 'column', gap: isNarrowViewport ? 14 : 18, flex: '1 1 auto', minHeight: 0, justifyContent: 'space-between', overflowY: 'auto' }}>
+              <div style={{ padding: modalSectionPadding, display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 auto', minHeight: 0, justifyContent: 'space-between', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isNarrowViewport ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14, alignItems: 'start' }}>
+                    <div>
+                      <label style={fieldLabel}>PROVEEDOR *</label>
+                      <Select value={form.proveedorId} onValueChange={value => setForm(prev => ({ ...prev, proveedorId: value }))}>
+                        <AppSelectTrigger style={{ width: '100%' }}>
+                          <SelectValue placeholder="Seleccionar proveedor..." />
+                        </AppSelectTrigger>
+                        <AppSelectContent>
+                          {PROVEEDORES.map(p => <AppSelectItem key={p.id} value={p.id}>{p.nombre} · {p.pais}</AppSelectItem>)}
+                        </AppSelectContent>
+                      </Select>
+                    </div>
 
-                {/* Proveedor */}
-                <div>
-                  <label style={fieldLabel}>PROVEEDOR *</label>
-                  <select
-                    value={form.proveedorId}
-                    onChange={set('proveedorId')}
-                    style={{ ...modalPrimarySelectStyle, color: form.proveedorId ? INK : MUTED, padding: '11px 40px 11px 16px' }}
-                  >
-                    <option value="">Seleccionar proveedor...</option>
-                    {PROVEEDORES.map(p => <option key={p.id} value={p.id}>{p.nombre} · {p.pais}</option>)}
-                  </select>
-                </div>
-
-                {/* Fecha OC */}
-                <div>
-                  <label style={fieldLabel}>FECHA O/C *</label>
-                  <input
-                    type="date"
-                    value={form.fechaOC}
-                    onChange={set('fechaOC')}
-                    style={{ ...formInput, minHeight: 44 }}
-                  />
-                </div>
-
-                {/* Incoterm + Moneda */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-                  <div>
-                    <label style={fieldLabel}>INCOTERM</label>
-                    <select value={form.incoterm} onChange={set('incoterm')} style={modalPrimarySelectStyle}>
-                      {INCOTERMS.map(t => <option key={t}>{t}</option>)}
-                    </select>
+                    <div>
+                      <label style={fieldLabel}>FECHA O/C *</label>
+                      <input
+                        type="date"
+                        value={form.fechaOC}
+                        onChange={set('fechaOC')}
+                        style={{ ...formInput, minHeight: 44 }}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label style={fieldLabel}>MONEDA</label>
-                    <select value={form.moneda} onChange={set('moneda')} style={modalPrimarySelectStyle}>
-                      <option value="USD">USD — Dólar</option>
-                      <option value="EUR">EUR — Euro</option>
-                    </select>
-                  </div>
-                </div>
 
-                {/* Monto + Condición de pago */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isNarrowViewport ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14, alignItems: 'start' }}>
+                    <div>
+                      <label style={fieldLabel}>INCOTERM</label>
+                      <Select value={form.incoterm} onValueChange={value => setForm(prev => ({ ...prev, incoterm: value }))}>
+                        <AppSelectTrigger style={{ width: '100%' }}>
+                          <SelectValue />
+                        </AppSelectTrigger>
+                        <AppSelectContent>
+                          {INCOTERMS.map(t => <AppSelectItem key={t} value={t}>{t}</AppSelectItem>)}
+                        </AppSelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label style={fieldLabel}>MONEDA</label>
+                      <Select value={form.moneda} onValueChange={value => setForm(prev => ({ ...prev, moneda: value as FormState['moneda'] }))}>
+                        <AppSelectTrigger style={{ width: '100%' }}>
+                          <SelectValue />
+                        </AppSelectTrigger>
+                        <AppSelectContent>
+                          <AppSelectItem value="USD">USD — Dólar</AppSelectItem>
+                          <AppSelectItem value="EUR">EUR — Euro</AppSelectItem>
+                        </AppSelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: isNarrowViewport ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 14, alignItems: 'start' }}>
+                    <div>
+                      <label style={fieldLabel}>MONTO TOTAL O/C *</label>
+                      <input
+                        type="number"
+                        value={form.montoTotal}
+                        onChange={set('montoTotal')}
+                        placeholder="0"
+                        style={{ ...formInput, minHeight: 44 }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={fieldLabel}>CONDICIÓN DE PAGO</label>
+                      <Select value={form.condPago} onValueChange={value => setForm(prev => ({ ...prev, condPago: value }))}>
+                        <AppSelectTrigger style={{ width: '100%' }}>
+                          <SelectValue />
+                        </AppSelectTrigger>
+                        <AppSelectContent>
+                          {CONDICIONES_PAGO.map(c => <AppSelectItem key={c} value={c}>{c}</AppSelectItem>)}
+                        </AppSelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div>
-                    <label style={fieldLabel}>MONTO TOTAL O/C *</label>
-                    <input
-                      type="number"
-                      value={form.montoTotal}
-                      onChange={set('montoTotal')}
-                      placeholder="0"
-                      style={{ ...formInput, minHeight: 44 }}
+                    <label style={fieldLabel}>OBSERVACIONES INICIALES</label>
+                    <textarea
+                      value={form.observaciones}
+                      onChange={set('observaciones')}
+                      rows={2}
+                      placeholder="Notas de apertura, condiciones especiales..."
+                      style={formTextarea}
                     />
                   </div>
-                  <div>
-                    <label style={fieldLabel}>CONDICIÓN DE PAGO</label>
-                    <select value={form.condPago} onChange={set('condPago')} style={modalPrimarySelectStyle}>
-                      {CONDICIONES_PAGO.map(c => <option key={c}>{c}</option>)}
-                    </select>
-                  </div>
-                </div>
 
-                {/* Observaciones */}
-                <div>
-                  <label style={fieldLabel}>OBSERVACIONES INICIALES</label>
-                  <textarea
-                    value={form.observaciones}
-                    onChange={set('observaciones')}
-                    rows={2}
-                    placeholder="Notas de apertura, condiciones especiales..."
-                    style={formTextarea}
-                  />
                 </div>
 
                 {/* Actions */}
@@ -2056,15 +2091,26 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                       <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'repeat(auto-fit, minmax(120px, 1fr))' : 'repeat(auto-fit, minmax(110px, 1fr))', gap: 12 }}>
                         <div>
                           <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>LÍNEA</label>
-                          <select value={manualArticleForm.linea} onChange={setManualField('linea')} style={modalSecondarySelectStyle}>
-                            <option>LCA</option><option>LDA</option>
-                          </select>
+                          <Select value={manualArticleForm.linea} onValueChange={value => setManualArticleForm(prev => ({ ...prev, linea: value }))}>
+                            <AppSelectTrigger style={{ width: '100%' }}>
+                              <SelectValue />
+                            </AppSelectTrigger>
+                            <AppSelectContent>
+                              <AppSelectItem value="LCA">LCA</AppSelectItem>
+                              <AppSelectItem value="LDA">LDA</AppSelectItem>
+                            </AppSelectContent>
+                          </Select>
                         </div>
                         <div>
                           <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>U.M.</label>
-                          <select value={manualArticleForm.um} onChange={setManualField('um')} style={modalSecondarySelectStyle}>
-                            {['Kg', 'Mill.', 'Unid.', 'Resma', 'm²'].map(u => <option key={u}>{u}</option>)}
-                          </select>
+                          <Select value={manualArticleForm.um} onValueChange={value => setManualArticleForm(prev => ({ ...prev, um: value }))}>
+                            <AppSelectTrigger style={{ width: '100%' }}>
+                              <SelectValue />
+                            </AppSelectTrigger>
+                            <AppSelectContent>
+                              {['Kg', 'Mill.', 'Unid.', 'Resma', 'm²'].map(u => <AppSelectItem key={u} value={u}>{u}</AppSelectItem>)}
+                            </AppSelectContent>
+                          </Select>
                         </div>
                         <div>
                           <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>CANTIDAD *</label>
@@ -2132,7 +2178,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                     </div>
                   </>
                 ) : (
-                  <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: '1 1 auto', minHeight: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', flexShrink: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 600, color: INK }}>Adjuntar archivo</div>
                       <button onClick={handleDownloadTemplate} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, borderRadius: 0, border: 'none', background: 'transparent', color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -2163,7 +2209,9 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         background: isDragActive ? 'rgba(26,92,56,0.06)' : PARCHMENT,
                         padding: '18px',
                         transition: 'border-color 0.15s, background 0.15s',
-                        flexShrink: 0,
+                        flex: uploadedFileName ? '0 0 auto' : '1 1 auto',
+                        display: 'flex',
+                        alignItems: uploadedFileName ? 'stretch' : 'center',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
@@ -2207,7 +2255,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         Validar artículos
                       </button>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}

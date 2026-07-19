@@ -26,6 +26,28 @@ function statusText(ready: boolean) {
   return ready ? 'Cargado' : 'Pendiente';
 }
 
+function getLoadModeLabel(sub: Subcarpeta) {
+  if (sub.transporte !== 'Marítimo') {
+    return sub.transporte === 'Terrestre' ? 'Carga terrestre' : 'Carga aérea';
+  }
+  return sub.contenedores > 0 ? 'FCL · Contenedor completo' : 'LCL · Carga consolidada';
+}
+
+function getShipmentArticles(sub: Subcarpeta, carpeta: Carpeta) {
+  return sub.articulosEmbarque.map(item => {
+    const articulo = carpeta.articulos.find(candidate => candidate.id === item.articuloId);
+    return {
+      articuloId: item.articuloId,
+      codigoSAP: articulo?.codigoSAP || item.articuloId,
+      descripcion: articulo?.descripcion || 'Artículo no encontrado',
+      linea: articulo?.linea || '—',
+      cantidad: item.cantidad,
+      um: articulo?.um || '—',
+      contenedores: item.contenedores?.length ? item.contenedores : [],
+    };
+  });
+}
+
 interface Props {
   subcarpeta: Subcarpeta;
   carpeta: Carpeta;
@@ -152,7 +174,7 @@ export function SubcarpetaDetail({ subcarpeta, carpeta, onBack, onAddDocumento, 
           })}
         </div>
         <div>
-          {tab === 'transito' && <TransitoSectionFlat sub={subcarpeta} />}
+          {tab === 'transito' && <TransitoSectionFlat sub={subcarpeta} carpeta={carpeta} />}
           {tab === 'aduana' && <AduanaSection sub={subcarpeta} despachante={despachante} />}
           {tab === 'costeo' && <CosteoSection sub={subcarpeta} carpeta={carpeta} />}
           {tab === 'documentos' && <DocumentosSectionV2 sub={subcarpeta} readonly={readonly} onAddDocumento={onAddDocumento} />}
@@ -203,8 +225,12 @@ function SubcarpetaLoadSummary({ sub, hideImportes }: { sub: Subcarpeta; hideImp
   );
 }
 
-function TransitoSectionFlat({ sub }: { sub: Subcarpeta }) {
+function TransitoSectionFlat({ sub, carpeta }: { sub: Subcarpeta; carpeta: Carpeta }) {
   const isMobile = useIsMobile();
+  const shipmentArticles = getShipmentArticles(sub, carpeta);
+  const totalUnits = shipmentArticles.reduce((total, item) => total + item.cantidad, 0);
+  const hasBillOfLading = sub.documentos.some(documento => documento.tipo === 'Bill of Lading / CRT');
+  const pendingContainerAssignments = hasBillOfLading && shipmentArticles.some(item => item.contenedores.length === 0);
   return (
     <div style={{ padding: 16, display: 'grid', gap: 18 }}>
       <section>
@@ -217,6 +243,7 @@ function TransitoSectionFlat({ sub }: { sub: Subcarpeta }) {
           <Field label="Buque / Forwarder" value={sub.buqueForwarder || '—'} />
           <Field label="BL / CRT / AWB" value={sub.blCrtAwb || '—'} />
           <Field label="Contenedores" value={String(sub.contenedores || 0)} />
+          <Field label="Modalidad de carga" value={getLoadModeLabel(sub)} />
           <Field label="ETA" value={sub.eta || '—'} />
           <Field label="Fecha embarque real" value={sub.fechaEmbarqueReal || '—'} />
           <Field label="Peso neto (kg)" value={sub.pesoNeto ? sub.pesoNeto.toLocaleString() : '—'} />
@@ -226,10 +253,68 @@ function TransitoSectionFlat({ sub }: { sub: Subcarpeta }) {
       </section>
       <section style={{ paddingTop: 16, borderTop: `1px solid ${HAIRLINE}` }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>Artículos del embarque</div>
-        {sub.articulosEmbarque.length === 0 ? (
+        {shipmentArticles.length === 0 ? (
           <div style={{ padding: 18, textAlign: 'center', color: MUTED, fontSize: 13, background: PARCHMENT, borderRadius: 12 }}>Sin artículos asignados a este embarque.</div>
         ) : (
-          <div style={{ fontSize: 13, color: MUTED }}>{sub.articulosEmbarque.length} artículo{sub.articulosEmbarque.length > 1 ? 's' : ''} asignados</div>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <div style={{ fontSize: 13, color: MUTED }}>
+              {shipmentArticles.length} artículo{shipmentArticles.length > 1 ? 's' : ''} asignado{shipmentArticles.length > 1 ? 's' : ''} · {totalUnits.toLocaleString()} unidades embarcadas
+            </div>
+            {hasBillOfLading && (
+              <div style={{ padding: '10px 12px', borderRadius: 10, border: `1px solid ${pendingContainerAssignments ? 'rgba(180,83,9,0.18)' : 'rgba(26,92,56,0.20)'}`, background: pendingContainerAssignments ? 'rgba(180,83,9,0.06)' : 'rgba(26,92,56,0.05)', fontSize: 12, color: pendingContainerAssignments ? '#9a6700' : GREEN }}>
+                {pendingContainerAssignments
+                  ? `BL ${sub.blCrtAwb || 'cargado'} disponible, pero faltan asignaciones de contenedor por artículo.`
+                  : `Asignación de contenedores trazada desde BL ${sub.blCrtAwb || 'cargado'}.`}
+              </div>
+            )}
+            <div style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 14, overflow: 'hidden', background: CANVAS }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : hasBillOfLading ? '160px minmax(0, 1.8fr) 110px 120px 90px 180px' : '160px minmax(0, 1.8fr) 110px 120px 90px', gap: 0, padding: isMobile ? '10px 12px' : '10px 14px', background: PARCHMENT, borderBottom: `1px solid ${HAIRLINE}` }}>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: '0.06em' }}>CÓDIGO SAP</span>
+                {!isMobile && <span style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: '0.06em' }}>ARTÍCULO</span>}
+                {!isMobile && <span style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: '0.06em' }}>LÍNEA</span>}
+                {!isMobile && <span style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: '0.06em' }}>CANTIDAD</span>}
+                {!isMobile && <span style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: '0.06em' }}>UM</span>}
+                {!isMobile && hasBillOfLading && <span style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: '0.06em' }}>CONTENEDOR</span>}
+              </div>
+              <div style={{ display: 'grid' }}>
+                {shipmentArticles.map((item, index) => (
+                  <div
+                    key={`${sub.id}-${item.articuloId}-${index}`}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: isMobile ? '1fr' : hasBillOfLading ? '160px minmax(0, 1.8fr) 110px 120px 90px 180px' : '160px minmax(0, 1.8fr) 110px 120px 90px',
+                      gap: isMobile ? 8 : 0,
+                      padding: isMobile ? '12px' : '12px 14px',
+                      borderTop: index > 0 ? `1px solid ${HAIRLINE}` : 'none',
+                      alignItems: 'start',
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 600, color: INK }}>{item.codigoSAP}</div>
+                      {isMobile && <div style={{ fontSize: 11.5, color: INK, lineHeight: 1.4, marginTop: 4 }}>{item.descripcion}</div>}
+                      {isMobile && <div style={{ fontSize: 10.5, color: MUTED, marginTop: 4 }}>{item.linea} · {item.cantidad.toLocaleString()} {item.um}</div>}
+                      {isMobile && hasBillOfLading && <div style={{ fontSize: 10.5, color: MUTED, marginTop: 4 }}>{item.contenedores.length ? item.contenedores.join(' · ') : 'Contenedor pendiente'}</div>}
+                    </div>
+                    {!isMobile && <div style={{ minWidth: 0, fontSize: 11.5, color: INK, lineHeight: 1.4 }}>{item.descripcion}</div>}
+                    {!isMobile && <div style={{ fontSize: 11.5, color: INK }}>{item.linea}</div>}
+                    {!isMobile && <div style={{ fontSize: 11.5, color: INK, whiteSpace: 'nowrap' }}>{item.cantidad.toLocaleString()}</div>}
+                    {!isMobile && <div style={{ fontSize: 11.5, color: INK }}>{item.um}</div>}
+                    {!isMobile && hasBillOfLading && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {item.contenedores.length ? item.contenedores.map(contenedor => (
+                          <span key={`${item.articuloId}-${contenedor}`} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 24, padding: '3px 8px', borderRadius: 9999, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, fontSize: 10.5, color: INK, whiteSpace: 'nowrap' }}>
+                            {contenedor}
+                          </span>
+                        )) : (
+                          <span style={{ fontSize: 11, color: MUTED }}>Pendiente BL</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </section>
     </div>
@@ -397,14 +482,15 @@ function DocumentosSectionV2({ sub, readonly, onAddDocumento }: { sub: Subcarpet
   const canAttach = Boolean(selectedFile) && Boolean(onAddDocumento);
   const handleAttach = () => {
     if (!canAttach) return;
-    onAddDocumento?.({
+    const nextDocument = {
       id: `doc-${Date.now()}`,
       nombre: selectedFile!.name,
       referencia: referencia.trim() || undefined,
       tipo,
       tamano: `${Math.max(1, Math.round(selectedFile!.size / 1024))} KB`,
       fecha: new Date().toISOString().split('T')[0],
-    });
+    };
+    onAddDocumento?.(nextDocument);
     setReferencia('');
     setSelectedFile(null);
     setIsComposerOpen(false);
@@ -496,7 +582,7 @@ function DocumentosSectionV2({ sub, readonly, onAddDocumento }: { sub: Subcarpet
           </div>
         )}
         {sub.documentos.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', color: MUTED, fontSize: 13 }}>Sin anexos cargados para este embarque.</div>
+          <div style={{ padding: 32, textAlign: 'center', color: MUTED, fontSize: 13 }}>Sin anexos cargados.</div>
         ) : (
           sub.documentos.map((doc, index) => {
             const itemColor = tipoColors[doc.tipo] || MUTED;
@@ -530,7 +616,7 @@ function DocumentosSection({ sub }: { sub: Subcarpeta }) {
   return (
     <Card title="Anexos del embarque">
       {sub.documentos.length === 0 ? (
-        <div style={{ padding: 32, textAlign: 'center', color: MUTED, fontSize: 13 }}>Sin anexos cargados para este embarque.</div>
+        <div style={{ padding: 32, textAlign: 'center', color: MUTED, fontSize: 13 }}>Sin anexos cargados.</div>
       ) : (
         <div style={{ display: 'grid', gap: 6 }}>
           {sub.documentos.map(doc => (

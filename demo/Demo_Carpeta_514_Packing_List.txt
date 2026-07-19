@@ -1,0 +1,24 @@
+RHEINLAND FILM GMBH
+Packing List
+
+Document No.: PL-RFG-2026-514-01
+Commercial Ref.: RFG-2026-DGF-514
+Date: 2026-06-14
+Folder Reference: 2026/514
+
+Shipment Information
+Mode of Transport: Maritime
+Shipment Status: Ready for Shipment
+Estimated Shipping Date: 2026-06-18
+Container Status: Pending assignment
+Bill of Lading: Not issued yet
+
+Packed Goods Detail
+SAP 3000034 - Film Polyéster Transparente 15µm - 18000 M2
+SAP 3000041 - Laminado BOPP Gloss 18µm - 21000 M2
+
+Operational Notes
+- Packed quantity of SAP 3000041 is lower than original order quantity.
+- Final Bill of Lading and container references will be issued after booking confirmation.
+
+End of Document

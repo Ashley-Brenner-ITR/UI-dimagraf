@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, FileText, DollarSign, Upload, Eye, Download, ChevronRight, ChevronDown, Plus, CheckCircle, Landmark, AlertTriangle, X, Pencil, Trash2, Info, Ship, CreditCard, Truck, Plane, Calendar, Package } from 'lucide-react';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { getAutoFitGridStyle, getResponsiveTableStyle, pageActions, pageHeader, pageShell, tableHeadCell, tableHeadRow, tableScrollArea } from './chromeStyles';
-import { CARPETAS, DESPACHANTES, getProveedor, getDespachante, getEstadoColor, type Documento, type Subcarpeta, type Carpeta } from './mockData';
+import { getAutoFitGridStyle, getModalPrimaryButtonStyle, getModalSecondaryButtonStyle, getResponsiveTableStyle, getModalShellStyle, modalFooter, modalOverlay, pageActions, pageHeader, pageShell, tableHeadCell, tableHeadRow, tableScrollArea } from './chromeStyles';
+import { CARPETAS, DESPACHANTES, getProveedor, getDespachante, getEstadoColor, shouldShowMotherPendingState, type Documento, type Subcarpeta, type Carpeta } from './mockData';
 import { NeonBadge, CanalBadge } from './NeonBadge';
 import { useIsMobile } from './ui/use-mobile';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { AppButton } from './AppButton';
 import { AppInput, FormField } from './FormField';
@@ -280,16 +280,20 @@ function TabIntro({
   subtitle,
   actions,
 }: {
-  title: string;
+  title?: string;
   subtitle?: string;
   actions?: React.ReactNode;
 }) {
+  const hasHeading = Boolean(title || subtitle);
+
   return (
-    <div style={{ minHeight: 58, padding: '10px 2px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', borderBottom: `1px solid ${HAIRLINE}`, background: CANVAS }}>
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{title}</div>
-        {subtitle && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{subtitle}</div>}
-      </div>
+    <div style={{ minHeight: 58, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: hasHeading ? 'space-between' : 'flex-end', gap: 12, flexWrap: 'wrap', borderBottom: `1px solid ${HAIRLINE}`, background: CANVAS }}>
+      {hasHeading && (
+        <div>
+          {title && <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{title}</div>}
+          {subtitle && <div style={{ fontSize: 12, color: MUTED, marginTop: title ? 2 : 0 }}>{subtitle}</div>}
+        </div>
+      )}
       {actions}
     </div>
   );
@@ -353,6 +357,7 @@ function GeneralTab({ carpeta, subs, proveedor, hideImportes, canEditGeneral, oc
         )}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, minmax(0, 1fr))', columnGap: 24, rowGap: 18, alignItems: 'start' }}>
           <Field label="N° Carpeta" value={carpeta.numero} />
+          {shouldShowMotherPendingState(carpeta) && <Field label="Estado" value="Pendiente de embarque" />}
           <Field label="Fecha O/C" value={carpeta.fechaOC} />
           <Field label="Proveedor" value={proveedor?.nombre || '—'} />
           <Field label="País Origen" value={proveedor?.pais || '—'} />
@@ -404,13 +409,15 @@ function GeneralTab({ carpeta, subs, proveedor, hideImportes, canEditGeneral, oc
               <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowGeneralEditModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
 
-            <div style={{ padding: 16, display: 'grid', gap: 12, overflowY: 'auto' }}>
-              <FormField label="Pedido SAP Tx.45">
-                <input value={generalForm.pedidoSAP45} onChange={setGeneralField('pedidoSAP45')} placeholder="Ej. 4500012345" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-              </FormField>
-              <FormField label="Referencia proveedor">
-                <input value={generalForm.referenciaProveedor} onChange={setGeneralField('referenciaProveedor')} placeholder="Referencia interna" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-              </FormField>
+            <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+                <FormField label="Pedido SAP Tx.45">
+                  <input value={generalForm.pedidoSAP45} onChange={setGeneralField('pedidoSAP45')} placeholder="Ej. 4500012345" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+                </FormField>
+                <FormField label="Referencia proveedor">
+                  <input value={generalForm.referenciaProveedor} onChange={setGeneralField('referenciaProveedor')} placeholder="Referencia interna" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+                </FormField>
+              </div>
               <FormField label="Fecha embarque estimada">
                 <input type="date" value={generalForm.fechaEmbarqueEst} onChange={setGeneralField('fechaEmbarqueEst')} style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
               </FormField>
@@ -647,8 +654,6 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
           <div style={{ overflow: 'hidden', background: CANVAS }}>
             {canEditOriginalOc && (
               <TabIntro
-                title="Artículos de la orden"
-                subtitle={`${articulos.length} ${articulos.length === 1 ? 'ítem' : 'ítems'} cargados`}
                 actions={canEditOriginalOc ? (
                   <div style={{ display: 'flex', gap: 8 }}>
                     <AppButton size="md" variant="secondary" onClick={() => { setMassiveText(''); setMassiveFileName(''); setShowMassiveModal(true); }} icon={<Upload aria-hidden="true" size={14} />}>
@@ -782,7 +787,7 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: INK }}>{editingArticleId ? 'Editar artículo' : 'Nuevo artículo'}</h2>
               <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={resetForm} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
-            <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: '24px 28px 30px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* SAP + Descripcion */}
               <div style={getAutoFitGridStyle(220, 14)}>
                 <div>
@@ -800,15 +805,26 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
               <div style={getAutoFitGridStyle(hideImportes ? 130 : 120, 12)}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>LÍNEA</label>
-                  <select value={form.linea} onChange={f('linea')} style={{ width: '100%', padding: '10px 10px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}>
-                    <option>LCA</option><option>LDA</option>
-                  </select>
+                  <Select value={form.linea} onValueChange={value => setForm(prev => ({ ...prev, linea: value }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent style={{ zIndex: 400 }}>
+                      <AppSelectItem value="LCA">LCA</AppSelectItem>
+                      <AppSelectItem value="LDA">LDA</AppSelectItem>
+                    </AppSelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>U.M.</label>
-                  <select value={form.um} onChange={f('um')} style={{ width: '100%', padding: '10px 10px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}>
-                    {['Kg', 'Mill.', 'Unid.', 'Resma', 'm²'].map(u => <option key={u}>{u}</option>)}
-                  </select>
+                  <Select value={form.um} onValueChange={value => setForm(prev => ({ ...prev, um: value }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent style={{ zIndex: 400 }}>
+                      {['Kg', 'Mill.', 'Unid.', 'Resma', 'm²'].map(u => <AppSelectItem key={u} value={u}>{u}</AppSelectItem>)}
+                    </AppSelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 5, letterSpacing: '0.04em' }}>CANTIDAD *</label>
@@ -823,7 +839,7 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
                   </div>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+              <div style={{ display: 'flex', gap: 10, paddingTop: 12 }}>
                 <AppButton onClick={resetForm} variant="secondary" size="md" style={{ flex: 1 }}>Cancelar</AppButton>
                 <AppButton onClick={handleSaveArticle} disabled={!canSave} size="md" style={{ flex: 2 }}>
                   {editingArticleId ? 'Guardar cambios' : 'Agregar artículo'}
@@ -845,7 +861,7 @@ function ArticulosTab({ carpeta, readonly, hideImportes, canEditOriginalOc, onUp
               <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowMassiveModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
             </div>
 
-            <div style={{ padding: 24, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: '24px 24px 30px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Plantilla Download */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10 }}>
                 <span style={{ fontSize: 13, color: INK }}>¿No tenés la plantilla? Descargá nuestro modelo Excel.</span>
@@ -1199,7 +1215,7 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
               <AppButton aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={resetModal} icon={<X size={15} style={{ color: MUTED }} />} style={{ borderRadius: 9999, flexShrink: 0 }} />
             </div>
 
-            <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: '24px 28px 30px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={getAutoFitGridStyle(220, 14)}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 6, letterSpacing: '0.04em' }}>N° FACTURA *</label>
@@ -1214,11 +1230,16 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
               <div style={getAutoFitGridStyle(220, 14)}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 6, letterSpacing: '0.04em' }}>TRANSPORTE</label>
-                  <select value={form.transporte} onChange={set('transporte')} style={{ width: '100%', padding: '10px 14px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 11, outline: 'none' }}>
-                    <option>Marítimo</option>
-                    <option>Terrestre</option>
-                    <option>Aéreo</option>
-                  </select>
+                  <Select value={form.transporte} onValueChange={value => setForm(prev => ({ ...prev, transporte: value }))}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent style={{ zIndex: 400 }}>
+                      <AppSelectItem value="Marítimo">Marítimo</AppSelectItem>
+                      <AppSelectItem value="Terrestre">Terrestre</AppSelectItem>
+                      <AppSelectItem value="Aéreo">Aéreo</AppSelectItem>
+                    </AppSelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: MUTED, display: 'block', marginBottom: 6, letterSpacing: '0.04em' }}>CONTENEDORES</label>
@@ -1276,7 +1297,7 @@ function SubcarpetasTab({ carpeta, subs, nextLetter, activeSub, setActiveSub, re
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+              <div style={{ display: 'flex', gap: 10, paddingTop: 12 }}>
                 <AppButton onClick={resetModal} variant="secondary" style={{ flex: 1 }}>
                   Cancelar
                 </AppButton>
@@ -1672,12 +1693,14 @@ function ProduccionTab({ carpeta, proveedor, editable, onUpdateProduccion }: any
     </div>
     {showEditModal && (
       <TabEditModal title="Editar producción y pre-embarque" onClose={() => setShowEditModal(false)} onSave={saveProduccion}>
-        <FormField label="Referencia proveedor">
-          <input value={form.referenciaProveedor} onChange={event => setForm(prev => ({ ...prev, referenciaProveedor: event.target.value }))} placeholder="Referencia interna" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-        </FormField>
-        <FormField label="Fecha embarque estimada">
-          <input type="date" value={form.fechaEmbarqueEst} onChange={event => setForm(prev => ({ ...prev, fechaEmbarqueEst: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-        </FormField>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+          <FormField label="Referencia proveedor">
+            <input value={form.referenciaProveedor} onChange={event => setForm(prev => ({ ...prev, referenciaProveedor: event.target.value }))} placeholder="Referencia interna" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+          </FormField>
+          <FormField label="Fecha embarque estimada">
+            <input type="date" value={form.fechaEmbarqueEst} onChange={event => setForm(prev => ({ ...prev, fechaEmbarqueEst: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+          </FormField>
+        </div>
         <FormField label="Control artículo por artículo">
           <div style={{ display: 'flex', gap: 8 }}>
             <AppButton type="button" size="md" variant={form.controlConforme ? 'success-soft' : 'secondary'} onClick={() => setForm(prev => ({ ...prev, controlConforme: true }))}>Conforme</AppButton>
@@ -1806,16 +1829,17 @@ function DocumentosTabV2({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [tipo, setTipo] = useState<Documento['tipo']>('Factura Comercial');
+  const [tipo, setTipo] = useState<Documento['tipo']>('Packing List');
+  const [tipoSugerido, setTipoSugerido] = useState<Documento['tipo'] | null>(null);
   const [target, setTarget] = useState<string | 'madre'>('madre');
   const [visibilidad, setVisibilidad] = useState<string>('Todos');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadTab, setUploadTab] = useState<'auto' | 'manual'>('auto');
 
   // Interactive Validation Modal States
   const [showValidationWizard, setShowValidationWizard] = useState(false);
-  const [wizardStep, setWizardStep] = useState<'intro' | 'loading' | 'comparison'>('intro');
+  const [wizardStep, setWizardStep] = useState<'loading' | 'comparison'>('loading');
   const [validationResult, setValidationResult] = useState<any[]>([]);
+  const validationTimerRef = useRef<number | null>(null);
 
   const subcarpetas = subs as Subcarpeta[];
   const allDocs = [
@@ -1837,6 +1861,21 @@ function DocumentosTabV2({
     'Solo Tesorería',
     'Solo Depósito',
   ];
+  const getReferenceFromFileName = (fileName: string) => fileName.replace(/\.[^.]+$/, '');
+  const resolveDocumentDefaults = (documentType: Documento['tipo']) => {
+    const belongsToMother = documentType === 'Confirmación de Pedido' || documentType === 'Factura Comercial';
+    const defaultTarget = belongsToMother ? 'madre' : (subcarpetas[0]?.id ?? 'madre');
+
+    if (documentType === 'Packing List') {
+      return { target: defaultTarget, visibilidad: 'Solo Depósito', belongsToMother };
+    }
+
+    if (documentType === 'Factura Comercial') {
+      return { target: defaultTarget, visibilidad: 'Solo Importaciones y Dirección', belongsToMother };
+    }
+
+    return { target: defaultTarget, visibilidad: 'Solo Importaciones y Dirección', belongsToMother };
+  };
 
   // Filtering documents by profile (RF-044, RF-045)
   const filteredDocs = allDocs.filter((doc: any) => {
@@ -1848,23 +1887,122 @@ function DocumentosTabV2({
     if (docVis === 'Solo Importaciones y Dirección' && (role === 'dispatcher' || role === 'operator' || role === 'director')) return true;
     return false;
   });
+  const getDocumentVersionKey = (doc: any) => `${doc.targetId ?? 'madre'}::${doc.tipo}::${doc.referencia || doc.nombre}`;
+  const getDocumentSequence = (doc: any, index: number) => {
+    if (typeof doc.id === 'string' && doc.id.startsWith('doc-')) {
+      const parsedTimestamp = Number(doc.id.slice(4));
+      if (Number.isFinite(parsedTimestamp)) {
+        return parsedTimestamp;
+      }
+    }
+
+    return index;
+  };
+  const documentGroupLatestSequence = filteredDocs.reduce<Record<string, number>>((acc, doc, index) => {
+    const key = getDocumentVersionKey(doc);
+    const sequence = getDocumentSequence(doc, index);
+    acc[key] = Math.max(acc[key] ?? 0, sequence);
+    return acc;
+  }, {});
+  const documentGroupCounts = filteredDocs.reduce<Record<string, number>>((acc, doc) => {
+    const key = getDocumentVersionKey(doc);
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+  const visibleDocs = filteredDocs
+    .map((doc, index) => {
+      const versionKey = getDocumentVersionKey(doc);
+      const sequence = getDocumentSequence(doc, index);
+      const latestSequence = documentGroupLatestSequence[versionKey] ?? sequence;
+
+      return {
+        ...doc,
+        versionKey,
+        sequence,
+        latestSequence,
+        isCurrentVersion: sequence === latestSequence,
+        hasVersionHistory: (documentGroupCounts[versionKey] ?? 0) > 1,
+      };
+    })
+    .sort((a, b) => {
+      if (b.latestSequence !== a.latestSequence) {
+        return b.latestSequence - a.latestSequence;
+      }
+
+      return b.sequence - a.sequence;
+    });
 
   const canAttach = Boolean(selectedFile);
+  const inferDocumentType = (fileName: string): Documento['tipo'] | null => {
+    const normalizedName = fileName.toLowerCase();
+    if (normalizedName.includes('invoice') || normalizedName.includes('factura')) return 'Factura Comercial';
+    if (normalizedName.includes('confirm') || normalizedName.includes('pedido') || normalizedName.includes('order')) return 'Confirmación de Pedido';
+    if (normalizedName.includes('packing')) return 'Packing List';
+    if (normalizedName.includes('bill') || normalizedName.includes('bl') || normalizedName.includes('crt')) return 'Bill of Lading / CRT';
+    if (normalizedName.includes('origen') || normalizedName.includes('origin') || normalizedName.includes('certificate')) return 'Certificado de Origen';
+    return null;
+  };
+
+  const handleSelectedFile = (file: File | null) => {
+    setSelectedFile(file);
+    if (!file) {
+      setReferencia('');
+      setTipoSugerido(null);
+      return;
+    }
+
+    setReferencia(getReferenceFromFileName(file.name));
+    const inferredType = inferDocumentType(file.name) ?? 'Packing List';
+    setTipoSugerido(inferredType);
+    setTipo(inferredType);
+    const defaults = resolveDocumentDefaults(inferredType);
+    setTarget(defaults.target);
+    setVisibilidad(defaults.visibilidad);
+  };
+
+  useEffect(() => {
+    if (!selectedFile) return;
+    const defaults = resolveDocumentDefaults(tipo);
+    setTarget(current => current === defaults.target ? current : defaults.target);
+    setVisibilidad(current => current === defaults.visibilidad ? current : defaults.visibilidad);
+  }, [tipo, selectedFile, subcarpetas]);
 
   const startValidation = () => {
     if (!selectedFile) return;
-    setWizardStep('intro');
     setShowValidationWizard(true);
+    runAnalysisSimulation();
   };
 
   const runAnalysisSimulation = () => {
     setWizardStep('loading');
-    setTimeout(() => {
+    if (validationTimerRef.current !== null) {
+      window.clearTimeout(validationTimerRef.current);
+    }
+    validationTimerRef.current = window.setTimeout(() => {
       const isInvoice = tipo === 'Factura Comercial';
       const items = generateComparisonItems(carpeta.articulos, isInvoice);
       setValidationResult(items);
       setWizardStep('comparison');
+      validationTimerRef.current = null;
     }, 1200);
+  };
+
+  const closeValidationWizard = () => {
+    if (validationTimerRef.current !== null) {
+      window.clearTimeout(validationTimerRef.current);
+      validationTimerRef.current = null;
+    }
+    setShowValidationWizard(false);
+    setWizardStep('loading');
+  };
+
+  const closeUploadFlow = () => {
+    closeValidationWizard();
+    setShowUploadModal(false);
+  };
+
+  const returnToUploadModal = () => {
+    closeValidationWizard();
   };
 
   const generateComparisonItems = (articulos: any[], isInvoice: boolean) => {
@@ -1900,52 +2038,82 @@ function DocumentosTabV2({
   const handleValidationFinish = (action: 'accept' | 'report') => {
     if (!selectedFile) return;
 
+    const hasDifferences = validationResult.some(item => item.status !== 'Coincide');
+    if (action === 'accept' && hasDifferences) return;
+
     const docId = `doc-${Date.now()}`;
-    const newDoc: any = {
+    const resolvedValidationState = action === 'accept' ? 'Aprobado' : 'Reclamo abierto';
+    const newDoc: Documento = {
       id: docId,
       nombre: selectedFile.name,
       referencia: referencia.trim() || undefined,
       tipo,
       tamano: `${Math.max(1, Math.round(selectedFile.size / 1024))} KB`,
       fecha: new Date().toISOString().split('T')[0],
-      visibilidad: visibilidad as any,
-      estadoValidacion: action === 'accept' ? 'Con Diferencias' : 'Rechazado',
+      visibilidad,
+      estadoValidacion: resolvedValidationState,
     };
 
-    // 1. Add the document to selected target
-    onAddDocumento(newDoc, target);
-
-    // 2. If discrepancy is accepted, update original articles validation status (RF-017 / RF-018)
-    if (action === 'accept' && onUpdateCarpeta) {
+    if (onUpdateCarpeta) {
       const firstArticleId = validationResult[0]?.articuloId;
-      if (firstArticleId) {
-        const updatedArticulos = carpeta.articulos.map(art => {
-          if (art.id === firstArticleId) {
-            return {
-              ...art,
-              estadoValidacion: 'Con advertencia' as const,
-              observacionesImportacion: `Cantidad validada por confirmación/factura con desvío menor del 5% aceptado (${selectedFile.name}).`,
-            };
-          } else {
-            return {
-              ...art,
-              estadoValidacion: 'Válido' as const,
-            };
-          }
-        });
+      const updatedArticulos = carpeta.articulos.map(art => {
+        if (action === 'accept') {
+          return {
+            ...art,
+            estadoValidacion: 'Válido' as const,
+          };
+        }
 
-        setTimeout(() => {
-          onUpdateCarpeta({
-            ...carpeta,
-            articulos: updatedArticulos,
-            ultimoHito: `Documento ${selectedFile.name} validado automáticamente con advertencias.`,
-          });
-        }, 100);
-      }
+        return {
+          ...art,
+          estadoValidacion: art.estadoValidacion === 'Válido' ? art.estadoValidacion : 'Con advertencia' as const,
+        };
+      });
+
+      const ultimoHito = action === 'accept'
+        ? `Documento ${selectedFile.name} validado automáticamente sin diferencias.`
+        : `Se registró un reclamo por diferencias detectadas en ${selectedFile.name}.`;
+
+      const documentosMadreBase = (carpeta.documentos ?? []).map((doc: Documento) => (
+        action === 'accept' && target === 'madre' && doc.tipo === tipo && doc.estadoValidacion === 'Reclamo abierto'
+          ? { ...doc, estadoValidacion: 'Reclamo resuelto' }
+          : doc
+      ));
+
+      const documentosMadre = target === 'madre'
+        ? [...documentosMadreBase, newDoc]
+        : documentosMadreBase;
+
+      const subcarpetasActualizadas = carpeta.subcarpetas.map(sub => {
+        if (sub.id !== target) {
+          return sub;
+        }
+
+        const documentosActualizados = sub.documentos.map((doc: Documento) => (
+          action === 'accept' && doc.tipo === tipo && doc.estadoValidacion === 'Reclamo abierto'
+            ? { ...doc, estadoValidacion: 'Reclamo resuelto' }
+            : doc
+        ));
+
+        return {
+          ...sub,
+          documentos: [...documentosActualizados, newDoc],
+        };
+      });
+
+      onUpdateCarpeta({
+        ...carpeta,
+        documentos: documentosMadre,
+        subcarpetas: subcarpetasActualizadas,
+        articulos: updatedArticulos,
+        ultimoHito,
+      });
+    } else {
+      onAddDocumento(newDoc, target);
     }
 
     // Reset wizard
-    setShowValidationWizard(false);
+    closeValidationWizard();
     setReferencia('');
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -1970,6 +2138,101 @@ function DocumentosTabV2({
   };
 
   const qualifiesForValidation = tipo === 'Confirmación de Pedido' || tipo === 'Factura Comercial';
+  const documentDefaults = resolveDocumentDefaults(tipo);
+  const showUploadTargetField = subcarpetas.length > 1 && !documentDefaults.belongsToMother;
+  const validationWizardSteps = [
+    { id: 'loading', label: 'Análisis' },
+    { id: 'comparison', label: 'Resultado' },
+  ] as const;
+  const validationDifferences = validationResult.filter(item => item.status !== 'Coincide');
+  const hasValidationDifferences = validationDifferences.length > 0;
+  const validationMatchesCount = validationResult.length - validationDifferences.length;
+  const validationStepIndex = validationWizardSteps.findIndex(step => step.id === wizardStep) + 1;
+  const validationStepLabel = validationWizardSteps.find(step => step.id === wizardStep)?.label ?? 'Resultado';
+  const uploadWizardSteps = qualifiesForValidation
+    ? [
+        { id: 1, label: 'Archivo' },
+        { id: 2, label: 'Clasificación' },
+        { id: 3, label: 'Análisis' },
+      ]
+    : [
+        { id: 1, label: 'Archivo' },
+        { id: 2, label: 'Clasificación' },
+        { id: 3, label: 'Análisis' },
+      ];
+  const uploadStepIndex = !selectedFile ? 1 : showValidationWizard ? 3 : 2;
+  const uploadStepLabel = uploadWizardSteps.find(step => step.id === uploadStepIndex)?.label ?? 'Archivo';
+  const getStepperTemplateColumns = (steps: readonly { id: string | number; label: string }[]) => (
+    steps.map((_, index) => index < steps.length - 1 ? '22px minmax(24px, 1fr)' : '22px').join(' ')
+  );
+  const validationStepperColumns = getStepperTemplateColumns(validationWizardSteps);
+  const uploadStepperColumns = getStepperTemplateColumns(uploadWizardSteps);
+  const uploadModalHeight = isMobile
+    ? 'calc(100vh - 32px)'
+    : 'min(720px, calc(100vh - 32px))';
+  const renderWizardStepper = (
+    steps: readonly { id: string | number; label: string }[],
+    activeStep: string | number,
+    activeIndex: number,
+    templateColumns: string,
+  ) => (
+    <div style={{ display: 'grid', gridTemplateColumns: templateColumns, rowGap: 8, columnGap: 0, alignItems: 'center', width: '100%' }}>
+      {steps.map((step, index) => {
+        const active = step.id === activeStep;
+        const completed = index < activeIndex - 1;
+        const connectorCompleted = index < activeIndex - 1;
+
+        return (
+          <Fragment key={step.id}>
+            <div style={{ width: 22, height: 22, borderRadius: '50%', background: completed || active ? GREEN : CANVAS, color: completed || active ? '#fff' : MUTED, border: completed || active ? 'none' : `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>
+              {index + 1}
+            </div>
+            {index < steps.length - 1 && <div style={{ height: 2, background: connectorCompleted ? GREEN : HAIRLINE }} />}
+          </Fragment>
+        );
+      })}
+      {steps.map((step, index) => {
+        const active = step.id === activeStep;
+        const completed = index < activeIndex - 1;
+
+        return (
+          <Fragment key={`${step.id}-label`}>
+            <div style={{ width: 72, marginLeft: -25, fontSize: 10, lineHeight: 1.2, fontWeight: active ? 700 : 500, color: active || completed ? INK : MUTED, textAlign: 'center' }}>{step.label}</div>
+            {index < steps.length - 1 && <div />}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+  const validationDifferenceSummary = validationDifferences[0]
+    ? (() => {
+        const item = validationDifferences[0];
+        const desvioCantidad = item.cantOC - item.cantDoc;
+        const desvioPct = ((desvioCantidad / item.cantOC) * 100).toFixed(0);
+        return `${item.codigoSAP} · ${item.descripcionOC}: OC ${item.cantOC.toLocaleString()} ${item.um} vs. documento ${item.cantDoc.toLocaleString()} ${item.um}. Desvío: ${desvioCantidad.toLocaleString()} ${item.um} (${desvioPct}%).`;
+      })()
+    : `${validationMatchesCount} artículo${validationMatchesCount === 1 ? '' : 's'} coincide${validationMatchesCount === 1 ? '' : 'n'} con la OC.`;
+  const validationResultTitle = hasValidationDifferences
+    ? 'Se detecto una diferencia'
+    : 'Documento listo para aprobar';
+  const validationResultTone = hasValidationDifferences
+    ? {
+        border: 'rgba(180,83,9,0.24)',
+        background: 'rgba(180,83,9,0.06)',
+        iconBackground: 'rgba(180,83,9,0.14)',
+        iconColor: '#b45309',
+        titleColor: '#8a4b08',
+      }
+    : {
+        border: 'rgba(26,92,56,0.18)',
+        background: 'rgba(26,92,56,0.04)',
+        iconBackground: 'rgba(26,92,56,0.10)',
+        iconColor: GREEN,
+        titleColor: GREEN,
+      };
+  const validationResultNextStep = hasValidationDifferences
+    ? 'No se puede aprobar. Si hay reclamo, se espera una nueva version para volver a comparar.'
+    : 'Podes aprobar este documento y seguir con la carpeta.';
 
   return (
     <div style={{ padding: isMobile ? 10 : 14, display: 'flex', flexDirection: 'column', gap: 12, background: CANVAS }}>
@@ -1980,37 +2243,20 @@ function DocumentosTabV2({
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
             <AppButton
               type="button"
-              variant="secondary"
-              size="md"
-              onClick={() => {
-                setSelectedFile(null);
-                setReferencia('');
-                setUploadTab('manual');
-                setTipo('Packing List');
-                setTarget('madre');
-                setVisibilidad('Todos');
-                setShowUploadModal(true);
-              }}
-              icon={<Upload size={14} style={{ color: MUTED }} />}
-            >
-              Adjuntar anexo
-            </AppButton>
-
-            <AppButton
-              type="button"
               variant="primary"
               size="md"
               onClick={() => {
                 setSelectedFile(null);
                 setReferencia('');
-                setUploadTab('auto');
-                setTipo('Factura Comercial');
+                setTipo('Packing List');
+                setTipoSugerido(null);
                 setTarget('madre');
+                setVisibilidad('Todos');
                 setShowUploadModal(true);
               }}
-              icon={<CheckCircle size={14} />}
+              icon={<Upload size={14} />}
             >
-              Auditar anexo (AI)
+              Adjuntar anexo
             </AppButton>
           </div>
         ) : undefined}
@@ -2018,22 +2264,39 @@ function DocumentosTabV2({
 
       {filteredDocs.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', background: CANVAS }}>
-          {filteredDocs.map((doc: any, i: number) => {
+          {visibleDocs.map((doc: any, i: number) => {
             const color = tipoColors[doc.tipo] || MUTED;
             return (
-              <div key={doc.id} style={{ padding: isMobile ? '14px 16px' : '14px 18px', borderBottom: i < filteredDocs.length - 1 ? `1px solid ${HAIRLINE}` : 'none', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.4fr) auto', gap: isMobile ? 10 : 16, alignItems: 'center', background: 'transparent' }}>
+              <div key={doc.id} style={{ padding: isMobile ? '14px 16px' : '14px 18px', borderBottom: i < visibleDocs.length - 1 ? `1px solid ${HAIRLINE}` : 'none', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.4fr) auto', gap: isMobile ? 10 : 16, alignItems: 'center', background: 'transparent' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nombre}</div>
                   {doc.referencia && <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>Ref. {doc.referencia}</div>}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    {doc.hasVersionHistory && (
+                      <span style={{ fontSize: 11, color: doc.isCurrentVersion ? '#1d4ed8' : '#475569', background: doc.isCurrentVersion ? '#eff6ff' : '#f8fafc', border: `1px solid ${doc.isCurrentVersion ? '#bfdbfe' : '#cbd5e1'}`, borderRadius: 9999, padding: '3px 8px' }}>
+                        {doc.isCurrentVersion ? 'Anexo vigente' : 'Versión anterior'}
+                      </span>
+                    )}
                     <span style={{ fontSize: 11, color, background: `${color}14`, border: `1px solid ${color}33`, borderRadius: 9999, padding: '3px 8px' }}>{doc.tipo}</span>
                     <span style={{ fontSize: 11, color: GREEN, background: 'rgba(26,92,56,0.08)', border: '1px solid rgba(26,92,56,0.18)', borderRadius: 9999, padding: '3px 8px' }}>{doc.origen}</span>
                     {doc.visibilidad && doc.visibilidad !== 'Todos' && (
                       <span style={{ fontSize: 11, color: '#d97706', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 9999, padding: '3px 8px' }}>{doc.visibilidad}</span>
                     )}
-                    {doc.estadoValidacion && (
-                      <span style={{ fontSize: 11, color: doc.estadoValidacion === 'Con Diferencias' ? '#b45309' : '#059669', background: doc.estadoValidacion === 'Con Diferencias' ? '#fffbeb' : '#ecfdf5', border: `1px solid ${doc.estadoValidacion === 'Con Diferencias' ? '#fde68a' : '#a7f3d0'}`, borderRadius: 9999, padding: '3px 8px' }}>{doc.estadoValidacion}</span>
-                    )}
+                    {doc.estadoValidacion && (() => {
+                      const validationStyles = doc.estadoValidacion === 'Reclamo abierto'
+                        ? { color: '#b91c1c', background: '#fef2f2', border: '#fecaca' }
+                        : doc.estadoValidacion === 'Reclamo resuelto'
+                          ? { color: '#0369a1', background: '#f0f9ff', border: '#bae6fd' }
+                          : doc.estadoValidacion === 'Aprobado'
+                            ? { color: '#059669', background: '#ecfdf5', border: '#a7f3d0' }
+                          : doc.estadoValidacion === 'Aprobado con diferencias'
+                            ? { color: '#b45309', background: '#fffbeb', border: '#fde68a' }
+                            : { color: '#059669', background: '#ecfdf5', border: '#a7f3d0' };
+
+                      return (
+                        <span style={{ fontSize: 11, color: validationStyles.color, background: validationStyles.background, border: `1px solid ${validationStyles.border}`, borderRadius: 9999, padding: '3px 8px' }}>{doc.estadoValidacion}</span>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div style={{ display: 'grid', justifyItems: isMobile ? 'start' : 'end', gap: 8 }}>
@@ -2044,145 +2307,110 @@ function DocumentosTabV2({
             );
           })}
         </div>
+      ) : allDocs.length === 0 ? (
+        <div style={{ textAlign: 'center', color: MUTED, fontSize: 15, padding: '32px 0' }}>Sin anexos cargados.</div>
       ) : (
-        <div style={{ textAlign: 'center', color: MUTED, fontSize: 15, padding: '32px 0' }}>Sin anexos visibles para tu perfil.</div>
-      )}
-
-      {/* validation wizard modal */}
-      {showValidationWizard && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(29,29,31,0.4)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 999 }}>
-          <div style={{ width: '100%', maxWidth: 840, maxHeight: '90vh', background: CANVAS, borderRadius: 20, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: `1px solid ${HAIRLINE}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${HAIRLINE}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <CheckCircle size={18} style={{ color: '#059669' }} />
-                <h3 style={{ fontSize: 17, fontWeight: 700, color: INK }}>Auditoría Automática de Documento</h3>
-              </div>
-              <button type="button" onClick={() => setShowValidationWizard(false)} style={{ border: 'none', background: 'transparent', color: MUTED, cursor: 'pointer' }}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-              {wizardStep === 'intro' && (
-                <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-                  <div style={{ width: 64, height: 64, borderRadius: 9999, background: 'rgba(5,150,105,0.08)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                    <CheckCircle size={32} style={{ color: '#059669' }} />
-                  </div>
-                  <h4 style={{ fontSize: 18, fontWeight: 700, color: INK }}>Preparado para cotejo contra Orden de Compra</h4>
-                  <p style={{ fontSize: 14, color: MUTED, maxWidth: 480, margin: '8px auto 24px', lineHeight: 1.6 }}>
-                    El sistema analizará el archivo adjunto (<strong>{selectedFile?.name}</strong>) traduciendo códigos y descripciones (ej. inglés/alemán) y comparando ítems, cantidades solicitadas y precios unitarios contra la Orden de Compra madre.
-                  </p>
-                  <div style={{ background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 12, padding: 14, margin: '0 auto 24px', maxWidth: 420, textAlign: 'left' }}>
-                    <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>CONFIGURACIÓN DEL ANÁLISIS</div>
-                    <div style={{ fontSize: 13, color: INK }}><strong>Idioma de origen:</strong> Autodetectar (Inglés/Alemán)</div>
-                    <div style={{ fontSize: 13, color: INK, marginTop: 2 }}><strong>Formato de archivo:</strong> PDF / Excel OCR</div>
-                    <div style={{ fontSize: 13, color: INK, marginTop: 2 }}><strong>Asignación:</strong> {target === 'madre' ? 'Carpeta madre' : `Subcarpeta ${subs.find(s => s.id === target)?.numero}`}</div>
-                  </div>
-                  <button type="button" onClick={runAnalysisSimulation} style={{ display: 'inline-flex', alignItems: 'center', justifySelf: 'center', gap: 8, minHeight: 44, padding: '10px 24px', background: '#059669', color: CANVAS, border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer', shadow: '0 4px 12px rgba(5,150,105,0.12)' }}>
-                    Iniciar Comparación
-                  </button>
-                </div>
-              )}
-
-              {wizardStep === 'loading' && (
-                <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-                  <div style={{ width: 44, height: 44, border: '3px solid #e2e8f0', borderTopColor: '#059669', borderRadius: 9999, animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
-                  <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-                  <h4 style={{ fontSize: 16, fontWeight: 700, color: INK }}>Extrayendo contenido de {selectedFile?.name}...</h4>
-                  <p style={{ fontSize: 13, color: MUTED, marginTop: 6 }}>
-                    Traduciendo terminología técnica, analizando cantidades y validando tolerancias del +/- 5%...
-                  </p>
-                </div>
-              )}
-
-              {wizardStep === 'comparison' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ padding: 14, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <AlertTriangle size={18} style={{ color: '#d97706', marginTop: 2, flexShrink: 0 }} />
-                    <div style={{ fontSize: 13, color: '#78350f' }}>
-                      <strong>Cotejo Completo:</strong> Se detectó 1 discrepancia de cantidad fuera de tolerancia. El ítem 1 presenta un desvío menor del 5% que requiere aprobación del operador para registrarse. El resto de las descripciones fueron mapeadas y traducidas exitosamente.
-                    </div>
-                  </div>
-
-                  <div style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 12, overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}>
-                          {['Código SAP / SKU', 'Artículo en OC (Madre)', 'Artículo en Documento', 'Cantidad OC', 'Cantidad Doc', 'Desvío', 'Estado'].map(h => (
-                            <th key={h} style={{ padding: '10px 14px', fontSize: 11, fontWeight: 600, color: MUTED, textAlign: 'left' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {validationResult.map((item, idx) => {
-                          const hasDiff = item.status !== 'Coincide';
-                          return (
-                            <tr key={idx} style={{ borderBottom: idx < validationResult.length - 1 ? `1px solid ${HAIRLINE}` : 'none' }}>
-                              <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 600, color: INK }}>{item.codigoSAP}</td>
-                              <td style={{ padding: '12px 14px', fontSize: 13, color: INK }}>{item.descripcionOC}</td>
-                              <td style={{ padding: '12px 14px', fontSize: 13, color: MUTED, fontStyle: 'italic' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <span>{item.descripcionDoc}</span>
-                                  <span style={{ fontSize: 10, color: '#059669', background: '#ecfdf5', borderRadius: 4, padding: '1px 4px' }}>EN</span>
-                                </div>
-                              </td>
-                              <td style={{ padding: '12px 14px', fontSize: 13, color: INK, fontVariantNumeric: 'tabular-nums' }}>{item.cantOC.toLocaleString()} {item.um}</td>
-                              <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: hasDiff ? 600 : 400, color: hasDiff ? '#b45309' : INK, fontVariantNumeric: 'tabular-nums' }}>{item.cantDoc.toLocaleString()} {item.um}</td>
-                              <td style={{ padding: '12px 14px', fontSize: 13, color: hasDiff ? '#b45309' : '#059669', fontVariantNumeric: 'tabular-nums' }}>
-                                {hasDiff ? `-${(item.cantOC - item.cantDoc).toLocaleString()} (${(((item.cantOC - item.cantDoc) / item.cantOC) * 100).toFixed(0)}%)` : '—'}
-                              </td>
-                              <td style={{ padding: '12px 14px' }}>
-                                <span style={{ fontSize: 11, fontWeight: 600, color: hasDiff ? '#b45309' : '#059669', background: hasDiff ? '#fffbeb' : '#ecfdf5', border: `1px solid ${hasDiff ? '#fde68a' : '#a7f3d0'}`, borderRadius: 9999, padding: '3px 8px' }}>
-                                  {hasDiff ? 'DIFERENCIA MENOR' : 'COMPLETADO'}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderTop: `1px solid ${HAIRLINE}`, background: '#fafbfd' }}>
-              <button type="button" onClick={() => setShowValidationWizard(false)} style={{ minHeight: 38, padding: '8px 16px', border: `1px solid ${HAIRLINE}`, borderRadius: 10, background: CANVAS, color: INK, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                Cancelar
-              </button>
-
-              {wizardStep === 'comparison' && (
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button type="button" onClick={() => handleValidationFinish('report')} style={{ minHeight: 38, padding: '8px 16px', border: '1px solid #f87171', borderRadius: 10, background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Rechazar y Reportar Discrepancia
-                  </button>
-                  <button type="button" onClick={() => handleValidationFinish('accept')} style={{ minHeight: 38, padding: '8px 16px', border: 'none', borderRadius: 10, background: '#059669', color: CANVAS, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Aceptar Desvío y Registrar
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <div style={{ textAlign: 'center', color: MUTED, fontSize: 15, padding: '32px 0' }}>No hay anexos visibles para tu perfil.</div>
       )}
 
       {showUploadModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 350, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ width: 'min(640px, 100%)', maxHeight: '90vh', background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 16, boxShadow: '0 25px 60px rgba(15, 23, 42, 0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ width: 'min(640px, 100%)', height: uploadModalHeight, maxHeight: 'calc(100vh - 32px)', background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 16, boxShadow: '0 25px 60px rgba(15, 23, 42, 0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Header */}
-            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ padding: '16px 28px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: INK }}>
-                  {uploadTab === 'auto' ? 'Auditar anexo con AI' : 'Adjuntar anexo'}
+                  Adjuntar anexo
                 </h2>
+                <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>{`Paso ${uploadStepIndex} · ${uploadStepLabel}`}</div>
               </div>
-              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowUploadModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={closeUploadFlow} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
+            </div>
+
+            <div style={{ padding: '16px 28px 0', flexShrink: 0 }}>
+              {renderWizardStepper(uploadWizardSteps, uploadStepIndex, uploadStepIndex, uploadStepperColumns)}
             </div>
 
             {/* Modal Body / Scrollable Content */}
-            <div style={{ padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {uploadTab === 'auto' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ padding: '20px 28px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, flex: '1 1 auto', minHeight: 0 }}>
+              {showValidationWizard ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: '1 1 auto', minHeight: 0 }}>
+                  <button
+                    type="button"
+                    onClick={returnToUploadModal}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '4px 0',
+                      border: 'none',
+                      background: 'transparent',
+                      color: GREEN,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      alignSelf: 'flex-start',
+                    }}
+                  >
+                    <ArrowLeft size={14} /> Volver
+                  </button>
+
+                  {wizardStep === 'loading' && (
+                    <div style={{ textAlign: 'center', padding: '48px 16px', flex: '1 1 auto', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div style={{ width: 44, height: 44, border: '3px solid #e2e8f0', borderTopColor: '#059669', borderRadius: 9999, animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
+                      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                      <h4 style={{ fontSize: 16, fontWeight: 700, color: INK }}>Analizando {selectedFile?.name}...</h4>
+                      <p style={{ fontSize: 13, color: MUTED, marginTop: 6 }}>
+                        Comparando artículos y cantidades contra la OC.
+                      </p>
+                    </div>
+                  )}
+
+                  {wizardStep === 'comparison' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: '1 1 auto', minHeight: 0 }}>
+                      <div style={{ border: `1px solid ${validationResultTone.border}`, borderRadius: 18, background: validationResultTone.background, padding: '24px 20px 18px', display: 'flex', flexDirection: 'column', gap: 14, flex: '1 1 auto', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                        <div style={{ width: 56, height: 56, borderRadius: '50%', background: validationResultTone.iconBackground, color: validationResultTone.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {hasValidationDifferences ? <AlertTriangle size={28} strokeWidth={2.4} /> : <CheckCircle size={28} strokeWidth={2.4} />}
+                        </div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: validationResultTone.titleColor, letterSpacing: '-0.02em' }}>
+                          {validationResultTitle}
+                        </div>
+                        <div style={{ fontSize: 13, color: INK, lineHeight: 1.45, maxWidth: 420 }}>
+                          {validationDifferenceSummary}
+                        </div>
+                        <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4, maxWidth: 420 }}>
+                          {validationResultNextStep}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: '1 1 auto', minHeight: 0 }}>
+                  {selectedFile && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '4px 0',
+                        border: 'none',
+                        background: 'transparent',
+                        color: GREEN,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      <ArrowLeft size={14} /> Volver
+                    </button>
+                  )}
                   <div
                     onDragOver={event => { event.preventDefault(); setIsDragActive(true); }}
                     onDragEnter={event => { event.preventDefault(); setIsDragActive(true); }}
@@ -2195,40 +2423,23 @@ function DocumentosTabV2({
                       event.preventDefault();
                       setIsDragActive(false);
                       const file = event.dataTransfer.files?.[0];
-                      if (file) {
-                        setSelectedFile(file);
-                        if (file.name.toLowerCase().includes('invoice') || file.name.toLowerCase().includes('factura')) {
-                          setTipo('Factura Comercial');
-                        } else {
-                          setTipo('Confirmación de Pedido');
-                        }
-                      }
+                      if (file) handleSelectedFile(file);
                     }}
-                    style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 18, background: isDragActive ? 'rgba(26,92,56,0.06)' : PARCHMENT, padding: 14, transition: 'border-color 0.15s, background 0.15s' }}
+                    style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 18, background: isDragActive ? 'rgba(26,92,56,0.06)' : PARCHMENT, padding: 14, transition: 'border-color 0.15s, background 0.15s', flex: selectedFile ? '0 0 auto' : '1 1 auto', display: 'flex', alignItems: selectedFile ? 'stretch' : 'center' }}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <input ref={fileInputRef} type="file" onChange={event => {
-                      const file = event.target.files?.[0] ?? null;
-                      setSelectedFile(file);
-                      if (file) {
-                        if (file.name.toLowerCase().includes('invoice') || file.name.toLowerCase().includes('factura')) {
-                          setTipo('Factura Comercial');
-                        } else {
-                          setTipo('Confirmación de Pedido');
-                        }
-                      }
-                    }} style={{ display: 'none' }} />
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <input ref={fileInputRef} type="file" onChange={event => handleSelectedFile(event.target.files?.[0] ?? null)} style={{ display: 'none' }} />
+                    <div style={{ display: 'flex', flexDirection: selectedFile ? 'row' : 'column', alignItems: selectedFile ? 'center' : 'center', justifyContent: selectedFile ? 'space-between' : 'center', gap: selectedFile ? 12 : 14, flexWrap: 'wrap', width: '100%', textAlign: selectedFile ? 'left' : 'center' }}>
                       <div style={{ minWidth: 0 }}>
                         {selectedFile ? (
                           <>
                             <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedFile.name}</div>
-                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>{Math.max(1, Math.round(selectedFile.size / 1024))} KB · Tipo detectado: <strong>{tipo}</strong></div>
+                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>{Math.max(1, Math.round(selectedFile.size / 1024))} KB · Tipo sugerido: <strong>{tipoSugerido ?? tipo}</strong></div>
                           </>
                         ) : (
                           <>
                             <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Sin archivo adjunto</div>
-                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>Arrastrá un PDF, XML o XLSX, o adjuntalo desde tu equipo.</div>
+                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4, maxWidth: 240 }}>Arrastrá un archivo o adjuntalo desde tu equipo.</div>
                           </>
                         )}
                       </div>
@@ -2237,7 +2448,7 @@ function DocumentosTabV2({
                           <Upload size={14} /> Adjuntar anexo
                         </button>
                       ) : (
-                        <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, borderRadius: 9999, border: 'none', background: 'rgba(196,0,26,0.06)', color: '#c4001a', cursor: 'pointer' }}>
+                        <button type="button" onClick={(event) => { event.stopPropagation(); handleSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, borderRadius: 9999, border: 'none', background: 'rgba(196,0,26,0.06)', color: '#c4001a', cursor: 'pointer' }}>
                           ×
                         </button>
                       )}
@@ -2245,137 +2456,91 @@ function DocumentosTabV2({
                   </div>
 
                   {selectedFile && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <FormField label="Tipo Detectado">
-                        <Select value={tipo} onValueChange={(v) => setTipo(v as any)}>
-                          <SelectTrigger style={{ width: '100%', minHeight: 38, borderRadius: 10, background: CANVAS, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent style={{ zIndex: 400 }}>
-                            <SelectItem value="Factura Comercial">Factura Comercial</SelectItem>
-                            <SelectItem value="Confirmación de Pedido">Confirmación de Pedido</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormField>
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {showUploadTargetField ? (
+                          <FormField label="Referencia o Nombre descriptivo">
+                            <input value={referencia} onChange={event => setReferencia(event.target.value)} placeholder="Ej. Packing List de embarque A" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+                          </FormField>
+                        ) : null}
 
-                      <FormField label="Pertenece a">
-                        <Select value={target} onValueChange={setTarget}>
-                          <SelectTrigger style={{ width: '100%', minHeight: 38, borderRadius: 10, background: CANVAS, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent style={{ zIndex: 400 }}>
-                            <SelectItem value="madre">Carpeta madre</SelectItem>
-                            {subcarpetas.map(sub => <SelectItem key={sub.id} value={sub.id}>{sub.numero}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </FormField>
-                    </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+                          {!showUploadTargetField && (
+                            <FormField label="Referencia o Nombre descriptivo">
+                              <input value={referencia} onChange={event => setReferencia(event.target.value)} placeholder="Ej. Packing List de embarque A" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 13, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+                            </FormField>
+                          )}
+
+                          <FormField label="Tipo de documento">
+                            <Select value={tipo} onValueChange={(v) => setTipo(v as any)}>
+                              <AppSelectTrigger>
+                                <SelectValue />
+                              </AppSelectTrigger>
+                              <AppSelectContent style={{ zIndex: 400 }}>
+                                {Object.keys(tipoColors).map(item => <AppSelectItem key={item} value={item}>{item}</AppSelectItem>)}
+                              </AppSelectContent>
+                            </Select>
+                          </FormField>
+
+                          {showUploadTargetField ? (
+                            <FormField label="Embarque">
+                              <Select value={target} onValueChange={setTarget}>
+                                <AppSelectTrigger>
+                                  <SelectValue />
+                                </AppSelectTrigger>
+                                <AppSelectContent style={{ zIndex: 400 }}>
+                                  {subcarpetas.map(sub => <AppSelectItem key={sub.id} value={sub.id}>{sub.numero}</AppSelectItem>)}
+                                </AppSelectContent>
+                              </Select>
+                            </FormField>
+                          ) : null}
+                        </div>
+                      </div>
+                    </>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                    <AppButton type="button" variant="tertiary" onClick={() => setShowUploadModal(false)}>Cancelar</AppButton>
-                    <AppButton
-                      type="button"
-                      disabled={!selectedFile}
-                      onClick={() => {
-                        setShowUploadModal(false);
-                        startValidation();
-                      }}
-                      style={{ background: '#059669', color: CANVAS }}
-                    >
-                      Iniciar Auditoría AI
-                    </AppButton>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 'auto', paddingTop: 18 }}>
+                    <button type="button" onClick={closeUploadFlow} style={{ ...getModalSecondaryButtonStyle(), flex: '0 0 auto', padding: '10px 12px', fontSize: 13 }}>
+                      Cancelar
+                    </button>
+                    {selectedFile && (
+                      <AppButton
+                        type="button"
+                        variant="primary"
+                        onClick={() => {
+                          if (qualifiesForValidation) {
+                            startValidation();
+                            return;
+                          }
+                          handleAttach();
+                        }}
+                      >
+                        {qualifiesForValidation ? 'Analizar documento' : 'Adjuntar anexo'}
+                      </AppButton>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div
-                    onDragOver={event => { event.preventDefault(); setIsDragActive(true); }}
-                    onDragEnter={event => { event.preventDefault(); setIsDragActive(true); }}
-                    onDragLeave={event => {
-                      event.preventDefault();
-                      const nextTarget = event.relatedTarget as Node | null;
-                      if (!nextTarget || !event.currentTarget.contains(nextTarget)) setIsDragActive(false);
-                    }}
-                    onDrop={event => {
-                      event.preventDefault();
-                      setIsDragActive(false);
-                      const file = event.dataTransfer.files?.[0];
-                      if (file) setSelectedFile(file);
-                    }}
-                    style={{ border: `2px dashed ${isDragActive ? GREEN : HAIRLINE}`, borderRadius: 18, background: isDragActive ? 'rgba(26,92,56,0.06)' : PARCHMENT, padding: 14, transition: 'border-color 0.15s, background 0.15s' }}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <input ref={fileInputRef} type="file" onChange={event => setSelectedFile(event.target.files?.[0] ?? null)} style={{ display: 'none' }} />
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                      <div style={{ minWidth: 0 }}>
-                        {selectedFile ? (
-                          <>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedFile.name}</div>
-                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>{Math.max(1, Math.round(selectedFile.size / 1024))} KB</div>
-                          </>
-                        ) : (
-                          <>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>Sin archivo adjunto</div>
-                            <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>Arrastrá un archivo o adjuntalo desde tu equipo.</div>
-                          </>
+              )}
+
+              {showValidationWizard && (
+                <div style={{ paddingTop: 14, borderTop: `1px solid ${HAIRLINE}`, background: '#fafbfd' }}>
+                  <div style={{ ...modalFooter, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <button type="button" onClick={closeUploadFlow} style={{ ...getModalSecondaryButtonStyle(), flex: '0 0 auto', padding: '10px 12px', fontSize: 13 }}>
+                      Cancelar
+                    </button>
+
+                    {wizardStep === 'comparison' && (
+                      <>
+                        <button type="button" onClick={() => handleValidationFinish('report')} style={{ ...getModalSecondaryButtonStyle(), flex: '0 0 auto', padding: '10px 12px', fontSize: 13, borderColor: '#f87171', color: '#dc2626', background: '#fef2f2' }}>
+                          Registrar reclamo
+                        </button>
+                        {!hasValidationDifferences && (
+                          <button type="button" onClick={() => handleValidationFinish('accept')} style={{ ...getModalPrimaryButtonStyle(true), flex: '0 0 auto', padding: '10px 14px', fontSize: 13 }}>
+                            Aprobar resultado
+                          </button>
                         )}
-                      </div>
-                      {!selectedFile ? (
-                        <button type="button" onClick={event => { event.stopPropagation(); fileInputRef.current?.click(); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 38, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${GREEN}`, background: CANVAS, color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                          <Upload size={14} /> Adjuntar anexo
-                        </button>
-                      ) : (
-                        <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, borderRadius: 9999, border: 'none', background: 'rgba(196,0,26,0.06)', color: '#c4001a', cursor: 'pointer' }}>
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <FormField label="Referencia o Nombre descriptivo">
-                    <input value={referencia} onChange={event => setReferencia(event.target.value)} placeholder="Ej. Packing List de embarque A" style={{ width: '100%', minHeight: 38, padding: '9px 12px', fontSize: 13, color: INK, background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-                  </FormField>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 12 }}>
-                    <FormField label="Tipo de documento">
-                      <Select value={tipo} onValueChange={(v) => setTipo(v as any)}>
-                        <SelectTrigger style={{ width: '100%', minHeight: 38, borderRadius: 10, background: CANVAS, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent style={{ zIndex: 400 }}>
-                          {Object.keys(tipoColors).map(item => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </FormField>
-
-                    <FormField label="Pertenece a">
-                      <Select value={target} onValueChange={setTarget}>
-                        <SelectTrigger style={{ width: '100%', minHeight: 38, borderRadius: 10, background: CANVAS, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent style={{ zIndex: 400 }}>
-                          <SelectItem value="madre">Carpeta madre</SelectItem>
-                          {subcarpetas.map(sub => <SelectItem key={sub.id} value={sub.id}>{sub.numero}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </FormField>
-
-                    <FormField label="Visibilidad">
-                      <Select value={visibilidad} onValueChange={setVisibilidad}>
-                        <SelectTrigger style={{ width: '100%', minHeight: 38, borderRadius: 10, background: CANVAS, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent style={{ zIndex: 400 }}>
-                          {visibilidadOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </FormField>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                    <AppButton type="button" variant="tertiary" onClick={() => setShowUploadModal(false)}>Cancelar</AppButton>
-                    <AppButton type="button" disabled={!selectedFile} onClick={handleAttach}>Adjuntar anexo</AppButton>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -2709,19 +2874,21 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
 
       {showEditModal && (
         <TabEditModal title={`Editar aduana · ${sub.numero}`} onClose={() => setShowEditModal(false)} onSave={saveAduana}>
-          <FormField label="Despachante aduanero">
-            <Select value={form.despachante} onValueChange={value => setForm(prev => ({ ...prev, despachante: value }))}>
-              <SelectTrigger style={{ width: '100%', minHeight: 40, borderRadius: 10, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
-                <SelectValue placeholder="Seleccionar despachante..." />
-              </SelectTrigger>
-              <SelectContent>
-                {despachantesList.map(d => <SelectItem key={d.id} value={d.id}>{d.nombre}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </FormField>
-          <FormField label="N° Declaración Detallada (DUA)">
-            <input value={form.duaNum} onChange={event => setForm(prev => ({ ...prev, duaNum: event.target.value }))} placeholder="26001-CUSBA-2026-XXXXXX" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-          </FormField>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <FormField label="Despachante aduanero">
+              <Select value={form.despachante} onValueChange={value => setForm(prev => ({ ...prev, despachante: value }))}>
+                <SelectTrigger style={{ width: '100%', minHeight: 40, borderRadius: 10, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
+                  <SelectValue placeholder="Seleccionar despachante..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {despachantesList.map(d => <SelectItem key={d.id} value={d.id}>{d.nombre}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FormField>
+            <FormField label="N° Declaración Detallada (DUA)">
+              <input value={form.duaNum} onChange={event => setForm(prev => ({ ...prev, duaNum: event.target.value }))} placeholder="26001-CUSBA-2026-XXXXXX" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+            </FormField>
+          </div>
           <FormField label="Canal aduanero">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {(['Pendiente', 'Verde', 'Rojo'] as const).map(option => (
@@ -2731,7 +2898,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
               ))}
             </div>
           </FormField>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <FormField label="Despacho / ZFI / ZFE">
               <Select value={form.despachoTipo} onValueChange={value => setForm(prev => ({ ...prev, despachoTipo: value }))}>
                 <SelectTrigger style={{ width: '100%', minHeight: 40, borderRadius: 10, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, padding: '0 12px' }}>
@@ -2746,7 +2913,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
               <input value={form.pedidoSAP55} onChange={event => setForm(prev => ({ ...prev, pedidoSAP55: event.target.value }))} placeholder="5500009321" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
             </FormField>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <FormField label="Monto gastos AR$">
               <input type="number" value={form.gastosARS} onChange={event => setForm(prev => ({ ...prev, gastosARS: event.target.value }))} placeholder="0" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
             </FormField>
@@ -2754,19 +2921,11 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
               <input type="number" value={form.vepUSD} onChange={event => setForm(prev => ({ ...prev, vepUSD: event.target.value }))} placeholder="0" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
             </FormField>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <FormField label="Pago aduana (Ej. W24 / HAY FONDOS)">
-              <input value={form.pagoAduana} onChange={event => setForm(prev => ({ ...prev, pagoAduana: event.target.value }))} placeholder="Ej. W24" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-            </FormField>
-            <FormField label="Pago marítima (Ej. W23)">
-              <input value={form.pagoMaritima} onChange={event => setForm(prev => ({ ...prev, pagoMaritima: event.target.value }))} placeholder="Ej. W23" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-            </FormField>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <FormField label="Fecha oficialización">
               <input type="date" value={form.fechaOficializacion} onChange={event => setForm(prev => ({ ...prev, fechaOficializacion: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
             </FormField>
-            <FormField label="Fecha salida puerto / frontera">
+            <FormField label="Fecha salida puerto">
               <input type="date" value={form.fechaSalidaPuerto} onChange={event => setForm(prev => ({ ...prev, fechaSalidaPuerto: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
             </FormField>
           </div>
@@ -2775,15 +2934,8 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
 
       {/* ── Modal Aplicar Saldo (Contabilidad de Fondos Despachante) ── */}
       {showSaldoModal && selectedDespachante && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 320, background: 'rgba(15, 23, 42, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ width: 'min(580px, 100%)', maxHeight: '90vh', background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 16, boxShadow: '0 22px 50px rgba(15, 23, 42, 0.22)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 16px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Landmark size={18} color={GREEN} />
-                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: INK }}>Imputación Contable de Saldo a Favor</h2>
-              </div>
-              <AppButton type="button" aria-label="Cerrar" title="Cerrar" variant="tertiary" size="sm" onClick={() => setShowSaldoModal(false)} icon={<X size={14} color={MUTED} />} style={{ borderRadius: 9999 }} />
-            </div>
+        <div style={modalOverlay}>
+          <div style={getModalShellStyle(isMobile ? 'calc(100vw - 32px)' : 560)}>
 
             {saldoSuccess ? (
               <div style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
@@ -2812,7 +2964,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ padding: 18, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, maxHeight: 'calc(90vh - 120px)' }}>
+                <div style={{ padding: '18px 18px 26px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, maxHeight: 'calc(90vh - 120px)' }}>
                   
                   {/* Departamento Responsable */}
                   <div style={{ padding: '10px 14px', background: 'rgba(26,92,56,0.04)', borderRadius: 12, border: `1px solid ${GREEN_HAIRLINE_SOFT}`, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -2824,7 +2976,7 @@ function AduanaTab({ carpeta, subs, editable, hideImportes, onUpdateSubcarpeta, 
                     Despachante: <strong>{selectedDespachante.nombre}</strong> (Saldo actual: <span style={{ color: GREEN, fontWeight: 600 }}>$ {selectedDespachante.saldoFavor.toLocaleString()}</span>)
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
                     <FormField label="Monto a Imputar (AR$)">
                       <input
                         type="number"
@@ -3088,7 +3240,7 @@ function CosteoTab({ carpeta, subs = [], editable, hideImportes, onUpdateSubcarp
 
     {showEditModal && (
       <TabEditModal title={`Editar costeo · ${sub.numero}`} onClose={() => setShowEditModal(false)} onSave={saveCosteo}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
           <FormField label="Coeficiente estimado">
             <input type="number" step="0.01" value={form.coeficienteEst} onChange={event => setForm(prev => ({ ...prev, coeficienteEst: event.target.value }))} placeholder="0.00" style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
           </FormField>
@@ -3384,15 +3536,17 @@ function PagosTab({
       {/* MODAL 1: Confirm payment */}
       {showPaymentModal && selectedPago && (
         <TabEditModal title={`Confirmar giro de fondos · ${selectedPago.concepto}`} onClose={() => setShowPaymentModal(false)} onSave={confirmPayment} saveLabel="Registrar Pago">
-          <FormField label="Fecha de pago real">
-            <input type="date" value={paymentForm.fechaPago} onChange={event => setPaymentForm(prev => ({ ...prev, fechaPago: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-          </FormField>
-          <FormField label="Monto girado final">
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <span style={{ position: 'absolute', left: 12, fontSize: 14, color: MUTED, fontWeight: 600 }}>{selectedPago.moneda}</span>
-              <input type="number" value={paymentForm.montoPago} onChange={event => setPaymentForm(prev => ({ ...prev, montoPago: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px 9px 48px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
-            </div>
-          </FormField>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <FormField label="Fecha de pago real">
+              <input type="date" value={paymentForm.fechaPago} onChange={event => setPaymentForm(prev => ({ ...prev, fechaPago: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+            </FormField>
+            <FormField label="Monto girado final">
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <span style={{ position: 'absolute', left: 12, fontSize: 14, color: MUTED, fontWeight: 600 }}>{selectedPago.moneda}</span>
+                <input type="number" value={paymentForm.montoPago} onChange={event => setPaymentForm(prev => ({ ...prev, montoPago: event.target.value }))} style={{ width: '100%', minHeight: 40, padding: '9px 12px 9px 48px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
+              </div>
+            </FormField>
+          </div>
         </TabEditModal>
       )}
 
@@ -3400,17 +3554,18 @@ function PagosTab({
       {showNewPaymentModal && (
         <TabEditModal title="Registrar Compromiso de Pago" onClose={() => setShowNewPaymentModal(false)} onSave={handleAddPayment} saveLabel="Registrar Compromiso">
           <FormField label="Concepto de pago">
-            <select
-              value={newPaymentForm.concepto}
-              onChange={event => setNewPaymentForm(prev => ({ ...prev, concepto: event.target.value }))}
-              style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}
-            >
-              <option value="Factura Proveedor Exterior">Factura Proveedor Exterior</option>
-              <option value="Flete Internacional">Flete Internacional</option>
-              <option value="Impuestos AFIP / VEP">Impuestos AFIP / VEP</option>
-              <option value="Gastos Terminal">Gastos Terminal</option>
-              <option value="Otros">Otros (especificar abajo)</option>
-            </select>
+            <Select value={newPaymentForm.concepto} onValueChange={value => setNewPaymentForm(prev => ({ ...prev, concepto: value }))}>
+              <AppSelectTrigger>
+                <SelectValue />
+              </AppSelectTrigger>
+              <AppSelectContent style={{ zIndex: 400 }}>
+                <AppSelectItem value="Factura Proveedor Exterior">Factura Proveedor Exterior</AppSelectItem>
+                <AppSelectItem value="Flete Internacional">Flete Internacional</AppSelectItem>
+                <AppSelectItem value="Impuestos AFIP / VEP">Impuestos AFIP / VEP</AppSelectItem>
+                <AppSelectItem value="Gastos Terminal">Gastos Terminal</AppSelectItem>
+                <AppSelectItem value="Otros">Otros (especificar abajo)</AppSelectItem>
+              </AppSelectContent>
+            </Select>
           </FormField>
 
           {newPaymentForm.concepto === 'Otros' && (
@@ -3424,17 +3579,18 @@ function PagosTab({
             </FormField>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <FormField label="Moneda">
-              <select
-                value={newPaymentForm.moneda}
-                onChange={event => setNewPaymentForm(prev => ({ ...prev, moneda: event.target.value }))}
-                style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}
-              >
-                <option value="USD">USD ($ Exterior)</option>
-                <option value="ARS">ARS ($ Local)</option>
-                <option value="EUR">EUR (€ Europa)</option>
-              </select>
+              <Select value={newPaymentForm.moneda} onValueChange={value => setNewPaymentForm(prev => ({ ...prev, moneda: value }))}>
+                <AppSelectTrigger>
+                  <SelectValue />
+                </AppSelectTrigger>
+                <AppSelectContent style={{ zIndex: 400 }}>
+                  <AppSelectItem value="USD">USD ($ Exterior)</AppSelectItem>
+                  <AppSelectItem value="ARS">ARS ($ Local)</AppSelectItem>
+                  <AppSelectItem value="EUR">EUR (€ Europa)</AppSelectItem>
+                </AppSelectContent>
+              </Select>
             </FormField>
 
             <FormField label="Monto">
@@ -3448,7 +3604,7 @@ function PagosTab({
             </FormField>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
             <FormField label="Fecha de Vencimiento">
               <input
                 type="date"
@@ -3459,14 +3615,15 @@ function PagosTab({
             </FormField>
 
             <FormField label="Estado Inicial">
-              <select
-                value={newPaymentForm.estado}
-                onChange={event => setNewPaymentForm(prev => ({ ...prev, estado: event.target.value as any }))}
-                style={{ width: '100%', minHeight: 40, padding: '9px 12px', fontSize: 14, color: INK, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }}
-              >
-                <option value="Pendiente">Pendiente de pago</option>
-                <option value="Pagado">Ya Pagado</option>
-              </select>
+              <Select value={newPaymentForm.estado} onValueChange={value => setNewPaymentForm(prev => ({ ...prev, estado: value as any }))}>
+                <AppSelectTrigger>
+                  <SelectValue />
+                </AppSelectTrigger>
+                <AppSelectContent style={{ zIndex: 400 }}>
+                  <AppSelectItem value="Pendiente">Pendiente de pago</AppSelectItem>
+                  <AppSelectItem value="Pagado">Ya Pagado</AppSelectItem>
+                </AppSelectContent>
+              </Select>
             </FormField>
           </div>
         </TabEditModal>

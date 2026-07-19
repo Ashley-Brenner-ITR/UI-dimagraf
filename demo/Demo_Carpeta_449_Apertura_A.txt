@@ -1,0 +1,35 @@
+RHEINLAND FILM GMBH
+Shipment Opening A Confirmation
+
+Document No.: OPEN-A-RFG-2026-449
+Date: 2026-05-14
+Folder Reference: 2026/449-A
+Parent Folder: 2026/449
+
+Shipment A Summary
+Status: Ready for export
+Estimated Shipment Date: 2026-05-14
+Transport Mode: Maritime
+Document Set: Invoice A / Packing List A / BL A
+
+Items Included in Opening A
+1. SAP 3000021
+   Description: Film Polyéster Metalizado 12µm
+   Quantity: 12000 M2
+   Status: Complete
+
+2. SAP 3000028
+   Description: Laminado BOPP Mate 20µm
+   Quantity: 15000 M2
+   Status: Partial shipment
+
+Operational Notes
+- This opening contains the material already available for shipment.
+- It should be managed as an independent shipment under the parent folder.
+- All shipping documents for this opening will be issued separately.
+
+Demo Notes
+1. Este documento representa la subcarpeta 2026/449-A.
+2. Sirve para mostrar que una apertura tiene su propio set documental.
+
+End of Document

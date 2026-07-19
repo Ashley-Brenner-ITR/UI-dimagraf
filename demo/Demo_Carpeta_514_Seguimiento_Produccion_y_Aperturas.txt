@@ -1,0 +1,31 @@
+RHEINLAND FILM GMBH
+Production Status Update / Partial Shipment Plan
+
+Document No.: PROD-RFG-2026-514-01
+Date: 2026-06-05
+Customer Reference: Dimagraf / 2026/514
+Supplier Reference: RFG-2026-DGF-514
+
+General Status
+Purchase Order / Folder: 2026/514
+Production Status: In progress
+Original Estimated Shipment Date: 2026-06-18
+Current Assessment: Partial readiness confirmed
+Reason for split: Final coating stage for one item is delayed.
+
+Proposed Shipment Split
+Opening A: 2026/514-A
+- SAP 3000034 / Film Polyéster Transparente 15µm / 18000 M2
+- SAP 3000041 / Laminado BOPP Gloss 18µm / 12000 M2
+- Estimated shipment date: 2026-06-18
+
+Opening B: 2026/514-B
+- SAP 3000041 / Laminado BOPP Gloss 18µm / 10000 M2
+- Estimated shipment date: 2026-07-02
+
+Operational Notes
+- Shipment A can leave on original plan.
+- Shipment B depends on production close-out.
+- Each opening will carry its own invoice and transport documents.
+
+End of Document

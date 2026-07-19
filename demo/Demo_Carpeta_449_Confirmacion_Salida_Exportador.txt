@@ -1,0 +1,65 @@
+RHEINLAND FILM GMBH
+Export Shipment Confirmation
+
+Confirmation No.: ESC-RFG-2026-449
+Date of Issue: 2026-05-15
+Exporter Reference: RFG-2026-DGF-449
+Customer Reference: Dimagraf / 2026/449
+
+Exporter
+Rheinland Film GmbH
+Am Industriepark 18
+40221 Duesseldorf
+Germany
+
+Customer
+Dimagraf S.A.
+Buenos Aires
+Argentina
+
+Subject
+Confirmation of cargo dispatch and departure from origin warehouse.
+
+We hereby confirm that the goods corresponding to customer reference RFG-2026-DGF-449 have left our export warehouse and have been delivered to the forwarder for international shipment.
+
+Operational Summary
+Purchase Order / Folder: 2026/449
+Incoterm: CIF Buenos Aires
+Mode of Transport: Maritime
+Warehouse Release Date: 2026-05-15
+Forwarder Handover Date: 2026-05-15
+Estimated Vessel Booking: confirmed
+Estimated Port of Loading: Hamburg
+Estimated Departure: 2026-05-15
+Estimated Arrival Buenos Aires: 2026-06-14
+Bill of Lading Status: issued separately after loading confirmation
+Container Assignment Status: confirmed after vessel loading
+
+Items Released
+1. SAP 3000021
+   Description: Film Polyéster Metalizado 12µm
+   Released Quantity: 12000 M2
+   Release Status: Complete
+
+2. SAP 3000028
+   Description: Laminado BOPP Mate 20µm
+   Released Quantity: 23750 M2
+   Release Status: Partial against original order
+   Comment: Remaining balance pending production close-out.
+
+Release Notes
+- Cargo left exporter facilities in good order and condition.
+- Final shipping document set will include Commercial Invoice, Packing List and Bill of Lading.
+- Any quantity discrepancy must be reviewed against the original purchase order before operational approval.
+- This confirmation represents the exporter dispatch milestone prior to full transport documentation closure.
+
+Demo Notes
+1. Este archivo sirve para mostrar la confirmación de salida desde el exportador.
+2. Funciona bien como documento previo al BL, cuando ya hay mercadería despachada pero todavía no está cerrada toda la documentación de transporte.
+3. También permite mostrar una diferencia de cantidad en el segundo artículo antes del cierre final del embarque.
+
+Signed by:
+Export Logistics Coordinator
+Rheinland Film GmbH
+
+End of Document

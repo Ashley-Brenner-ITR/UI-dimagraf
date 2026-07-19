@@ -1,0 +1,20 @@
+RHEINLAND FILM GMBH
+Export Shipment Confirmation
+
+Confirmation No.: ESC-RFG-2026-514
+Date of Issue: 2026-06-18
+Exporter Reference: RFG-2026-DGF-514
+Customer Reference: Dimagraf / 2026/514
+
+Operational Summary
+Purchase Order / Folder: 2026/514
+Warehouse Release Date: 2026-06-18
+Forwarder Handover Date: 2026-06-18
+Estimated Arrival Buenos Aires: 2026-07-16
+Bill of Lading Status: issued separately after loading confirmation
+
+Items Released
+1. SAP 3000034 - 18000 M2
+2. SAP 3000041 - 21000 M2
+
+End of Document
