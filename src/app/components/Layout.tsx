@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, FolderOpen, Ship, BarChart3, DollarSign, Boxes, Activity, Users, Shield, Package, LogOut, Menu, X, ChevronDown, Settings2, PanelLeftClose, PanelLeftOpen, CalendarDays } from 'lucide-react';
+import { Bell, FolderOpen, Ship, BarChart3, DollarSign, Boxes, Activity, Users, Shield, Package, LogOut, Menu, X, ChevronDown, Settings2, PanelLeftClose, PanelLeftOpen, CalendarDays, Wallet } from 'lucide-react';
 import type { AppUser, Role } from './mockData';
 import { useIsMobile } from './ui/use-mobile';
 import { color } from './theme';
@@ -48,7 +48,7 @@ interface NavItem { id: string; label: string; mobileLabel?: string; icon: React
 function getNavItems(role: AccessRole): NavItem[] {
   if (role === 'operator') return [
     { id: 'carpetas',      label: 'Carpetas',           mobileLabel: 'Carpetas',       icon: <FolderOpen size={18} /> },
-    { id: 'arrivals',      label: 'Arrivals',           mobileLabel: 'Arrivals',       icon: <Ship size={18} /> },
+    { id: 'arrivals',      label: 'Arribos',            mobileLabel: 'Arribos',        icon: <Ship size={18} /> },
     { id: 'vencimientos',  label: 'Vencimientos',       mobileLabel: 'Vencimientos',   icon: <CalendarDays size={18} /> },
   ];
   if (role === 'director') return [
@@ -59,7 +59,7 @@ function getNavItems(role: AccessRole): NavItem[] {
   ];
   if (role === 'commercial') return [
     { id: 'carpetas', label: 'Carpetas',            mobileLabel: 'Carpetas', icon: <FolderOpen size={18} /> },
-    { id: 'arrivals', label: 'Arrivals',            mobileLabel: 'Arrivals', icon: <Ship size={18} /> },
+    { id: 'arrivals', label: 'Arribos',             mobileLabel: 'Arribos',  icon: <Ship size={18} /> },
   ];
   if (role === 'treasury') return [
     { id: 'cashflow',      label: 'Flujo de caja',  mobileLabel: 'Flujo',          icon: <DollarSign size={18} /> },
@@ -311,7 +311,10 @@ export function Layout({ role, availableRoles, setRole, view, setView, children,
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {isMobile && (
               <button
-                onClick={() => setNavMenuOpen(open => !open)}
+                onClick={() => {
+                  setRoleMenuOpen(false);
+                  setNavMenuOpen(open => !open);
+                }}
                 style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, background: 'transparent', border: 'none', color: INK, cursor: 'pointer' }}
                 aria-label={navMenuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
               >
@@ -325,6 +328,104 @@ export function Layout({ role, availableRoles, setRole, view, setView, children,
 
           {/* Right cluster */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            {isMobile && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => {
+                  setNavMenuOpen(false);
+                  onRequestCloseNotifications?.();
+                  setRoleMenuOpen(open => !open);
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 36, height: 36,
+                  background: CANVAS,
+                  border: `1px solid ${BORDER_TINT}`,
+                  borderRadius: 9999,
+                  color: GREEN,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 2px rgba(16,24,40,0.04)',
+                }}
+                aria-label="Abrir menú de usuario"
+              >
+                {userInitials}
+              </button>
+
+              {roleMenuOpen && (
+                <div style={{
+                  position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                  background: CANVAS,
+                  border: `1px solid ${BORDER_TINT}`,
+                  borderRadius: 16,
+                  boxShadow: '0 18px 48px rgba(16,24,40,0.10)',
+                  width: 240,
+                  overflow: 'hidden',
+                  zIndex: 200,
+                }}>
+                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER_TINT_SOFT}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0 }}>
+                      <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(26,92,56,0.12)', color: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                        {userInitials}
+                      </span>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUserLabel}</div>
+                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{currentRole.label}</div>
+                      </div>
+                      {canEditCurrentUser && (
+                        <button
+                          onClick={() => { setRoleMenuOpen(false); onRequestCloseNotifications?.(); onOpenSettings?.(); }}
+                          aria-label="Abrir configuración de cuenta"
+                          style={{ width: 28, height: 28, borderRadius: 9999, border: `1px solid ${BORDER_TINT}`, background: CANVAS, color: MUTED, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          <Settings2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {availableRoles.length > 1 && (
+                    <div style={{ padding: '8px 0', borderBottom: `1px solid ${BORDER_TINT_SOFT}` }}>
+                      {availableRoles.map((availableRole) => {
+                        const roleOption = getRoleMeta(availableRole);
+                        const isActiveRole = availableRole === role;
+                        return (
+                          <button
+                            key={roleOption.id}
+                            onClick={() => handleSelectRole(availableRole)}
+                            style={{
+                              display: 'flex', alignItems: 'center', width: '100%', padding: '8px 16px',
+                              border: 'none', background: isActiveRole ? 'rgba(26,92,56,0.08)' : 'transparent',
+                              color: isActiveRole ? GREEN : INK, fontSize: 12, fontWeight: isActiveRole ? 700 : 500,
+                              cursor: 'pointer', textAlign: 'left',
+                            }}
+                          >
+                            {roleOption.short}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div style={{ padding: '8px 0' }}>
+                    <button
+                      onClick={() => { setRoleMenuOpen(false); onLogout(); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                        padding: '10px 16px', background: 'rgba(180,35,24,0.05)', border: 'none',
+                        color: DANGER, fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left',
+                      }}
+                    >
+                      <LogOut size={13} />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            )}
+
             {/* Role switcher */}
             {!isMobile && (
             <div style={{ position: 'relative' }}>

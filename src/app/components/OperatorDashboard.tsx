@@ -1,8 +1,8 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Plus, ChevronRight, ChevronLeft, CheckCircle, X, Upload, FileText, AlertTriangle, Trash2, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, ArrowLeft, Layers, ChevronDown, ChevronUp, FolderOpen, Ship } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { Plus, ChevronRight, ChevronLeft, CheckCircle, X, Upload, FileText, AlertTriangle, Trash2, ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal, ArrowLeft, Layers, ChevronDown, ChevronUp, FolderOpen, Ship, Anchor, CalendarClock } from 'lucide-react';
 import { fieldLabel, formInput, formTextarea, getAutoFitGridStyle, getModalPrimaryButtonStyle, getModalSecondaryButtonStyle, getResponsiveTableStyle, getModalShellStyle, modalCloseButton, modalFooter, modalHeader, modalOverlay, pageActions, pageHeader, pageShell, tableHeadCell, tableHeadRow, tableScrollArea, tableShell } from './chromeStyles';
 import { read, utils, writeFileXLSX } from 'xlsx';
-import { PROVEEDORES, getEstadoColor, shouldShowMotherPendingState, type EstadoCarpeta, type Carpeta, type Subcarpeta } from './mockData';
+import { ARTICULOS_CATALOGO, PROVEEDORES, getEstadoColor, shouldShowMotherPendingState, type EstadoCarpeta, type Carpeta, type Subcarpeta } from './mockData';
 import { NeonBadge } from './NeonBadge';
 import { useIsMobile } from './ui/use-mobile';
 import { AppButton } from './AppButton';
@@ -10,8 +10,10 @@ import { normalizeSearchTerm, SearchField } from './SearchField';
 import { FilterToolbar } from './FilterToolbar';
 import { WelcomeBanner } from './WelcomeBanner';
 import { SurfaceCard } from './SurfaceCard';
-import { color, radius } from './theme';
+import { color, radius, shipmentTypography } from './theme';
 import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectValue } from './ui/select';
+import { TransportModeIcon } from './TransportModeIcon';
+import { AppDateField } from './AppDateField';
 
 const INK       = '#1d1d1f';
 const MUTED     = '#6e6e73';
@@ -22,6 +24,7 @@ const CANVAS    = '#ffffff';
 const MINT_WASH = color.mintWash;
 const GREEN_HAIRLINE = color.borderTint;
 const GREEN_HAIRLINE_SOFT = color.borderTintSoft;
+const SHIPMENT_TYPE = shipmentTypography;
 const SELECT_CHEVRON_SVG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")";
 
 const ESTADO_FILTERS: Array<{ value: EstadoCarpeta | 'Todos'; label: string; color?: string }> = [
@@ -34,7 +37,37 @@ const ESTADO_FILTERS: Array<{ value: EstadoCarpeta | 'Todos'; label: string; col
 ];
 
 const INCOTERMS = ['FOB', 'CIF', 'EXW', 'FCA', 'DAP', 'DDP', 'CFR'];
-const CONDICIONES_PAGO = ['30 días neto', '60 días neto', '90 días neto', 'Contado', '50% anticipo / 50% entrega', 'Carta de crédito'];
+
+function getRowItemIconShellStyle(isSubcarpeta: boolean): CSSProperties {
+  return {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    background: isSubcarpeta ? '#eff4ff' : `${GREEN}10`,
+    border: isSubcarpeta ? '1px solid rgba(82,139,255,0.18)' : `1px solid ${GREEN}22`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  };
+}
+
+function renderRowItemIcon(isSubcarpeta: boolean, transporte?: string, extraStyle?: CSSProperties) {
+  if (isSubcarpeta) {
+    return (
+      <span style={{ display: 'inline-flex', alignSelf: 'start', paddingTop: 1, ...extraStyle }}>
+        <TransportModeIcon transporte={transporte} size={13} compact />
+      </span>
+    );
+  }
+
+  return (
+    <div style={{ ...getRowItemIconShellStyle(isSubcarpeta), ...extraStyle }}>
+      <FolderOpen size={14} style={{ color: GREEN }} />
+    </div>
+  );
+}
+const CONDICIONES_PAGO = ['30 días neto', '60 días neto', '60 días desde BL', '90 días neto', 'Contado', '50% anticipo / 50% entrega', 'Carta de crédito'];
 const MASSIVE_TEMPLATE = [
   'codigoSAP\tdescripcion\tcantidad\tum\tume\tequivalencia\tlinea\tprecioUnitario\tobservaciones',
   '1000234\tPapel Estucado Brillante 115g/m2\t50000\tKg\tKg\t1\tLCA\t1.42\tOC completa',
@@ -46,7 +79,7 @@ const EMPTY_MANUAL_ARTICLE_FORM = { codigoSAP: '', descripcion: '', linea: 'LCA'
 
 type CreationMode = 'manual' | 'massive';
 type WizardStep = 1 | 2 | 3 | 4 | 5;
-type ValidationStatus = 'Válido' | 'Con advertencia' | 'Con error' | 'Duplicado';
+type ValidationStatus = 'Válido' | 'Con advertencia' | 'Con error' | 'Duplicado' | 'No se encuentra en el sistema';
 type SortDirection = 'asc' | 'desc';
 type SortKey = 'numero' | 'proveedor' | 'pedidoSAP45' | 'montoTotal' | 'ultimoHito' | 'lastUpdate';
 type ColumnKey = SortKey | 'fechaOC' | 'referenciaProveedor' | 'incoterm' | 'condPago' | 'fechaEmbarqueEst' | 'embarques';
@@ -166,48 +199,48 @@ function SubcarpetaLine({ sub, onClick, showDivider = false, showMobileDivider =
         {mobileStacked ? (
           <>
             <span style={{ fontSize: 12, fontWeight: 700, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{sub.numero}</span>
-            <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 10, minWidth: 0, flexWrap: 'nowrap' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 10, minWidth: 0, flexWrap: 'nowrap' }}>
               <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap', flexShrink: 0 }}>
                 <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>ETA</span>
-                <span style={{ fontSize: 11, color: INK, lineHeight: 1.2 }}>{sub.eta || '—'}</span>
+                  <span style={{ fontSize: 11, color: INK, lineHeight: 1.25 }}>{sub.eta || '—'}</span>
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                <span style={{ fontSize: 11, color: INK, lineHeight: 1.2 }}>{sub.contenedores || 0}</span>
+                  <span style={{ fontSize: 11, color: INK, lineHeight: 1.25 }}>{sub.contenedores || 0}</span>
                 <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em' }}>cont.</span>
               </span>
             </span>
           </>
         ) : (
           <>
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{sub.numero}</span>
+            <span style={{ fontSize: SHIPMENT_TYPE.title, fontWeight: 600, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{sub.numero}</span>
             {compact ? (
               <span style={{ display: 'grid', gridTemplateColumns: 'auto auto', alignItems: 'baseline', columnGap: 10, minWidth: 0, justifyContent: 'start' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, minWidth: 0, whiteSpace: 'nowrap' }}>
-                  <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>ETA</span>
-                  <span style={{ fontSize: 10.5, color: INK, lineHeight: 1.2 }}>{sub.eta || '—'}</span>
+                  <span style={{ fontSize: SHIPMENT_TYPE.label, color: MUTED, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>ETA</span>
+                  <span style={{ fontSize: SHIPMENT_TYPE.value, color: INK, lineHeight: 1.25 }}>{sub.eta || '—'}</span>
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <span style={{ fontSize: 10.5, color: INK, lineHeight: 1.2 }}>{sub.contenedores || 0}</span>
-                  <span style={{ fontSize: 9, color: MUTED, fontWeight: 700, letterSpacing: '0.04em' }}>cont.</span>
+                  <span style={{ fontSize: SHIPMENT_TYPE.value, color: INK, lineHeight: 1.25 }}>{sub.contenedores || 0}</span>
+                  <span style={{ fontSize: SHIPMENT_TYPE.label, color: MUTED, fontWeight: 700, letterSpacing: '0.04em' }}>cont.</span>
                 </span>
               </span>
             ) : (
-              <span style={{ fontSize: 11, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>ETA {sub.eta || '-'} · {sub.contenedores || 0} cont.</span>
+              <span style={{ fontSize: SHIPMENT_TYPE.companion, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>ETA {sub.eta || '-'} · {sub.contenedores || 0} cont.</span>
             )}
           </>
         )}
       </span>
       {mobileStacked && (
         <>
-          <span style={{ gridColumn: '2 / 3', gridRow: '1 / 3', alignSelf: 'center', justifySelf: 'end', display: 'inline-flex', alignItems: 'center' }}>
+          <span style={{ gridColumn: '3 / 4', gridRow: '1 / 3', alignSelf: 'center', justifySelf: 'end', display: 'inline-flex', alignItems: 'center' }}>
             <NeonBadge estado={sub.estado as any} size="xs" />
           </span>
-          <span style={{ gridColumn: '3 / 4', gridRow: '1 / 3', width: 20, alignSelf: 'center', justifySelf: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ gridColumn: '4 / 5', gridRow: '1 / 3', width: 20, alignSelf: 'center', justifySelf: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
             <ChevronRight size={12} style={{ color: '#98a2b3', flexShrink: 0 }} />
           </span>
         </>
       )}
-      <span style={{ display: mobileStacked ? 'none' : 'inline-flex', alignItems: compact ? 'flex-start' : 'center', justifyContent: 'flex-end', gap: compact ? 12 : 10, alignSelf: compact ? 'start' : 'center', justifySelf: 'end' }}>
+      <span style={{ display: mobileStacked ? 'none' : 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: compact ? 12 : 10, alignSelf: 'center', justifySelf: 'end' }}>
         <NeonBadge estado={sub.estado as any} size="xs" />
         <span style={{ width: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
           <ChevronRight size={12} style={{ color: '#98a2b3' }} />
@@ -221,7 +254,7 @@ function nextNumero(carpetasList: Carpeta[]): string {
   const seqs = carpetasList
     .map(c => { const [, s] = c.numero.split('/'); return parseInt(s) || 0; })
     .filter(n => !isNaN(n));
-  const next = seqs.length > 0 ? Math.max(...seqs) + 1 : 100;
+  const next = Math.max(513, ...seqs) + 1;
   return `${year}/${next}`;
 }
 
@@ -316,6 +349,8 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
   const [isDragActive, setIsDragActive] = useState(false);
   const [manualArticles, setManualArticles] = useState<ImportedRow[]>([]);
   const [manualArticleForm, setManualArticleForm] = useState<ManualArticleFormState>(EMPTY_MANUAL_ARTICLE_FORM);
+  const [manualArticleSearch, setManualArticleSearch] = useState('');
+  const [manualArticleFilter, setManualArticleFilter] = useState<'Todos' | 'Válidos' | 'Con advertencia'>('Todos');
   const [columnsDrawerOpen, setColumnsDrawerOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnKey>>(() => new Set(DEFAULT_HIDDEN_COLUMNS));
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -328,7 +363,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
   const showUpdateColumn = !useCompactTableLayout;
   const showRowAction = !useCompactTableLayout;
   const currentStepLabel = wizardSteps.find(item => item.id === step)?.label ?? 'Resultado';
-  const stepLabel = `Paso ${step} · ${currentStepLabel}`;
+  const stepLabel = step === 1 ? 'Datos generales de la importación' : `Paso ${step} · ${currentStepLabel}`;
   const importableRows = importedRows.filter(row => row.status !== 'Con error');
   const hasValidationIssues = importedRows.some(row => row.status !== 'Válido');
   const hasBlockingErrors = importedRows.some(row => row.status === 'Con error');
@@ -575,7 +610,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
   };
 
   const primaryTableTextStyle = {
-    fontSize: 13,
+    fontSize: SHIPMENT_TYPE.companion,
     color: INK,
     lineHeight: 1.2,
     whiteSpace: 'nowrap' as const,
@@ -585,6 +620,17 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
 
   const primaryTableNumericTextStyle = {
     ...primaryTableTextStyle,
+    fontVariantNumeric: 'tabular-nums' as const,
+  };
+
+  const compactTopRowValueStyle = {
+    fontSize: SHIPMENT_TYPE.companion,
+    fontWeight: 400,
+    lineHeight: 1.2,
+    color: INK,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden' as const,
+    textOverflow: 'ellipsis' as const,
     fontVariantNumeric: 'tabular-nums' as const,
   };
 
@@ -603,12 +649,11 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       sortKey: 'numero',
       required: true,
       render: carpeta => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>{carpeta.numero}</div>
-            <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              {shouldShowMotherPendingState(carpeta) && <NeonBadge estado="Pendiente de embarque" size="xs" />}
-            {carpeta.subcarpetas.length > 0 && <div style={{ marginTop: 2, fontSize: 10, color: MUTED, whiteSpace: 'nowrap' }}>{carpeta.subcarpetas.length} embarque{carpeta.subcarpetas.length > 1 ? 's' : ''}</div>}
+            <div style={{ fontSize: SHIPMENT_TYPE.title, lineHeight: '16px', fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{carpeta.numero}</div>
+            <div style={{ marginTop: 3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {carpeta.subcarpetas.length > 0 && <div style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: MUTED, whiteSpace: 'nowrap' }}>{carpeta.subcarpetas.length} embarque{carpeta.subcarpetas.length > 1 ? 's' : ''}</div>}
             </div>
           </div>
         </div>
@@ -621,7 +666,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       sortKey: 'proveedor',
       render: (carpeta, proveedorNombre, proveedorPais) => {
         return (
-          <div style={{ ...primaryTableTextStyle, display: 'flex', alignItems: 'flex-start', gap: 6, minWidth: 0, maxWidth: '100%' }}>
+          <div style={{ ...primaryTableTextStyle, display: 'flex', alignItems: 'flex-start', gap: 4, minWidth: 0, maxWidth: '100%' }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{proveedorNombre || '—'}</span>
             {proveedorPais && <CountryFlag country={proveedorPais} />}
           </div>
@@ -633,7 +678,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       label: 'SAP 45',
       hint: 'Pedido de la OC',
       sortKey: 'pedidoSAP45',
-      render: carpeta => <div style={primaryTableNumericTextStyle}>{carpeta.pedidoSAP45 || '—'}</div>,
+      render: carpeta => <span style={compactTopRowValueStyle}>{carpeta.pedidoSAP45 || '—'}</span>,
     },
     ...(hideImportes
       ? []
@@ -642,7 +687,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
           label: 'MONTO OC',
           hint: 'Importe y moneda',
           sortKey: 'montoTotal' as SortKey,
-          render: (carpeta: Carpeta) => <div style={primaryTableNumericTextStyle}>{`${carpeta.moneda} ${carpeta.montoTotal.toLocaleString()}`}</div>,
+          render: (carpeta: Carpeta) => <span style={compactTopRowValueStyle}>{`${carpeta.moneda} ${carpeta.montoTotal.toLocaleString()}`}</span>,
         }]),
     {
       key: 'ultimoHito',
@@ -750,6 +795,19 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
 
   const canSubmitStep1 = form.proveedorId && form.fechaOC && form.montoTotal && Number(form.montoTotal) > 0;
   const canAddManualArticle = manualArticleForm.codigoSAP.trim() && manualArticleForm.descripcion.trim() && Number(manualArticleForm.cantidadSolicitada) > 0;
+  const manualArticleMissingInSap = Boolean(manualArticleForm.codigoSAP.trim())
+    && !ARTICULOS_CATALOGO.some(article => article.codigoSAP === manualArticleForm.codigoSAP.trim());
+  const validManualArticleCount = manualArticles.filter(article => article.status === 'Válido').length;
+  const warningManualArticleCount = manualArticles.length - validManualArticleCount;
+  const normalizedManualArticleSearch = normalizeSearchTerm(manualArticleSearch);
+  const visibleManualArticles = manualArticles.filter(article => {
+    const matchesSearch = !normalizedManualArticleSearch
+      || normalizeSearchTerm(`${article.codigoSAP} ${article.descripcion}`).includes(normalizedManualArticleSearch);
+    const matchesFilter = manualArticleFilter === 'Todos'
+      || (manualArticleFilter === 'Válidos' && article.status === 'Válido')
+      || (manualArticleFilter === 'Con advertencia' && article.status !== 'Válido');
+    return matchesSearch && matchesFilter;
+  });
 
   const validateRows = (text: string): ImportedRow[] => {
     const lines = text
@@ -777,6 +835,9 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       if (!codigoSAP || !descripcion || !um || !ume || !Number.isFinite(cantidadValue) || cantidadValue <= 0) {
         status = 'Con error';
         detail = 'Faltan datos obligatorios o la cantidad es inválida.';
+      } else if (!ARTICULOS_CATALOGO.some(article => article.codigoSAP === codigoSAP)) {
+        status = 'No se encuentra en el sistema';
+        detail = 'El código no se encuentra en el sistema. Avisá al administrador para solicitar su alta.';
       } else if (seenCodes.has(codigoSAP)) {
         status = 'Duplicado';
         detail = 'Código repetido dentro del mismo lote.';
@@ -846,8 +907,8 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
         precioUnitario: row.precioUnitario,
         cantidadAsignada: 0,
         origenCarga: isMassiveCreation ? 'Carga masiva' : 'Manual',
-        estadoValidacion: isMassiveCreation ? row.status : undefined,
-        observacionesImportacion: isMassiveCreation ? row.detail : undefined,
+        estadoValidacion: row.status,
+        observacionesImportacion: row.detail,
         loteImportacion,
       })),
       subcarpetas: [],
@@ -975,11 +1036,13 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
     };
     onCreateCarpeta(newCarpeta);
     handleClose();
-    onSelectCarpeta(newCarpeta.id);
+    onSelectCarpeta(newCarpeta.id, 'articulos');
   };
 
   const handleAddManualArticle = () => {
     if (!canAddManualArticle) return;
+
+    const missingInSap = !ARTICULOS_CATALOGO.some(article => article.codigoSAP === manualArticleForm.codigoSAP.trim());
 
     const newArticle: ImportedRow = {
       id: `manual_${Date.now()}`,
@@ -992,8 +1055,10 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       linea: manualArticleForm.linea,
       precioUnitario: Number(manualArticleForm.precioUnitario) || 0,
       observaciones: '',
-      status: 'Válido',
-      detail: 'Carga manual inicial.',
+      status: missingInSap ? 'No se encuentra en el sistema' : 'Válido',
+      detail: missingInSap
+        ? 'El código no se encuentra en el sistema. Avisá al administrador para solicitar su alta.'
+        : 'Carga manual inicial.',
     };
 
     setManualArticles(prev => [...prev, newArticle]);
@@ -1016,6 +1081,8 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
     setIsDragActive(false);
     setManualArticles([]);
     setManualArticleForm(EMPTY_MANUAL_ARTICLE_FORM);
+    setManualArticleSearch('');
+    setManualArticleFilter('Todos');
     setShowModal(true);
     setStep(1);
   };
@@ -1035,6 +1102,8 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
     setIsDragActive(false);
     setManualArticles([]);
     setManualArticleForm(EMPTY_MANUAL_ARTICLE_FORM);
+    setManualArticleSearch('');
+    setManualArticleFilter('Todos');
   };
 
   const handleOpenDetail = () => {
@@ -1047,7 +1116,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
   return (
     <div style={{ ...pageShell, background: MINT_WASH, borderRadius: 24 }}>
 
-      <div style={{ padding: isNarrowViewport ? '0 12px' : '0 14px' }}>
+      <div style={{ padding: isNarrowViewport ? '12px 12px 0' : '16px 14px 0' }}>
         <WelcomeBanner
           title="Carpetas"
           actions={
@@ -1060,7 +1129,6 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
           }
         />
       </div>
-
       {/* Table */}
         <div ref={tableShellRef} style={{ ...tableShell, border: 'none', background: 'transparent', boxShadow: 'none', borderRadius: 0, overflow: 'visible' }}>
           <div style={{
@@ -1150,9 +1218,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         style={{ cursor: 'pointer', background: isSubcarpeta ? CANVAS : '#f8faf9', borderRadius: 8 }}
                       >
                         <td style={{ padding: '10px 6px 10px 14px', verticalAlign: 'middle' }}>
-                          <div style={{ width: isSubcarpeta ? 24 : 28, height: isSubcarpeta ? 24 : 28, borderRadius: isSubcarpeta ? 6 : 8, background: isSubcarpeta ? '#eff4ff' : `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {isSubcarpeta ? <Ship size={13} style={{ color: '#528bff' }} /> : <FolderOpen size={15} style={{ color: GREEN }} />}
-                          </div>
+                          {renderRowItemIcon(isSubcarpeta, sub?.transporte)}
                         </td>
                         {visibleColumns.map(column => (
                           <td key={column.key} style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12 }}>
@@ -1206,57 +1272,54 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         <div
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: 'auto minmax(0, 1fr) auto 20px',
+                            gridTemplateColumns: 'minmax(0, 1fr) auto 20px',
                             alignItems: 'start',
                             gap: 10,
                             width: '100%',
                             padding: '16px 20px',
                           }}
                         >
-                          <div style={{ width: 24, height: 24, borderRadius: 6, background: '#eff4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                            <Ship size={13} style={{ color: '#528bff' }} />
-                          </div>
                           <div onClick={() => onSelectSubcarpeta ? onSelectSubcarpeta(c.id, sub.id) : onSelectCarpeta(c.id)} style={{ minWidth: 0, cursor: 'pointer', display: 'grid', gap: 6 }}>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 12, fontWeight: 600, color: INK }}>{sub.numero}</span>
-                              <span style={{ fontSize: 10, color: MUTED }}>de {c.numero}</span>
+                              <span style={{ fontSize: SHIPMENT_TYPE.title, fontWeight: 600, color: INK }}>{sub.numero}</span>
+                              <span style={{ fontSize: SHIPMENT_TYPE.companion, color: MUTED }}>de {c.numero}</span>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'repeat(2, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))', gap: 10, minWidth: 0 }}>
                               <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Proveedor</span>
-                                <span style={{ fontSize: 11, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prov?.nombre || '—'}</span>
+                                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Proveedor</span>
+                                <span style={{ fontSize: SHIPMENT_TYPE.value, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prov?.nombre || '—'}</span>
                               </div>
                               {!hideImportes ? (
                                 <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Monto</span>
-                                  <span style={{ fontSize: 11, fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{c.moneda} {sub.importeTotal.toLocaleString()}</span>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Monto</span>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.value, fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{c.moneda} {sub.importeTotal.toLocaleString()}</span>
                                 </div>
                               ) : (
                                 <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
-                                  <span style={{ fontSize: 11, color: INK }}>{sub.eta || '—'}</span>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.value, color: INK }}>{sub.eta || '—'}</span>
                                 </div>
                               )}
                               <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>SAP 55 / 18</span>
-                                <span style={{ fontSize: 10.5, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.pedidoSAP55 || '—'} / {sub.ingresoSAP18 || '—'}</span>
+                                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>SAP 55 / 18</span>
+                                <span style={{ fontSize: SHIPMENT_TYPE.value, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.pedidoSAP55 || '—'} / {sub.ingresoSAP18 || '—'}</span>
                               </div>
                               <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Canal</span>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 600, color: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : '#9a6700', whiteSpace: 'nowrap' }}>
+                                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Canal</span>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: SHIPMENT_TYPE.value, fontWeight: 600, color: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : '#9a6700', whiteSpace: 'nowrap' }}>
                                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: sub.canalAduana === 'Rojo' ? '#c4001a' : sub.canalAduana === 'Verde' ? '#1a7a4a' : '#9a6700' }} />
                                   {sub.canalAduana || '—'}
                                 </span>
                               </div>
                               {!hideImportes && (
                                 <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
-                                  <span style={{ fontSize: 11, color: INK }}>{sub.eta || '—'}</span>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.value, color: INK }}>{sub.eta || '—'}</span>
                                 </div>
                               )}
                               <div style={{ display: 'grid', gap: 3, minWidth: 0, gridColumn: '1 / -1' }}>
-                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Estado operativo</span>
-                                <span style={{ fontSize: 10.5, color: INK, lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Estado operativo</span>
+                                <span style={{ fontSize: SHIPMENT_TYPE.value, color: INK, lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                   {sub.estado} · {sub.buqueForwarder || 'Sin forwarder cargado'}
                                 </span>
                               </div>
@@ -1284,7 +1347,10 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
 
                   const hasSubs = c.subcarpetas.length > 0;
                   const showSubcarpetasUnderParent = hasSubs;
-                  const useCompactDesktopParentGrid = tableShellWidth >= 900;
+                  const useCompactDesktopParentGrid = tableShellWidth >= 1120;
+                  const showMotherPendingState = shouldShowMotherPendingState(c);
+                  const useCondensedPendingParentCard = !useCompactDesktopParentGrid && !hasSubs && showMotherPendingState;
+                  const useCompactParentSummaryCard = !useCompactDesktopParentGrid && !hasSubs;
 
                   return (
                     <SurfaceCard key={c.id} as="article" style={{ margin: '6px 10px', borderColor: GREEN_HAIRLINE, boxShadow: 'none', borderRadius: 10 }}>
@@ -1301,71 +1367,103 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                       >
                         <div onClick={() => onSelectCarpeta(c.id)} style={{ minWidth: 0, cursor: 'pointer', display: 'grid', gap: useCompactDesktopParentGrid ? 6 : 6 }}>
                           {useCompactDesktopParentGrid ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'minmax(140px, 0.95fr) minmax(220px, 1.25fr) minmax(126px, 0.85fr) minmax(96px, 0.7fr)' : 'minmax(140px, 0.95fr) minmax(220px, 1.25fr) minmax(126px, 0.85fr) minmax(126px, 0.85fr) minmax(96px, 0.7fr)', columnGap: 12, rowGap: 10, alignItems: 'start' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'minmax(136px, 0.95fr) minmax(208px, 1.15fr) minmax(118px, 0.8fr) minmax(92px, 0.64fr)' : 'minmax(136px, 0.95fr) minmax(208px, 1.15fr) minmax(118px, 0.8fr) minmax(110px, 0.78fr) minmax(148px, 0.96fr) minmax(92px, 0.64fr)', columnGap: 10, rowGap: 10, alignItems: 'start' }}>
                               <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
                                 <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Carpeta</span>
-                                <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, minWidth: 0, whiteSpace: 'nowrap' }}>
-                                  <span style={{ fontSize: 14, lineHeight: '16px', fontWeight: 700, color: INK }}>{c.numero}</span>
-                                  {hasSubs && <span style={{ fontSize: 10, color: MUTED, whiteSpace: 'nowrap' }}>{c.subcarpetas.length} embarque{c.subcarpetas.length > 1 ? 's' : ''}</span>}
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0, whiteSpace: 'nowrap' }}>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.title, lineHeight: '16px', fontWeight: 700, color: INK }}>{c.numero}</span>
+                                  {hasSubs && <span style={{ fontSize: SHIPMENT_TYPE.companion, color: MUTED, whiteSpace: 'nowrap' }}>{c.subcarpetas.length} embarque{c.subcarpetas.length > 1 ? 's' : ''}</span>}
                                 </div>
-                                {shouldShowMotherPendingState(c) && (
-                                  <div style={{ marginTop: 2 }}>
-                                    <NeonBadge estado="Pendiente de embarque" size="xs" />
-                                  </div>
-                                )}
                               </div>
                               <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
-                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Proveedor</span>
+                                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Proveedor</span>
                                 <div style={{ minHeight: 16, display: 'flex', alignItems: 'flex-start', overflow: 'hidden' }}>
-                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, lineHeight: '16px', color: INK, display: 'inline-flex', alignItems: 'flex-start', gap: 4 }}>
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: SHIPMENT_TYPE.value, lineHeight: '16px', color: INK, display: 'inline-flex', alignItems: 'flex-start', gap: 4 }}>
                                   {prov?.nombre || '—'}
                                   {prov?.pais && <CountryFlag country={prov.pais} />}
                                   </span>
                                 </div>
                               </div>
                               <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
-                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>SAP 45</span>
-                                <div style={{ fontSize: 10.5, lineHeight: '16px', color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.pedidoSAP45 || '—'}</div>
+                                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>SAP 45</span>
+                                <div style={{ fontSize: SHIPMENT_TYPE.value, lineHeight: '16px', color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.pedidoSAP45 || '—'}</div>
                               </div>
                               {!hideImportes && (
                                 <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
-                                  <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Monto OC</span>
-                                  <div style={{ fontSize: 11, lineHeight: '16px', fontWeight: 600, color: INK, whiteSpace: 'nowrap' }}>{getCurrencySymbol(c.moneda)} {c.montoTotal.toLocaleString()}</div>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Monto OC</span>
+                                  <div style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0, whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontSize: SHIPMENT_TYPE.value, lineHeight: '16px', fontWeight: 600, color: INK }}>{getCurrencySymbol(c.moneda)} {c.montoTotal.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              )}
+                              {!hideImportes && (
+                                <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Estado</span>
+                                  <div style={{ minHeight: 16, display: 'flex', alignItems: 'flex-start', overflow: 'hidden' }}>
+                                    {showMotherPendingState ? <NeonBadge estado="Pendiente de embarque" size="xs" /> : null}
+                                  </div>
                                 </div>
                               )}
                               <div style={{ display: 'grid', gap: 5, minWidth: 0, alignContent: 'start' }}>
-                                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Actualiz.</span>
-                                <div style={{ fontSize: 10.5, lineHeight: '16px', color: INK, whiteSpace: 'nowrap' }}>{formatCompactDate(c.lastUpdate)}</div>
+                                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Actualiz.</span>
+                                <div style={{ fontSize: SHIPMENT_TYPE.value, lineHeight: '16px', color: INK, whiteSpace: 'nowrap' }}>{formatCompactDate(c.lastUpdate)}</div>
                               </div>
                             </div>
                           ) : (
                             <>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', alignItems: 'start', columnGap: 10, rowGap: 6 }}>
-                                <div style={{ width: 28, height: 28, borderRadius: 8, background: `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  <FolderOpen size={15} style={{ color: GREEN }} />
+                              <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) auto', alignItems: 'start', columnGap: 10, rowGap: 6 }}>
+                                <div style={{ minWidth: 0, display: 'grid', gap: useCompactParentSummaryCard ? 2 : useCondensedPendingParentCard ? 3 : 4 }}>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.title, fontWeight: 700, color: INK, lineHeight: 1.2 }}>{c.numero}</span>
+                                  {useCompactParentSummaryCard ? (
+                                    <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: MUTED, display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
+                                      <span style={{ color: INK, display: 'inline-flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prov?.nombre || '—'}</span>
+                                        {prov?.pais && <CountryFlag country={prov.pais} />}
+                                      </span>
+                                      <span style={{ whiteSpace: 'nowrap' }}>SAP {c.pedidoSAP45 || '—'}</span>
+                                      {showMotherPendingState && (
+                                        <span style={{ display: 'inline-flex' }}>
+                                          <NeonBadge estado="Pendiente de embarque" size="xs" />
+                                        </span>
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', overflowWrap: 'anywhere', fontSize: SHIPMENT_TYPE.value, color: INK, display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                                        {prov?.nombre || '—'}
+                                        {prov?.pais && <CountryFlag country={prov.pais} />}
+                                      </span>
+                                      {useCondensedPendingParentCard ? (
+                                        <span style={{ fontSize: SHIPMENT_TYPE.companion, color: MUTED, lineHeight: 1.2, display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                          <span style={{ whiteSpace: 'nowrap' }}>SAP {c.pedidoSAP45 || '—'}</span>
+                                          <span style={{ display: 'inline-flex' }}>
+                                            <NeonBadge estado="Pendiente de embarque" size="xs" />
+                                          </span>
+                                        </span>
+                                      ) : (
+                                        <span style={{ fontSize: SHIPMENT_TYPE.companion, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>SAP {c.pedidoSAP45 || '—'}</span>
+                                      )}
+                                    </>
+                                  )}
                                 </div>
-                                <div style={{ minWidth: 0, display: 'grid', gap: 4 }}>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: INK, lineHeight: 1.2 }}>{c.numero}</span>
-                                  {shouldShowMotherPendingState(c) && (
-                                    <span style={{ marginTop: 2, display: 'inline-flex' }}>
+                                {!hideImportes && (
+                                  <div style={{ display: 'grid', justifyItems: 'end', alignContent: 'start', gap: 4 }}>
+                                    <span style={{ fontSize: SHIPMENT_TYPE.value, fontWeight: 600, lineHeight: 1.2, color: INK, whiteSpace: 'nowrap' }}>{getCurrencySymbol(c.moneda)} {c.montoTotal.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                {showMotherPendingState && !useCondensedPendingParentCard && !useCompactParentSummaryCard && (
+                                  <div style={{ gridColumn: '1 / -1', paddingTop: 2 }}>
+                                    <span style={{ display: 'inline-flex' }}>
                                       <NeonBadge estado="Pendiente de embarque" size="xs" />
                                     </span>
-                                  )}
-                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: INK, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                    {prov?.nombre || '—'}
-                                    {prov?.pais && <CountryFlag country={prov.pais} />}
-                                  </span>
-                                  <span style={{ fontSize: 9.5, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>SAP {c.pedidoSAP45 || '—'}</span>
-                                </div>
+                                  </div>
+                                )}
                               </div>
                             </>
                           )}
                         </div>
-                        <div style={{ display: 'grid', justifyItems: 'end', alignContent: 'start', gap: 10 }}>
-                          {!useCompactDesktopParentGrid && !hideImportes && (
-                            <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.2, color: INK, whiteSpace: 'nowrap' }}>{getCurrencySymbol(c.moneda)} {c.montoTotal.toLocaleString()}</span>
-                          )}
-                          <span onClick={() => onSelectCarpeta(c.id)} style={{ width: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginTop: useCompactDesktopParentGrid ? 6 : 0 }}>
+                        <div style={{ display: 'grid', justifyItems: 'end', alignContent: 'center', alignSelf: 'center', gap: 10 }}>
+                          <span onClick={() => onSelectCarpeta(c.id)} style={{ width: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                             <ChevronRight size={14} style={{ color: '#98a2b3', flexShrink: 0 }} />
                           </span>
                         </div>
@@ -1435,13 +1533,8 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         }}
                         style={{ cursor: 'pointer', background: isSubcarpeta ? CANVAS : '#f8faf9', borderRadius: 8 }}
                       >
-                        <td style={{ padding: '10px 6px 10px 14px', verticalAlign: 'middle' }}>
-                          <div style={{ width: isSubcarpeta ? 24 : 28, height: isSubcarpeta ? 24 : 28, borderRadius: isSubcarpeta ? 6 : 8, background: isSubcarpeta ? '#eff4ff' : `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {isSubcarpeta ? <Ship size={13} style={{ color: '#528bff' }} /> : <FolderOpen size={15} style={{ color: GREEN }} />}
-                          </div>
-                        </td>
                         {visibleColumns.map(column => (
-                          <td key={column.key} style={{ padding: '10px 10px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 13 }}>
+                          <td key={column.key} style={{ padding: column.key === 'numero' ? '10px 10px 10px 14px' : '10px 10px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 13 }}>
                             {isSubcarpeta && sub ? (
                               column.key === 'numero' ? (
                                 <div>
@@ -1512,6 +1605,15 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                     const hasSubs = c.subcarpetas.length > 0;
                     const showSubcarpetasUnderParent = hasSubs && !isFlatView;
                     const inlineColumns = visibleColumns.filter(column => column.key !== 'ultimoHito');
+                    const showMotherPendingState = !isSubcarpeta && shouldShowMotherPendingState(c);
+                    const displayColumns = !isSubcarpeta && !hideImportes
+                      ? inlineColumns.flatMap(column => {
+                          if (column.key === 'lastUpdate') {
+                            return [{ key: 'estadoMadre', label: '' }];
+                          }
+                          return [column];
+                        })
+                      : inlineColumns;
                     const hitoColumn = visibleColumns.find(column => column.key === 'ultimoHito');
 
                     return (
@@ -1529,51 +1631,70 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                               }}
                               style={{
                                 display: 'grid',
-                                gridTemplateColumns: `auto ${inlineColumns.map(column => {
-                      if (column.key === 'numero') return 'minmax(140px, 0.9fr)';
-                      if (column.key === 'proveedor') return 'minmax(220px, 1.25fr)';
-                      if (column.key === 'lastUpdate') return 'minmax(96px, 0.7fr)';
-                      return 'minmax(120px, 0.85fr)';
+                                gridTemplateColumns: `${displayColumns.map(column => {
+                      if (column.key === 'numero') return 'minmax(108px, 0.74fr)';
+                      if (column.key === 'proveedor') return 'minmax(148px, 0.9fr)';
+                      if (column.key === 'pedidoSAP45') return 'minmax(86px, 0.62fr)';
+                      if (column.key === 'montoTotal') return 'minmax(90px, 0.62fr)';
+                      if (column.key === 'estadoMadre') return 'minmax(124px, 0.78fr)';
+                      if (column.key === 'lastUpdate') return 'minmax(78px, 0.5fr)';
+                      return 'minmax(108px, 0.78fr)';
                     }).join(' ')}${showRowAction ? ' 20px' : ''}`,
                                 alignItems: 'start',
-                                columnGap: 16,
-                                rowGap: 10,
-                                padding: '14px 16px 12px',
+                                columnGap: 8,
+                                rowGap: 6,
+                                padding: '12px 14px 10px',
                                 background: 'transparent',
                                 cursor: 'pointer',
                               }}
                             >
-                              <div style={{ width: isSubcarpeta ? 24 : 28, height: isSubcarpeta ? 24 : 28, borderRadius: isSubcarpeta ? 6 : 8, background: isSubcarpeta ? '#eff4ff' : `${GREEN}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                                {isSubcarpeta ? <Ship size={13} style={{ color: '#528bff' }} /> : <FolderOpen size={15} style={{ color: GREEN }} />}
-                              </div>
-                              {inlineColumns.map(column => (
-                                <div key={column.key} style={{ minWidth: 0, display: 'grid', gridTemplateRows: 'auto auto', gap: 5, alignContent: 'start', justifyItems: 'start', textAlign: 'left' }}>
-                                  <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', width: '100%' }}>
+                              {displayColumns.map(column => (
+                                <div key={column.key} style={{ minWidth: 0, display: 'grid', gridTemplateRows: 'auto auto', gap: 3, alignContent: 'start', justifyItems: 'start', textAlign: 'left' }}>
+                                  <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase', width: '100%' }}>
                                     {column.label}
                                   </span>
                                   <div style={{ minWidth: 0, width: '100%', alignSelf: 'start' }}>
                                   <div style={{ minWidth: 0, width: '100%', alignSelf: 'start' }}>
-                                      {isSubcarpeta && column.key === 'numero' && sub ? (
-                                        <div>
-                                          <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{sub.numero}</div>
-                                          <span style={{ fontSize: 10, color: MUTED }}>de {c.numero}</span>
-                                        </div>
-                                      ) : isSubcarpeta && column.key === 'pedidoSAP45' && sub ? (
-                                        <div style={{ fontSize: 12, color: INK }}>
-                                          <div>SAP 55: {sub.pedidoSAP55 || '—'}</div>
-                                          <div style={{ fontSize: 10, color: MUTED }}>SAP 18: {sub.ingresoSAP18 || '—'}</div>
-                                        </div>
-                                      ) : isSubcarpeta && column.key === 'montoTotal' && sub ? (
-                                        <span style={{ fontSize: 13, fontWeight: 600, color: INK }}>
-                                          {c.moneda} {sub.importeTotal.toLocaleString()}
-                                        </span>
-                                      ) : isSubcarpeta && column.key === 'ultimoHito' && sub ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                          <NeonBadge estado={sub.estado as any} size="xs" />
-                                        </div>
-                                      ) : (
-                                        column.render(c, prov?.nombre || '', prov?.pais || '')
-                                      )}
+                                      {(() => {
+                                        if (!isSubcarpeta && column.key === 'estadoMadre') {
+                                          return (
+                                            <div style={{ minHeight: 16, display: 'flex', alignItems: 'flex-start', overflow: 'hidden', paddingTop: 1, paddingRight: 18 }}>
+                                              {showMotherPendingState ? <NeonBadge estado="Pendiente de embarque" size="xs" /> : null}
+                                            </div>
+                                          );
+                                        }
+                                        if (isSubcarpeta && column.key === 'numero' && sub) {
+                                          return (
+                                            <div>
+                                              <div style={{ fontSize: SHIPMENT_TYPE.title, lineHeight: '16px', fontWeight: 600, color: INK }}>{sub.numero}</div>
+                                              <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: MUTED }}>de {c.numero}</span>
+                                            </div>
+                                          );
+                                        }
+                                        if (isSubcarpeta && column.key === 'pedidoSAP45' && sub) {
+                                          return (
+                                            <div style={{ fontSize: SHIPMENT_TYPE.value, lineHeight: '16px', color: INK }}>
+                                              <div>SAP 55: {sub.pedidoSAP55 || '—'}</div>
+                                              <div style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: MUTED }}>SAP 18: {sub.ingresoSAP18 || '—'}</div>
+                                            </div>
+                                          );
+                                        }
+                                        if (isSubcarpeta && column.key === 'montoTotal' && sub) {
+                                          return (
+                                            <span style={{ fontSize: SHIPMENT_TYPE.value, lineHeight: '16px', fontWeight: 600, color: INK }}>
+                                              {c.moneda} {sub.importeTotal.toLocaleString()}
+                                            </span>
+                                          );
+                                        }
+                                        if (isSubcarpeta && column.key === 'ultimoHito' && sub) {
+                                          return (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                              <NeonBadge estado={sub.estado as any} size="xs" />
+                                            </div>
+                                          );
+                                        }
+                                        return column.render(c, prov?.nombre || '', prov?.pais || '');
+                                      })()}
                                     </div>
                                   </div>
                                 </div>
@@ -1600,10 +1721,23 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
 
                             {!isSubcarpeta && hitoColumn && (
                               <div onClick={() => onSelectCarpeta(c.id)} style={{ padding: '0 14px 10px', cursor: 'pointer' }}>
-                                <div style={{ display: 'grid', gap: 2, padding: '8px 10px', background: 'rgba(29, 29, 31, 0.03)', borderRadius: 6 }}>
-                                  <span style={{ fontSize: 9.5, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>{hitoColumn.label}</span>
-                                  <div style={{ fontSize: 12, lineHeight: 1.35, color: INK }}>{c.ultimoHito}</div>
-                                </div>
+                                {showSubcarpetasUnderParent ? (
+                                  <div style={{ display: 'grid', alignContent: 'center', rowGap: 2, minHeight: 42, padding: '4px 10px', background: 'rgba(29, 29, 31, 0.03)', borderRadius: 6 }}>
+                                    <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase' }}>{hitoColumn.label}</span>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', columnGap: 12 }}>
+                                      <div style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: INK, minWidth: 0 }}>{c.ultimoHito}</div>
+                                      <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: MUTED, whiteSpace: 'nowrap' }}>Actualiz. {formatCompactDate(c.lastUpdate)}</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'grid', alignContent: 'center', rowGap: 2, minHeight: 34, padding: '4px 10px', background: 'rgba(29, 29, 31, 0.03)', borderRadius: 6 }}>
+                                    <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase' }}>{hitoColumn.label}</span>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', columnGap: 12 }}>
+                                      <div style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: INK, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.ultimoHito}</div>
+                                      <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: MUTED, whiteSpace: 'nowrap' }}>Actualiz. {formatCompactDate(c.lastUpdate)}</span>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                             {showSubcarpetasUnderParent && (
@@ -1829,7 +1963,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
       {/* Nueva Carpeta Modal */}
       {showModal && (
         <div style={{ ...modalOverlay, zIndex: 300 }}>
-          <div style={{ ...getModalShellStyle(720), borderRadius: isNarrowViewport ? 16 : 24, height: 'min(760px, calc(100vh - 16px))', margin: isNarrowViewport ? '0 8px' : '0 16px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ ...getModalShellStyle(step === 3 && creationMode === 'manual' ? 1040 : 720), borderRadius: isNarrowViewport ? 16 : 24, height: step === 1 ? 'auto' : 'min(820px, calc(100vh - 16px))', maxHeight: 'calc(100vh - 16px)', margin: isNarrowViewport ? '0 8px' : '0 16px', display: 'flex', flexDirection: 'column' }}>
 
             {/* Modal header */}
             <div style={{ ...modalHeader, padding: `${isNarrowViewport ? 18 : 22}px ${modalHorizontalPadding}px ${isNarrowViewport ? 14 : 18}px` }}>
@@ -1850,7 +1984,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
               </button>
             </div>
 
-            {step < (creationMode === 'manual' ? 4 : 5) && (
+            {step > 1 && step < (creationMode === 'manual' ? 4 : 5) && (
               <div style={{ padding: `${isNarrowViewport ? 14 : 18}px ${modalHorizontalPadding}px 0`, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: isNarrowViewport ? 4 : 6, width: '100%' }}>
                   {wizardSteps.map(item => {
@@ -1891,11 +2025,10 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
 
                     <div>
                       <label style={fieldLabel}>FECHA O/C *</label>
-                      <input
-                        type="date"
+                      <AppDateField
                         value={form.fechaOC}
-                        onChange={set('fechaOC')}
-                        style={{ ...formInput, minHeight: 44 }}
+                        onValueChange={value => setForm(prev => ({ ...prev, fechaOC: value }))}
+                        ariaLabel="Fecha de orden de compra"
                       />
                     </div>
                   </div>
@@ -1971,11 +2104,11 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                     Cancelar
                   </button>
                   <button
-                    onClick={() => setStep(2)}
+                    onClick={handleCreateManualAndOpen}
                     disabled={!canSubmitStep1}
                     style={getModalPrimaryButtonStyle(canSubmitStep1)}
                   >
-                    Guardar y continuar
+                    Crear carpeta y cargar artículos
                   </button>
                 </div>
               </div>
@@ -2072,8 +2205,8 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                 </button>
                 {creationMode === 'manual' ? (
                   <>
-                    <div style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 18, background: PARCHMENT, padding: '18px 18px 16px', flexShrink: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: INK, marginBottom: 14 }}>Agregar artículos ahora</div>
+                    <div style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 18, background: PARCHMENT, padding: '14px 16px', flexShrink: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: INK, marginBottom: 10 }}>Agregar artículo</div>
 
                       <div style={{ ...getAutoFitGridStyle(220, 14), marginBottom: 14 }}>
                         <div>
@@ -2087,6 +2220,12 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                             style={{ width: '100%', padding: '10px 14px', fontSize: 13, color: INK, background: CANVAS, border: `1px solid ${HAIRLINE}`, borderRadius: 10, outline: 'none' }} />
                         </div>
                       </div>
+
+                      {manualArticleMissingInSap && (
+                        <div role="alert" style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(180,83,9,0.32)', background: 'rgba(180,83,9,0.08)', color: '#8a4b08', fontSize: 12, fontWeight: 600 }}>
+                          Este artículo no se encuentra en el sistema. Avisá al administrador para solicitar su alta.
+                        </div>
+                      )}
 
                       <div style={{ display: 'grid', gridTemplateColumns: hideImportes ? 'repeat(auto-fit, minmax(120px, 1fr))' : 'repeat(auto-fit, minmax(110px, 1fr))', gap: 12 }}>
                         <div>
@@ -2133,37 +2272,58 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                       </div>
                     </div>
 
-                    <div style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 18, overflow: 'hidden', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ padding: '14px 18px', background: PARCHMENT, borderBottom: `1px solid ${HAIRLINE}`, fontSize: 14, fontWeight: 600, color: INK }}>
-                        Artículos a crear {manualArticles.length > 0 ? `(${manualArticles.length})` : ''}
+                    <div style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 18, overflow: 'hidden', flex: '1 1 280px', minHeight: 240, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ padding: '12px 16px', background: PARCHMENT, borderBottom: `1px solid ${HAIRLINE}`, display: 'grid', gap: 10, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>Artículos a crear ({manualArticles.length})</div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: GREEN, padding: '4px 8px', borderRadius: 9999, background: 'rgba(26,92,56,0.08)' }}>{validManualArticleCount} válidos</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: '#9a6700', padding: '4px 8px', borderRadius: 9999, background: 'rgba(180,83,9,0.09)' }}>{warningManualArticleCount} con advertencia</span>
+                          </div>
+                        </div>
+                        {manualArticles.length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: isNarrowViewport ? '1fr' : 'minmax(220px, 1fr) auto', gap: 10 }}>
+                            <SearchField value={manualArticleSearch} onChange={setManualArticleSearch} placeholder="Buscar por código o descripción" ariaLabel="Buscar artículos cargados" />
+                            <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
+                              {(['Todos', 'Válidos', 'Con advertencia'] as const).map(filter => (
+                                <button key={filter} type="button" onClick={() => setManualArticleFilter(filter)} style={{ minHeight: 36, padding: '7px 10px', borderRadius: 8, border: `1px solid ${manualArticleFilter === filter ? GREEN : HAIRLINE}`, background: manualArticleFilter === filter ? GREEN : CANVAS, color: manualArticleFilter === filter ? '#fff' : MUTED, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer' }}>{filter}</button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       {manualArticles.length === 0 ? (
                         <div style={{ padding: '22px 18px', fontSize: 13, color: MUTED, flex: '1 1 auto' }}>
                           Todavía no agregaste artículos. Podés crear la carpeta igual y completarlos después desde Artículos.
                         </div>
                       ) : (
-                        <div style={{ ...tableScrollArea, overflowY: 'auto', minHeight: 0, flex: '1 1 auto' }}>
+                        <div style={{ ...tableScrollArea, overflow: 'auto', minHeight: 0, flex: '1 1 auto', overscrollBehavior: 'contain' }}>
                           <table style={getResponsiveTableStyle(hideImportes ? 620 : 760)}>
                             <thead>
                               <tr style={{ background: CANVAS, borderBottom: `1px solid ${HAIRLINE}` }}>
-                                {['Cód. SAP', 'Descripción', 'Línea', 'Cant.', 'U.M.'].concat(hideImportes ? [] : ['P. Unit.']).map(col => (
-                                  <th key={col} style={{ padding: '11px 14px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: MUTED }}>{col}</th>
+                                {['Cód. SAP', 'Descripción', 'Línea', 'Cant.', 'U.M.', 'Validación'].concat(hideImportes ? [] : ['P. Unit.']).concat(['']).map((col, index) => (
+                                  <th key={`${col}-${index}`} style={{ position: 'sticky', top: 0, zIndex: 1, padding: '11px 14px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: MUTED, background: CANVAS }}>{col}</th>
                                 ))}
                               </tr>
                             </thead>
                             <tbody>
-                              {manualArticles.map((row, index) => (
-                                <tr key={row.id} style={{ borderBottom: index < manualArticles.length - 1 ? `1px solid ${HAIRLINE}` : 'none' }}>
+                              {visibleManualArticles.map((row, index) => (
+                                <tr key={row.id} style={{ borderBottom: index < visibleManualArticles.length - 1 ? `1px solid ${HAIRLINE}` : 'none' }}>
                                   <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 700, color: INK }}>{row.codigoSAP}</td>
                                   <td style={{ padding: '12px 14px', fontSize: 13, color: INK }}>{row.descripcion}</td>
                                   <td style={{ padding: '12px 14px', fontSize: 13, color: MUTED }}>{row.linea}</td>
                                   <td style={{ padding: '12px 14px', fontSize: 13, color: INK }}>{row.cantidadSolicitada.toLocaleString()}</td>
                                   <td style={{ padding: '12px 14px', fontSize: 13, color: MUTED }}>{row.um}</td>
+                                  <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: row.status === 'No se encuentra en el sistema' ? 700 : 400, color: row.status === 'No se encuentra en el sistema' ? '#b45309' : MUTED }}>{row.status}</td>
                                   {!hideImportes && <td style={{ padding: '12px 14px', fontSize: 13, color: INK }}>{row.precioUnitario.toFixed(2)}</td>}
+                                  <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                                    <button type="button" aria-label={`Quitar ${row.codigoSAP}`} title="Quitar artículo" onClick={() => setManualArticles(current => current.filter(article => article.id !== row.id))} style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 8, background: 'transparent', color: '#c4001a', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
+                          {visibleManualArticles.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: MUTED, fontSize: 12 }}>No hay artículos que coincidan con la búsqueda y el filtro.</div>}
                         </div>
                       )}
                     </div>
@@ -2214,8 +2374,8 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         alignItems: uploadedFileName ? 'stretch' : 'center',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
-                        <div>
+                      <div style={{ display: 'flex', width: '100%', flexDirection: 'column', alignItems: uploadedFileName ? 'stretch' : 'center', gap: 14, textAlign: uploadedFileName ? 'left' : 'center' }}>
+                        <div style={{ width: '100%' }}>
                           {uploadedFileName ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                               <button onClick={handleDownloadUploadedFile} style={{ padding: 0, background: 'transparent', border: 'none', fontSize: 13, fontWeight: 600, color: '#0066cc', textDecoration: 'underline', cursor: 'pointer', textAlign: 'left' }}>
@@ -2232,7 +2392,7 @@ export function OperatorDashboard({ carpetasList, onSelectCarpeta, onSelectSubca
                         </div>
                         {!uploadedFileName && (
                           <button onClick={() => fileInputRef.current?.click()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 38, padding: '8px 12px', borderRadius: 9999, border: `1px solid ${GREEN}`, background: CANVAS, color: GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                            <Upload size={14} /> Adjuntar anexo
+                            <Upload size={14} /> Adjuntar archivo
                           </button>
                         )}
                       </div>

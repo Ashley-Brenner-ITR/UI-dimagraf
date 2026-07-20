@@ -28,6 +28,7 @@ const CANAL_CFG = {
 const DESPACHO_OPTS: DespachoTipo[] = ['Despacho Directo', 'ZFI', 'ZFE'];
 
 interface DispatcherData {
+  duaNum: string;
   gastosARS: string;
   vepUSD: string;
   fechaOficializacion: string;
@@ -38,6 +39,7 @@ interface DispatcherData {
 
 function emptyData(sub: Subcarpeta): DispatcherData {
   return {
+    duaNum:             sub.duaNum             ?? '',
     gastosARS:          sub.gastosARS          ? String(sub.gastosARS)          : '',
     vepUSD:             sub.vepUSD             ? String(sub.vepUSD)             : '',
     fechaOficializacion:sub.fechaOficializacion ?? '',
@@ -48,7 +50,7 @@ function emptyData(sub: Subcarpeta): DispatcherData {
 }
 
 function hasData(d: DispatcherData): boolean {
-  return !!(d.gastosARS || d.vepUSD || d.fechaOficializacion || d.fechaSalidaPuerto || d.despachoTipo);
+  return !!(d.duaNum || d.gastosARS || d.vepUSD || d.fechaOficializacion || d.fechaSalidaPuerto || d.despachoTipo);
 }
 
 // ── Canal badge ───────────────────────────────────────────────────────────────
@@ -127,6 +129,10 @@ function EditModal({ carpetaNumero, sub, data, onSave, onClose }: EditModalProps
                 {DESPACHO_OPTS.map(o => <AppSelectItem key={o} value={o}>{o}</AppSelectItem>)}
               </AppSelectContent>
             </Select>
+          </Field>
+
+          <Field label="DUA">
+            <input value={form.duaNum} onChange={set('duaNum')} placeholder="Ej. 26001-CUSBA-2026-000514" style={inputStyle} />
           </Field>
 
           {/* Montos */}
@@ -325,9 +331,10 @@ function DetailView({ carpeta, dispatcherMap, onSave, onBack, isMobile }: Detail
 
 interface Props {
   carpetasList: Carpeta[];
+  onUpdateCarpeta: (updated: Carpeta) => void;
 }
 
-export function DispatcherDashboard({ carpetasList }: Props) {
+export function DispatcherDashboard({ carpetasList, onUpdateCarpeta }: Props) {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dispatcherMap, setDispatcherMap] = useState<Record<string, DispatcherData>>({});
@@ -345,6 +352,27 @@ export function DispatcherDashboard({ carpetasList }: Props) {
 
   const handleSave = (subId: string, data: DispatcherData) => {
     setDispatcherMap(prev => ({ ...prev, [subId]: data }));
+    const carpeta = carpetasList.find(candidate => candidate.subcarpetas.some(sub => sub.id === subId));
+    if (!carpeta) return;
+    const estado = data.fechaOficializacion ? 'Oficializado' : 'Arribado Aduana';
+    onUpdateCarpeta({
+      ...carpeta,
+      estado,
+      subcarpetas: carpeta.subcarpetas.map(sub => sub.id === subId ? {
+        ...sub,
+        duaNum: data.duaNum,
+        canalAduana: data.canalAduana,
+        despachoTipo: data.despachoTipo || undefined,
+        gastosARS: Number(data.gastosARS) || 0,
+        vepUSD: Number(data.vepUSD) || 0,
+        fechaOficializacion: data.fechaOficializacion,
+        fechaSalidaPuerto: data.fechaSalidaPuerto,
+        estado,
+      } : sub),
+      ultimoHito: data.fechaOficializacion
+        ? `Embarque oficializado. DUA ${data.duaNum || 'pendiente'} · Canal ${data.canalAduana}.`
+        : `Embarque arribado a Aduana · Canal ${data.canalAduana}.`,
+    });
   };
 
   const selectedCarpeta = selectedId ? carpetasList.find(c => c.id === selectedId) : null;

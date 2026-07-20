@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, List, CalendarDays, Clock, AlertTriangle, CheckCircle, X, Filter, CalendarX2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Clock, AlertTriangle, X, CalendarX2, CalendarDays, List } from 'lucide-react';
 import type { ObligacionPago } from './mockData';
 import { color, radius } from './theme';
 import { useIsMobile } from './ui/use-mobile';
 import { AppButton } from './AppButton';
-import { SearchField } from './SearchField';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { AppCalendarPopoverPanel } from './AppCalendarPopoverPanel';
+import { FilterToolbar } from './FilterToolbar';
+import { ViewModeToggle } from './ViewModeToggle';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectValue } from './ui/select';
 
 const INK = color.ink;
 const MUTED = color.muted;
@@ -24,6 +27,11 @@ interface Props {
 
 const DAYS_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const STATUS_FILTER_OPTIONS = [
+  { value: 'Todos', label: 'Todos los estados' },
+  { value: 'Pendiente de Pago', label: 'Pendiente de pago', color: '#b45309' },
+  { value: 'Transferencia Emitida', label: 'Transferencia emitida', color: '#1a7a4a' },
+] as const;
 
 function formatDate(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -146,10 +154,36 @@ function DetailPanel({ pagos, selectedDate, today, onToggleEstado, onClose }: {
   );
 }
 
+function SidebarStatePanel({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <>
+      <div style={{ padding: '14px 16px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>{title}</div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+        <div style={{ minHeight: 248, borderRadius: radius.md, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <span style={{ width: 48, height: 48, borderRadius: 14, background: CANVAS, border: `1px solid ${HAIRLINE}`, display: 'grid', placeItems: 'center', color: MUTED, marginBottom: 14 }}>{icon}</span>
+          <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>{title}</div>
+          <div style={{ maxWidth: 220, marginTop: 5, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>{description}</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), onToggleEstado }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -191,9 +225,21 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
     return map;
   }, [filteredPagos]);
 
+  useEffect(() => {
+    if (selectedDate && !pagosByDate[selectedDate]) {
+      setSelectedDate(null);
+      setMobileSheetOpen(false);
+    }
+  }, [pagosByDate, selectedDate]);
+
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfWeek(currentYear, currentMonth);
+  const calendarWeeks = Math.ceil((firstDay + daysInMonth) / 7);
   const todayStr = formatDate(today);
+  const currentCalendarDate = useMemo(() => new Date(currentYear, currentMonth, 1), [currentMonth, currentYear]);
+  const minCalendarYear = today.getFullYear() - 3;
+  const maxCalendarYear = today.getFullYear() + 3;
+  const rootPanelHeight = Math.max(isMobile ? 420 : 520, availableHeight);
 
   const prevMonth = () => {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
@@ -241,6 +287,7 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
   }, [sortedPagos]);
 
   const selectedDayPagos = selectedDate ? (pagosByDate[selectedDate] || []) : [];
+  const showDesktopSidebar = !isMobile && (filteredPagos.length === 0 || selectedDate !== null);
 
   const listItemsPerPage = Math.max(4, Math.floor((availableHeight - 210) / 72));
   const listPageCount = Math.max(1, Math.ceil(groupedPagos.length / listItemsPerPage));
@@ -248,74 +295,42 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
   const visibleGroups = groupedPagos.slice((safeListPage - 1) * listItemsPerPage, safeListPage * listItemsPerPage);
 
   return (
-    <div ref={rootRef} style={{ border: `1px solid ${HAIRLINE}`, borderRadius: radius.lg, overflow: 'hidden', background: CANVAS, position: 'relative' }}>
-      {/* Header with view toggle */}
-      <div style={{
-        padding: isMobile ? '14px' : '16px 18px',
-        borderBottom: `1px solid ${HAIRLINE}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-        flexWrap: 'wrap',
-        background: CANVAS,
-      }}>
-        <div style={{ width: isMobile ? '100%' : 'auto' }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: INK, letterSpacing: '-0.02em' }}>Calendario de vencimientos</h3>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: MUTED }}>Seguimiento de obligaciones y fechas de pago</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
-          <button
-            onClick={() => setViewMode('calendar')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              minHeight: 30,
-              padding: '5px 10px', borderRadius: 9999,
-              border: viewMode === 'calendar' ? `1px solid ${HAIRLINE}` : '1px solid transparent',
-              background: viewMode === 'calendar' ? CANVAS : 'transparent',
-              color: viewMode === 'calendar' ? GREEN : MUTED,
-              fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flex: isMobile ? 1 : undefined, justifyContent: 'center',
-              boxShadow: viewMode === 'calendar' ? '0 1px 2px rgba(16,24,40,0.04)' : 'none',
-            }}
-          >
-            <CalendarDays size={13} /> Calendario
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              minHeight: 30,
-              padding: '5px 10px', borderRadius: 9999,
-              border: viewMode === 'list' ? `1px solid ${HAIRLINE}` : '1px solid transparent',
-              background: viewMode === 'list' ? CANVAS : 'transparent',
-              color: viewMode === 'list' ? GREEN : MUTED,
-              fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flex: isMobile ? 1 : undefined, justifyContent: 'center',
-              boxShadow: viewMode === 'list' ? '0 1px 2px rgba(16,24,40,0.04)' : 'none',
-            }}
-          >
-            <List size={13} /> Lista
-          </button>
-        </div>
-      </div>
-
-      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${HAIRLINE}`, background: '#fcfcfd', display: 'grid', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <SearchField value={search} onChange={setSearch} placeholder="Buscar carpeta, proveedor o concepto" ariaLabel="Buscar vencimientos" />
-          <button type="button" onClick={() => setFiltersExpanded(open => !open)} aria-expanded={filtersExpanded} aria-label={filtersExpanded ? 'Ocultar filtros' : 'Mostrar filtros'} style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 9999, border: `1px solid ${GREEN}`, background: filtersExpanded ? GREEN : CANVAS, color: filtersExpanded ? '#fff' : GREEN, display: 'grid', placeItems: 'center', cursor: 'pointer' }}><Filter size={14} /></button>
-        </div>
-        {filtersExpanded && (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
-            <label style={{ display: 'grid', gap: 6, minWidth: 0, width: isMobile ? '100%' : undefined, flex: isMobile ? '1 1 100%' : '1 1 190px' }}><span style={{ paddingLeft: 2, fontSize: 11, fontWeight: 600, color: MUTED }}>Estado del vencimiento</span><Select value={statusFilter} onValueChange={value => setStatusFilter(value as typeof statusFilter)}><SelectTrigger className="h-10 w-full rounded-[10px] border-[#eaecf0] bg-white px-3 text-xs text-[#1d1d1f] shadow-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl border-[#eaecf0] bg-white p-1 shadow-xl"><SelectItem value="Todos">Todos los estados</SelectItem><SelectItem value="Pendiente de Pago">Pendiente de pago</SelectItem><SelectItem value="Transferencia Emitida">Transferencia emitida</SelectItem></SelectContent></Select></label>
-            <label style={{ display: 'grid', gap: 6, minWidth: 0, width: isMobile ? '100%' : undefined, flex: isMobile ? '1 1 100%' : '1 1 220px' }}><span style={{ paddingLeft: 2, fontSize: 11, fontWeight: 600, color: MUTED }}>Concepto de pago</span><Select value={typeFilter} onValueChange={setTypeFilter}><SelectTrigger className="h-10 w-full rounded-[10px] border-[#eaecf0] bg-white px-3 text-xs text-[#1d1d1f] shadow-none"><SelectValue /></SelectTrigger><SelectContent className="max-h-72 rounded-xl border-[#eaecf0] bg-white p-1 shadow-xl">{types.map(type => <SelectItem key={type} value={type}>{type === 'Todos' ? 'Todos los conceptos' : type}</SelectItem>)}</SelectContent></Select></label>
+    <div ref={rootRef} style={{ border: `1px solid ${HAIRLINE}`, borderRadius: radius.lg, overflow: 'hidden', background: CANVAS, position: 'relative', display: 'flex', flexDirection: 'column', height: viewMode === 'calendar' ? rootPanelHeight : undefined, minHeight: viewMode === 'calendar' ? rootPanelHeight : undefined }}>
+      <div style={{ padding: isMobile ? '10px 12px' : '12px 14px', display: 'grid', gap: 10 }}>
+        <FilterToolbar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={isMobile ? 'Buscar carpeta, proveedor o concepto' : 'Buscar por Carpeta, Proveedor o Concepto'}
+          searchAriaLabel="Buscar vencimientos"
+          searchSize={isMobile ? 'compact' : 'default'}
+          options={STATUS_FILTER_OPTIONS}
+          value={statusFilter}
+          onValueChange={value => setStatusFilter(value as typeof statusFilter)}
+          expanded={filtersExpanded}
+          onExpandedChange={setFiltersExpanded}
+          trailingActions={
+            <ViewModeToggle
+              value={viewMode}
+              onValueChange={setViewMode}
+              fullWidth={isMobile}
+              options={[
+                { value: 'calendar', label: 'Calendario', icon: <CalendarDays size={13} /> },
+                { value: 'list', label: 'Lista', icon: <List size={13} /> },
+              ]}
+            />
+          }
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap', width: '100%' }}>
+            <label style={{ display: 'grid', gap: 6, minWidth: 0, width: isMobile ? '100%' : undefined, flex: isMobile ? '1 1 100%' : '1 1 220px' }}><span style={{ paddingLeft: 2, fontSize: 11, fontWeight: 600, color: MUTED }}>Concepto de pago</span><Select value={typeFilter} onValueChange={setTypeFilter}><AppSelectTrigger style={{ width: '100%' }}><SelectValue /></AppSelectTrigger><AppSelectContent style={{ zIndex: 400 }}>{types.map(type => <AppSelectItem key={type} value={type}>{type === 'Todos' ? 'Todos los conceptos' : type}</AppSelectItem>)}</AppSelectContent></Select></label>
             {(search || statusFilter !== 'Todos' || typeFilter !== 'Todos') && <button onClick={() => { setSearch(''); setStatusFilter('Todos'); setTypeFilter('Todos'); }} style={{ minHeight: 40, padding: '9px 12px', borderRadius: 9999, border: `1px solid ${HAIRLINE}`, background: CANVAS, color: GREEN, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Limpiar</button>}
           </div>
-        )}
+        </FilterToolbar>
       </div>
 
       {viewMode === 'calendar' ? (
-        <div style={{ display: 'flex', minHeight: Math.max(460, availableHeight - 108) }}>
+        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           {/* Calendar grid (left side) */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             {/* Month navigation */}
             <div style={{
               display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr) 32px', alignItems: 'center',
@@ -324,10 +339,34 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
               <button onClick={prevMonth} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${HAIRLINE}`, borderRadius: radius.sm, background: CANVAS, cursor: 'pointer', color: INK }}>
                 <ChevronLeft size={16} />
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 5 : 10, minWidth: 0, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-                <Select value={String(currentMonth)} onValueChange={value => setCurrentMonth(Number(value))}><SelectTrigger aria-label="Mes" className="h-8 w-[112px] rounded-lg border-[#eaecf0] bg-white px-2.5 text-xs font-bold text-[#1d1d1f] shadow-none"><SelectValue /></SelectTrigger><SelectContent className="max-h-72 rounded-xl border-[#eaecf0] bg-white p-1 shadow-xl">{MONTHS_ES.map((month, index) => <SelectItem key={month} value={String(index)}>{month}</SelectItem>)}</SelectContent></Select>
-                <Select value={String(currentYear)} onValueChange={value => setCurrentYear(Number(value))}><SelectTrigger aria-label="Año" className="h-8 w-[82px] rounded-lg border-[#eaecf0] bg-white px-2.5 text-xs font-bold text-[#1d1d1f] shadow-none"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl border-[#eaecf0] bg-white p-1 shadow-xl">{Array.from({ length: 7 }, (_, index) => today.getFullYear() - 3 + index).map(year => <SelectItem key={year} value={String(year)}>{year}</SelectItem>)}</SelectContent></Select>
-                <button onClick={goToToday} style={{ fontSize: 11, fontWeight: 600, color: GREEN, background: 'rgba(26,92,56,0.06)', border: '1px solid rgba(26,92,56,0.15)', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <button type="button" aria-label="Seleccionar mes y año" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: 0, border: 'none', background: 'transparent', minWidth: 0, cursor: 'pointer', color: INK }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: INK, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{MONTHS_ES[currentMonth]} {currentYear}</span>
+                      <ChevronDown size={14} color={monthPickerOpen ? GREEN : MUTED} />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align={isMobile ? 'start' : 'center'} className="w-auto rounded-2xl border-[#eaecf0] bg-white p-0 shadow-xl">
+                    <AppCalendarPopoverPanel
+                      visibleMonth={currentCalendarDate}
+                      onVisibleMonthChange={date => {
+                        setCurrentMonth(date.getMonth());
+                        setCurrentYear(date.getFullYear());
+                      }}
+                      selectedDate={currentCalendarDate}
+                      onSelect={date => {
+                        if (!date) return;
+                        setCurrentMonth(date.getMonth());
+                        setCurrentYear(date.getFullYear());
+                        setMonthPickerOpen(false);
+                      }}
+                      minYear={minCalendarYear}
+                      maxYear={maxCalendarYear}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <button onClick={goToToday} style={{ minHeight: 32, padding: '6px 12px', borderRadius: 9999, border: `1px solid ${HAIRLINE}`, background: CANVAS, color: GREEN, fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
                   Hoy
                 </button>
               </div>
@@ -337,101 +376,117 @@ export function VencimientosCalendar({ pagos, today = new Date('2026-05-28'), on
             </div>
 
             {/* Grid */}
-            <div style={{ padding: isMobile ? '8px' : '0' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0, marginBottom: 4 }}>
-                {DAYS_ES.map(day => (
-                  <div key={day} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: MUTED, padding: '6px 0' }}>
-                    {day}
+            <div style={{ padding: isMobile ? '8px' : '0', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              {filteredPagos.length === 0 ? (
+                <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '28px 20px' }}>
+                  <span style={{ width: 48, height: 48, borderRadius: 14, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, display: 'grid', placeItems: 'center', color: MUTED, marginBottom: 14 }}><CalendarX2 size={22} /></span>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>Sin resultados para los filtros activos</div>
+                  <div style={{ maxWidth: 280, marginTop: 5, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>Ajustá la búsqueda o los filtros para volver a ver vencimientos en el calendario.</div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0, marginBottom: 4 }}>
+                    {DAYS_ES.map(day => (
+                      <div key={day} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: MUTED, padding: '6px 0' }}>
+                        {day}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
-                {Array.from({ length: firstDay }).map((_, i) => (
-                  <div key={`empty-${i}`} style={{ minHeight: isMobile ? 56 : 92, borderTop: `1px solid ${HAIRLINE}`, borderRight: `1px solid ${HAIRLINE}`, background: '#fafbfd' }} />
-                ))}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const dayNum = i + 1;
-                  const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                  const dayPagos = pagosByDate[dateStr] || [];
-                  const isToday = dateStr === todayStr;
-                  const isSelected = dateStr === selectedDate;
-                  const hasPagos = dayPagos.length > 0;
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridTemplateRows: `repeat(${calendarWeeks}, minmax(0, 1fr))`, gridAutoRows: '1fr', gap: 2, flex: 1, minHeight: 0 }}>
+                    {Array.from({ length: firstDay }).map((_, i) => (
+                      <div key={`empty-${i}`} style={{ minHeight: 0, height: '100%', borderTop: `1px solid ${HAIRLINE}`, borderRight: `1px solid ${HAIRLINE}`, background: '#fafbfd' }} />
+                    ))}
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                      const dayNum = i + 1;
+                      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                      const dayPagos = pagosByDate[dateStr] || [];
+                      const isToday = dateStr === todayStr;
+                      const isSelected = dateStr === selectedDate;
+                      const hasPagos = dayPagos.length > 0;
 
-                  return (
-                    <button
-                      key={dayNum}
-                      onClick={() => handleSelectDate(dateStr)}
-                      style={{
-                        minHeight: isMobile ? 56 : 92,
-                        padding: isMobile ? '4px 2px' : '7px 6px',
-                        border: isSelected ? `2px solid ${GREEN}` : `1px solid ${HAIRLINE}`,
-                        borderRadius: 0,
-                        background: isSelected ? 'rgba(26,92,56,0.06)' : isToday ? 'rgba(26,92,56,0.02)' : 'transparent',
-                        cursor: hasPagos ? 'pointer' : 'default',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: isMobile ? 'center' : 'stretch',
-                        gap: 3,
-                        transition: 'all 0.12s ease',
-                      }}
-                    >
-                      <span style={{
-                        fontSize: 13,
-                        fontWeight: isToday ? 700 : 400,
-                        color: isToday ? GREEN : hasPagos ? INK : MUTED,
-                        width: 24, height: 24, borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: isToday ? 'rgba(26,92,56,0.12)' : 'transparent',
-                      }}>
-                        {dayNum}
-                      </span>
-                      {hasPagos && (
-                        <div style={{ display: 'grid', gap: 3, width: '100%' }}>
-                          {dayPagos.slice(0, isMobile ? 1 : 2).map(p => (
-                            <span key={p.id} style={{ minWidth: 0, padding: isMobile ? '2px 3px' : '3px 5px', borderRadius: 5, background: getStatusColor(p, today), color: '#fff', fontSize: isMobile ? 8 : 10, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                              {isMobile ? p.carpetaNumero : `${p.carpetaNumero} · ${p.moneda} ${p.importe.toLocaleString()}`}
-                            </span>
-                          ))}
-                          {dayPagos.length > (isMobile ? 1 : 2) && <span style={{ fontSize: 9, color: MUTED, textAlign: 'left' }}>+{dayPagos.length - (isMobile ? 1 : 2)} más</span>}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+                      return (
+                        <button
+                          key={dayNum}
+                          onClick={() => handleSelectDate(dateStr)}
+                          style={{
+                            minHeight: 0,
+                            height: '100%',
+                            padding: isMobile ? '4px 2px' : '7px 6px',
+                            border: isSelected ? `2px solid ${GREEN}` : `1px solid ${HAIRLINE}`,
+                            borderRadius: 0,
+                            background: isSelected ? 'rgba(26,92,56,0.06)' : isToday ? 'rgba(26,92,56,0.02)' : 'transparent',
+                            cursor: hasPagos ? 'pointer' : 'default',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: isMobile ? 'center' : 'stretch',
+                            justifyContent: 'flex-start',
+                            gap: 3,
+                            transition: 'all 0.12s ease',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <span style={{
+                            fontSize: 13,
+                            fontWeight: isToday ? 700 : 400,
+                            color: isToday ? GREEN : hasPagos ? INK : MUTED,
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: isToday ? 'rgba(26,92,56,0.12)' : 'transparent',
+                          }}>
+                            {dayNum}
+                          </span>
 
-              {/* Legend */}
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12, padding: '10px 0', borderTop: `1px solid ${HAIRLINE}` }}>
-                {[
-                  { color: '#c4001a', label: 'Vencido' },
-                  { color: '#b45309', label: '≤7 días' },
-                  { color: '#5b21b6', label: 'Pendiente' },
-                  { color: '#1a7a4a', label: 'Pagado' },
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: item.color }} />
-                    <span style={{ fontSize: 10, color: MUTED }}>{item.label}</span>
+                          {hasPagos && (
+                            <div style={{ display: 'grid', gap: isMobile ? 3 : 4, minHeight: 0 }}>
+                              {dayPagos.slice(0, isMobile ? 1 : 2).map(p => (
+                                <span key={p.id} style={{ minWidth: 0, padding: isMobile ? '2px 3px' : '3px 5px', borderRadius: 5, background: getStatusColor(p, today), color: '#fff', fontSize: isMobile ? 8 : 10, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                                  {isMobile ? p.carpetaNumero : `${p.carpetaNumero} · ${p.moneda} ${p.importe.toLocaleString()}`}
+                                </span>
+                              ))}
+                              {dayPagos.length > (isMobile ? 1 : 2) && <span style={{ fontSize: 9, color: MUTED, textAlign: 'left' }}>+{dayPagos.length - (isMobile ? 1 : 2)} más</span>}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 8, padding: '10px 16px', borderTop: `1px solid ${HAIRLINE}`, background: '#fafbfd' }}>
+                    {[
+                      { color: '#c4001a', label: 'Vencido' },
+                      { color: '#b45309', label: '≤7 días' },
+                      { color: '#5b21b6', label: 'Pendiente' },
+                      { color: '#1a7a4a', label: 'Pagado' },
+                    ].map(item => (
+                      <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: item.color }} />
+                        <span style={{ fontSize: 10, color: MUTED }}>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Desktop: Side panel for detail */}
-          {!isMobile && (
+          {showDesktopSidebar && (
             <div style={{
               width: 320, minWidth: 320, borderLeft: `1px solid ${HAIRLINE}`,
               background: CANVAS, display: 'flex', flexDirection: 'column',
               animation: 'fadeIn 0.15s ease',
             }}>
-              {selectedDate ? <DetailPanel pagos={selectedDayPagos} selectedDate={selectedDate} today={today} onToggleEstado={onToggleEstado} onClose={handleCloseDetail} /> : (
-                <div style={{ flex: 1, minHeight: 300, padding: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                  <span style={{ width: 48, height: 48, borderRadius: 14, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, display: 'grid', placeItems: 'center', color: MUTED, marginBottom: 14 }}><CalendarDays size={22} /></span>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>Seleccioná un día</div>
-                  <div style={{ maxWidth: 220, marginTop: 5, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>Elegí una fecha del calendario para consultar el detalle de sus vencimientos.</div>
-                </div>
-              )}
+              {filteredPagos.length === 0 ? (
+                <SidebarStatePanel
+                  title="Sin resultados"
+                  description="No hay vencimientos que coincidan con los filtros activos para esta vista."
+                  icon={<CalendarX2 size={22} />}
+                />
+              ) : selectedDate ? <DetailPanel pagos={selectedDayPagos} selectedDate={selectedDate} today={today} onToggleEstado={onToggleEstado} onClose={handleCloseDetail} /> : null}
             </div>
           )}
         </div>

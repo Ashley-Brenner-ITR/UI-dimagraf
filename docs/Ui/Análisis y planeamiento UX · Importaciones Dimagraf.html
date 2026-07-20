@@ -1,0 +1,778 @@
+
+<!-- saved from url=(0068)http://127.0.0.1:5500/blueprint_importaciones_dimagraf.html#glosario -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Análisis y planeamiento UX · Importaciones Dimagraf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./Análisis y planeamiento UX · Importaciones Dimagraf_files/css2" rel="stylesheet">
+<style>
+:root{--paper:#0f172a;--card:#1e293b;--ink:#e2e8f0;--ink2:#cbd5e1;--ink3:#a1b2c4;--line:#3d4f63;--line2:#2d3b4e;--accent:#6cb4d4;--accent-deep:#a3d4e8;--accent-tint:rgba(108,180,212,.08);--verde:#34d399;--verde-tint:rgba(52,211,153,.12);--rojo:#f87171;--rojo-tint:rgba(248,113,113,.12);--amber:#d4a94e;--amber-tint:rgba(212,169,78,.1);--kraft:#c9a96c;--kraft-tint:rgba(201,169,108,.1);--violet:#c084fc;--violet-tint:rgba(192,132,252,.1)}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.6;font-size:14px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 28px}
+section{padding:48px 0;scroll-margin-top:52px}section.alt{background:linear-gradient(180deg,#1e293b,#0f172a)}
+h2{font-family:'Archivo',sans-serif;font-weight:700;font-size:24px;margin:0}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin:0 0 6px}.sec-num{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--accent);font-size:14px}
+.sec-sub{color:var(--ink2);max-width:72ch;margin:8px 0 26px;font-size:14px;line-height:1.6}
+.note{background:var(--accent-tint);border-left:4px solid var(--accent);padding:14px 16px;border-radius:0 7px 7px 0;font-size:13px;color:var(--ink2);margin:18px 0 0;line-height:1.6}
+.note.q{background:var(--violet-tint);border-left-color:var(--violet)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:12.8px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line2);vertical-align:top;line-height:1.5}
+thead th{background:#334155;color:#e2e8f0;font-family:'Archivo Narrow',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+tbody tr:last-child td{border-bottom:none}
+nav.toc{position:sticky;top:0;z-index:40;background:rgba(15,23,42,.97);backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,255,255,.1)}
+nav.toc .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 20px}
+nav.toc a{flex:none;color:#cbd5e1;text-decoration:none;font-size:12.5px;font-weight:500;padding:12px 11px;border-bottom:2px solid transparent;white-space:nowrap}
+nav.toc a:hover{color:#fff;border-bottom-color:var(--accent)}
+nav.toc a b{font-family:'IBM Plex Mono',monospace;color:#6cb4d4;font-weight:600;margin-right:5px}
+header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);color:#e2e8f0;padding:28px 0 24px;border-bottom:4px solid var(--accent)}
+header.hero h1{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(22px,4vw,34px);line-height:1.1;margin:0 0 8px;max-width:28ch}
+header.hero p.lead{max-width:66ch;color:#cbd5e1;font-size:13.5px;margin:0}
+.eyebrow{font-family:'Archivo Narrow',sans-serif;font-weight:700;letter-spacing:.22em;text-transform:uppercase;font-size:12px;color:#8bb8cc;margin:0 0 14px}
+.tline{position:relative;margin-top:6px}.tline::before{content:"";position:absolute;left:147px;top:0;bottom:0;width:2px;background:var(--line)}
+@media(max-width:720px){.tline::before{left:15px}}
+.ev{position:relative;display:grid;grid-template-columns:130px 36px 1fr;gap:0;margin-bottom:22px;align-items:start}
+@media(max-width:720px){.ev{grid-template-columns:0 30px 1fr}}
+.ev .when{text-align:right;padding-right:12px;padding-top:5px}@media(max-width:720px){.ev .when{display:none}}
+.ev .when .step{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--accent-deep)}
+.ev .when .fase{font-size:10.5px;color:var(--ink3);font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.ev .dot{display:flex;justify-content:center;align-items:flex-start;padding-top:5px;width:36px;min-height:24px}
+.ev .dot span{width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--accent);z-index:2;flex-shrink:0;margin:0 auto}
+.ev.x .dot span{border-color:var(--kraft)}.ev.state .dot span{border-color:var(--verde);background:var(--verde)}
+.ev .card2{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:16px 18px;margin-left:8px}
+.ev.state .card2{background:#334155;border-color:#475569;padding:10px 16px}
+.ev .who2{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;align-items:center}
+.ev .act{font-family:'Archivo Narrow',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;color:#fff;background:var(--accent);padding:3px 10px;border-radius:20px}
+.ev.x .act{background:var(--kraft)}.ev .arrow{color:var(--ink3);font-weight:700;font-size:11px}
+.ev .txt{font-size:13px;color:var(--ink2);line-height:1.55}.ev.state .txt{color:#e2e8f0;font-size:12.5px}
+.ev .st-tag{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11px;color:#fff;background:var(--verde);padding:2px 8px;border-radius:5px;margin-left:6px}
+.sys-fields{margin-top:10px;padding:12px 14px;background:var(--accent-tint);border-radius:6px;font-size:11.5px;color:var(--accent-deep);line-height:1.7}
+
+.sys-fields ul{margin:4px 0 0;padding-left:14px;list-style:none;line-height:1.7}.sys-fields li{margin-bottom:4px;padding-left:8px;border-left:2px solid var(--accent);font-size:11.5px}
+.sys-fields b{color:var(--ink)}.sf-who{font-size:10.5px;color:var(--ink2);display:block;margin-top:6px;padding-top:6px;border-top:1px solid var(--line2)}
+.dep-ext{margin-top:8px;padding:10px 14px;background:var(--kraft-tint);border-left:3px solid var(--kraft);border-radius:0 6px 6px 0;font-size:11.5px;color:var(--ink2);line-height:1.6}
+details>summary{cursor:pointer;list-style:none}details>summary::-webkit-details-marker{display:none}details>summary::before{content:'\25B8  ';font-size:12px}details[open]>summary::before{content:'\25BE  ';font-size:12px}
+.pain-details{margin-top:10px}.pain-details summary{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--ink2);cursor:pointer;padding:4px 0;list-style:none}
+.pain-details summary::-webkit-details-marker{display:none}.pain-details summary::before{content:'▸ '}.pain-details[open] summary::before{content:'▾ '}
+.pain-details ul{margin:6px 0 0;padding:0 0 0 16px;list-style:none}.pain-details li{font-size:11.5px;color:var(--ink2);margin-bottom:6px;padding-left:10px;border-left:2px solid var(--line);line-height:1.5}
+.pain-details li b{color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-right:4px}
+.gtt{border-bottom:1px dotted var(--accent);cursor:help;position:relative}
+.gtt:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:0;background:#334155;color:#e2e8f0;font-size:12px;padding:6px 10px;border-radius:5px;white-space:normal;width:max-content;max-width:280px;z-index:50;line-height:1.4;box-shadow:0 3px 12px rgba(0,0,0,.25)}
+.role-card{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:16px 18px;margin-bottom:0}
+.role-card h4{font-family:'Archivo',sans-serif;font-size:14px;margin:0 0 8px}
+@media(max-width:860px){.wrap{padding:0 16px}}
+
+/* LIGHT MODE */
+body.light{--paper:#EAEEF2;--card:#ffffff;--ink:#102132;--ink2:#3a4d60;--ink3:#546478;--line:#b8c4d0;--line2:#d4dce4;--accent:#1a6480;--accent-deep:#0f4b63;--accent-tint:#e5eff3;--verde:#267348;--verde-tint:#e4f0e9;--rojo:#a83530;--rojo-tint:#f6e7e5;--amber:#92700c;--amber-tint:#f7eedd;--kraft:#7a6232;--kraft-tint:#f2ebde;--violet:#6a4c8c;--violet-tint:#ece6f2}
+body.light header.hero{background:var(--ink)}
+body.light section.alt{background:linear-gradient(180deg,#fff,#f6f8fa)}
+body.light nav.toc{background:rgba(10,24,38,.97)}
+body.light nav.toc a{color:#a9c3d2}
+body.light .ev.state .card2{background:var(--ink);border-color:var(--ink)}
+body.light thead th{background:#1e293b;color:#e2e8f0}
+body.light .gtt:hover::after{background:var(--ink);color:#dfe9f0}
+
+/* TOGGLE */
+.theme-toggle{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#f1f5f9;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;letter-spacing:.02em;white-space:nowrap;flex-shrink:0}
+.theme-toggle:hover{background:rgba(255,255,255,.3)}
+body.light .theme-toggle{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.4);color:#ffffff}
+
+/* LAYOUT */
+.hero-wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.flex-col{display:flex;flex-direction:column;gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:20px;font-size:11.5px}
+
+/* CALENDAR CELLS */
+.cal-head{text-align:center;font-family:'Archivo Narrow',sans-serif;font-weight:700;color:var(--ink3);font-size:10px;text-transform:uppercase;letter-spacing:.1em;padding:4px}
+.cal-empty{background:var(--line2);border-radius:6px;padding:8px;opacity:.4}
+.cal-empty.dim{opacity:.3}
+.cal-pre{background:var(--kraft-tint);border:1px dashed var(--kraft);border-radius:6px;padding:8px;opacity:.7}
+.cal-holiday{background:var(--rojo-tint);border:1px dashed var(--rojo);border-radius:6px;padding:8px;opacity:.5}
+.cal-day--verde{background:var(--verde-tint);border:1px solid var(--verde);border-radius:6px;padding:8px}
+.cal-day--accent{background:var(--accent-tint);border:1px solid var(--accent);border-radius:6px;padding:8px}
+.cal-day--kraft{background:var(--kraft-tint);border:1px solid var(--kraft);border-radius:6px;padding:8px}
+.cal-day--violet{background:var(--violet-tint);border:1px solid var(--violet);border-radius:6px;padding:8px}
+.cal-date{font-weight:700;font-size:10px}
+.cal-date--verde{color:var(--verde)}.cal-date--accent{color:var(--accent)}.cal-date--kraft{color:var(--kraft)}.cal-date--violet{color:var(--violet)}.cal-date--rojo{color:var(--rojo)}
+.cal-body{color:var(--ink2);margin-top:2px;line-height:1.4}
+.cal-body--muted{color:var(--ink3);margin-top:2px;line-height:1.4}
+.cal-hours{margin-top:4px;font-size:10px;color:var(--ink3)}
+.cal-label{font-size:10px;color:var(--ink3)}
+/* SECTION HEADINGS (inline h3/h4 patterns) */
+.h3-section{font-family:'Archivo',sans-serif;font-size:16px;font-weight:700;color:var(--accent);padding:6px 0}
+.h3-sub{font-family:'Archivo',sans-serif;font-size:15px;color:var(--accent);margin:20px 0 10px}
+.h3-sub--first{font-family:'Archivo',sans-serif;font-size:15px;color:var(--accent);margin:0 0 10px}
+.h4-field{font-family:'Archivo',sans-serif;font-size:13px;font-weight:600;color:var(--ink2);padding:4px 0}
+.lifecycle-label{font-family:'Archivo',sans-serif;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px}
+
+/* LIFECYCLE CARDS */
+.lifecycle-card{padding:14px 18px;background:var(--card);border:1px solid var(--line);border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:2.2;color:var(--ink2)}
+.lifecycle-card+.lifecycle-card{margin-top:10px}
+
+/* GLOSARIO CARDS */
+.glos-card--accent{border-top:3px solid var(--accent)}
+.glos-card--amber{border-top:3px solid var(--amber)}
+.glos-card--kraft{border-top:3px solid var(--kraft)}
+.glos-card--verde{border-top:3px solid var(--verde)}
+.glos-h4--accent{color:var(--accent-deep)}.glos-h4--amber{color:var(--amber)}.glos-h4--kraft{color:var(--kraft)}.glos-h4--verde{color:var(--verde)}
+.glos-list{margin:0;padding-left:16px;font-size:12.5px;color:var(--ink2);line-height:1.8;list-style:none}
+
+/* ERRORS TABLE */
+.err-dot{font-weight:700;text-align:center}
+.err-dot--rojo{color:var(--rojo)}.err-dot--amber{color:var(--amber)}
+
+/* NOTE VARIANTS */
+.note--kraft{background:var(--kraft-tint);border-left-color:var(--kraft)}
+.note--violet{background:var(--violet-tint);border-left-color:var(--violet)}
+.note--mt0{margin-top:0}.note--mt8{margin-top:8px}.note--mt12{margin-top:12px}.note--mt20{margin-top:20px}
+
+/* TABLE VARIANTS */
+.table-sm{font-size:11.5px}.table-sm--mt{font-size:11.5px;margin-top:6px}
+.table-md{font-size:12px}.table-md--mt{font-size:12px;margin-top:12px}
+
+/* UTILITY */
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-20{margin-top:20px}.mt-24{margin-top:24px}
+.mb-8{margin-bottom:8px}.mb-10{margin-bottom:10px}
+.w-40{width:40px}.w-100{width:100px}.w-200{width:200px}
+
+/* TABS (pure CSS) */
+.tabs{position:relative;margin-top:10px}
+.tabs input[type="radio"]{display:none}
+.tabs label{display:inline-block;padding:6px 12px;font-family:'Archivo Narrow',sans-serif;font-size:12px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-right:2px;transition:color .15s,border-color .15s}
+.tabs input[type="radio"]:checked+label{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs label:hover{color:var(--ink)}
+.tab-panel{display:none;padding:10px 0 0}
+#tab-oc:checked~#panel-oc,#tab-art:checked~#panel-art,#tab-emb:checked~#panel-emb,#tab-des:checked~#panel-des,#tab-pag:checked~#panel-pag,#tab-doc:checked~#panel-doc,#tab-val:checked~#panel-val,#tab-inc:checked~#panel-inc,#tab-prov:checked~#panel-prov,#tab-err:checked~#panel-err,#tab-est:checked~#panel-est{display:block}
+
+/* COLOR UTILITIES */
+.c-accent{color:var(--accent)}.c-amber{color:var(--amber)}.c-kraft{color:var(--kraft)}.c-verde{color:var(--verde)}.c-violet{color:var(--violet)}.c-rojo{color:var(--rojo)}.c-ink{color:var(--ink)}.c-ink3{color:var(--ink3)}
+.bg-accent{background:var(--accent)}.bg-amber{background:var(--amber)}.bg-kraft{background:var(--kraft)}.bg-verde{background:var(--verde)}.bg-violet{background:var(--violet)}
+.bg-state{background:#475569;border:1px solid #64748b}
+.st-tag--muted{background:#475569;border:1px solid #64748b}
+.meta{font-size:10.5px;color:var(--ink3)}
+.scope-list{margin:6px 0 0;padding-left:16px;list-style:none;line-height:1.8;font-size:12.5px}
+.mt-10{margin-top:10px}
+</style>
+
+</head><body class="light"><header class="hero"><div class="wrap hero-wrap">
+  <div>
+    <h1>Análisis y planeamiento UX — Importaciones Dimagraf S.A.</h1>
+    <p class="lead">Roles, proceso con campos y dependencias, validación automática y decisiones pendientes.</p>
+  </div>
+  <button class="theme-toggle" onclick="document.body.classList.toggle(&#39;light&#39;);this.textContent=document.body.classList.contains(&#39;light&#39;)?&#39;● Oscuro&#39;:&#39;○ Claro&#39;">● Oscuro</button>
+</div></header>
+
+<nav class="toc"><div class="wrap">
+  <a href="http://127.0.0.1:5500/blueprint_importaciones_dimagraf.html#roles"><b>01</b>Roles y pantallas</a>
+  <a href="http://127.0.0.1:5500/blueprint_importaciones_dimagraf.html#glosario"><b>02</b>Glosario</a>
+  <a href="http://127.0.0.1:5500/blueprint_importaciones_dimagraf.html#validacion"><b>03</b>Validación</a>
+  <a href="http://127.0.0.1:5500/blueprint_importaciones_dimagraf.html#proceso"><b>04</b>Proceso</a>
+  <a href="http://127.0.0.1:5500/blueprint_importaciones_dimagraf.html#decisiones"><b>05</b>Decisiones</a>
+  <a href="http://127.0.0.1:5500/blueprint_importaciones_dimagraf.html#plan"><b>06</b>Plan UX</a>
+  
+</div></nav>
+
+<!-- 01 ROLES -->
+<section class="alt" id="roles"><div class="wrap">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Roles, pantallas y permisos</h2></div>
+  <p class="sec-sub">Cada rol tiene un home distinto y ve solo lo que necesita. Multi-rol acumula permisos.</p>
+
+  <!-- TABLA ROLES + PANTALLAS -->
+  <table>
+    <thead><tr><th>Rol</th><th>Hoy (manual)</th><th>Con el sistema</th><th>Pantallas</th><th>No ve / no hace</th></tr></thead>
+    <tbody>
+      <tr><td><b>Importaciones</b><br>AC-001</td><td>Planilla maestra, SAP, correo con proveedores/despachantes/depósito.</td><td>Vista operativa única, validaciones automáticas, alertas, carga masiva, trazabilidad.</td><td><b>Home: Grilla carpetas</b><br>Detalle OC · Detalle embarque · Vista <span class="gtt" data-tip="Validacion Automatica contra OC: pipeline de 3 etapas">VAL</span> · Carga masiva · Calendario · Exportación SAP</td><td>—</td></tr>
+      <tr><td><b>Comercial</b><br>AC-002</td><td>Planilla Arrivals (viernes). Sin visibilidad anticipada.</td><td>Matriz de Arribos en tiempo real. Filtros por artículo, proveedor, fecha.</td><td><b>Home: Matriz Arribos</b><br>Reportes (Excel/PDF, semanal)</td><td>No ve costos, pagos, coeficientes, validaciones. No edita.</td></tr>
+      <tr><td><b>Tesorería</b><br>AC-003</td><td>Reporte vencimientos por correo (solo 15 días).</td><td>Calendario completo. Proyección pagos. Registrar pago real. Alertas.</td><td><b>Home: Calendario vencimientos</b><br>Proyección cash flow · Alertas</td><td>No reemplaza sistema financiero. No gestiona OC.</td></tr>
+      <tr><td><b>Depósito</b><br>AC-004</td><td>Pre-aviso por correo. Planilla escaneada.</td><td>Notificación en sistema. Confirmar desde tablet. Registrar discrepancias.</td><td><b>Home: Recepción</b><br>Responsive (tablet/móvil)</td><td>No ve costos, pagos, validaciones.</td></tr>
+      <tr><td><b>Dirección</b><br>AC-005</td><td><span class="gtt" data-tip="Reporte SAP automatico: coeficiente actual vs anterior">ZMR21</span> por correo. Sin histórico.</td><td>Reportes consolidados. Alertas variación coeficiente. Calendario (consulta).</td><td><b>Home: Reportes</b><br>Solo consulta</td><td>No edita datos operativos.</td></tr>
+      <tr><td><b>Despachante</b><br>AC-007</td><td>Informa por WhatsApp. Opera fuera de planilla.</td><td>Ver embarques asignados. Cargar <span class="gtt" data-tip="Declaracion Unica de Aduanas: nacionalizar la carga">DUA</span>, canal, gastos, <span class="gtt" data-tip="Volante Electronico de Pago: boleta AFIP para aranceles">VEP</span>, fechas.</td><td><b>Home: Mis embarques</b><br>Despacho aduanero (solo asignados)</td><td>NO ve: confirmaciones, costos, coeficientes, pagos.</td></tr>
+      <tr><td><b>Administrador</b><br>AC-006</td><td>No existe. Config embebida en tareas Import.</td><td>Maestros, roles, permisos por campo, config alertas/<span class="gtt" data-tip="Validacion Automatica contra OC: pipeline de 3 etapas">VAL</span>.</td><td><b>Home: Admin</b><br>Usuarios · Proveedores · Configuración · Auditoría</td><td>No opera el proceso.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="note note--mt8"><b>Volumen:</b> ~20 embarques nuevos/mes, hasta 100 activas + 500 históricas. <b>Permisos:</b> editable por rol, multi-rol acumula. <b>Nomenclatura:</b> siempre "artículo" (no mercadería).</p>
+
+  <!-- CAMPOS Y ESTADOS -->
+  <h3 class="h3-section" style="margin-top:24px">Campos por pantalla</h3>
+
+  <div class="tabs">
+    <input type="radio" name="entity" id="tab-oc" checked=""><label for="tab-oc">OC</label>
+    <input type="radio" name="entity" id="tab-art"><label for="tab-art">Artículo</label>
+    <input type="radio" name="entity" id="tab-emb"><label for="tab-emb">Embarque</label>
+    <input type="radio" name="entity" id="tab-des"><label for="tab-des">Despacho</label>
+    <input type="radio" name="entity" id="tab-pag"><label for="tab-pag">Pago</label>
+    <input type="radio" name="entity" id="tab-doc"><label for="tab-doc">Documento</label>
+    <input type="radio" name="entity" id="tab-val"><label for="tab-val">VAL</label>
+    <input type="radio" name="entity" id="tab-inc"><label for="tab-inc">Incidencia</label>
+    <input type="radio" name="entity" id="tab-prov"><label for="tab-prov">Proveedor</label>
+    <input type="radio" name="entity" id="tab-err"><label for="tab-err" class="c-rojo">Errores</label>
+    <input type="radio" name="entity" id="tab-est"><label for="tab-est">Estados</label>
+
+    <div class="tab-panel" id="panel-oc">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>Carpeta ID</td><td>Auto (Año/Seq)</td><td>Formato 2026/437. Único. Generado por sistema.</td></tr>
+        <tr><td>Proveedor</td><td>Selector (maestro)</td><td>Precarga incoterm, banco, días producción/tránsito.</td></tr>
+        <tr><td>Incoterm</td><td>Enum (<span class="gtt" data-tip="Free On Board: Dimagraf paga flete">FOB</span>/<span class="gtt" data-tip="Cost, Insurance, Freight: proveedor paga logistica">CIF</span>/…)</td><td>Precargado desde proveedor. Comercial y Depósito no ven.</td></tr>
+        <tr><td>Condición pago</td><td>Texto</td><td>Dispara cálculo de vencimiento. Comercial y Depósito no ven.</td></tr>
+        <tr><td>Estado</td><td>Enum (10 estados)</td><td>Automático. Indicador visual en grilla.</td></tr>
+        <tr><td>Saldo total</td><td>Calculado</td><td>Σ saldos artículos. Cierre automático si llega a 0. Comercial no ve.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-art">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td><span class="gtt" data-tip="Codigo unico de articulo en el sistema">SKU</span></td><td>Texto</td><td>Código único. Carga masiva desde Excel.</td></tr>
+        <tr><td>Descripción</td><td>Texto</td><td>Siempre "artículo" (no mercadería).</td></tr>
+        <tr><td>Cantidad</td><td>Numérico</td><td>Individual o masiva.</td></tr>
+        <tr><td>UM / <span class="gtt" data-tip="Unidad de medida de embarque">UME</span></td><td>Texto</td><td>Depósito ve en recepción. Comercial y Tesorería no ven.</td></tr>
+        <tr><td>Precio</td><td>Moneda</td><td><b>Comercial NUNCA ve precios.</b></td></tr>
+        <tr><td>Saldo pendiente</td><td>Calculado</td><td>= Solicitada − Σ embarcadas. Comercial no ve.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-emb">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>ID (437-A)</td><td>Auto</td><td>Mismo nivel que madre en grilla.</td></tr>
+        <tr><td>Artículos + cant.</td><td>Lista</td><td>Multi-OC: un despacho puede mezclar OCs.</td></tr>
+        <tr><td>Transporte</td><td>Enum</td><td>Marítimo (14-35d) / Terrestre (48h).</td></tr>
+        <tr><td><span class="gtt" data-tip="Estimated Time of Arrival: fecha estimada de llegada">ETA</span></td><td>Calculado + editable</td><td>= F. embarque + días tránsito. Actualizable múltiples veces.</td></tr>
+        <tr><td>Estado</td><td>Enum (10)</td><td>Automático, avanza con cada fase.</td></tr>
+        <tr><td>Coeficiente</td><td>Decimal</td><td>POR APERTURA, no madre. Alerta si varía &gt; umbral. Com./Dep./Desp. no ven.</td></tr>
+        <tr><td>Factura + importe</td><td>Texto + Moneda</td><td>Com./Dep./Desp. no ven.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-des">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td><span class="gtt" data-tip="Declaracion Unica de Aduanas: nacionalizar la carga">DUA</span></td><td>Texto</td><td>Import. o Despachante cargan. Com./Dep. no ven.</td></tr>
+        <tr><td>Canal</td><td>Enum (Verde/Rojo)</td><td>Rojo = inspección física.</td></tr>
+        <tr><td>Gastos AR$ / <span class="gtt" data-tip="Volante Electronico de Pago: boleta AFIP para aranceles">VEP</span> USD</td><td>Moneda</td><td>Import./Desp. cargan. Desp. no ve totales. Com./Dep. no ven.</td></tr>
+        <tr><td>Fechas + Nº despacho</td><td>Texto + Fechas</td><td>Oficialización, salida. Com./Dep. no ven.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-pag">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>Vencimiento</td><td>Calculado</td><td>= F. <span class="gtt" data-tip="Bill of Lading: titulo de propiedad de la carga maritima">B/L</span> + condición pago. Solo Import./Tes./Dir. ven.</td></tr>
+        <tr><td>Monto</td><td>Moneda</td><td>Solo Import./Tes./Dir. ven.</td></tr>
+        <tr><td>Fecha pago real</td><td>Fecha</td><td><b>Solo Tesorería edita.</b> Import./Dir. consultan.</td></tr>
+        <tr><td>Estado</td><td>Enum</td><td>Pendiente / Pagado / Anticipo / Mora. Automático.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-doc">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>Tipo</td><td>Enum (Factura, <span class="gtt" data-tip="Bill of Lading: titulo de propiedad de la carga maritima">B/L</span>, packing, <span class="gtt" data-tip="Declaracion Unica de Aduanas: nacionalizar la carga">DUA</span>, <span class="gtt" data-tip="Carta de Porte: documento transporte terrestre">CRT</span>…)</td><td>Obligatorio al subir. Define visibilidad por rol.</td></tr>
+        <tr><td>Archivo</td><td>Binario (max 20 MB)</td><td>Drag &amp; drop. Import. o Desp. suben.</td></tr>
+        <tr><td>Visibilidad</td><td>Multi-select</td><td>Cada doc solo visible para roles autorizados.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-val">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>Resultado por artículo</td><td>✓ / ⚠ / ✗ × N</td><td>Lado a lado OC vs documento.</td></tr>
+        <tr><td>% Confianza</td><td>Decimal (IA)</td><td>Si &lt; umbral → rechazar.</td></tr>
+        <tr><td>Decisión</td><td>Aprobar / Cancelar</td><td>Observación obligatoria si hay diferencias.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-inc">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>Tipo</td><td>Enum (Faltante / Sobrante / Dañado)</td><td>Depósito registra.</td></tr>
+        <tr><td>Artículo + cantidad</td><td>Selector + Numérico</td><td>Contraste recibida vs esperada.</td></tr>
+        <tr><td>Estado resolución</td><td>Enum (Abierta / Resuelta)</td><td>Import. resuelve. Notificación automática.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-prov">
+    <table class="table-sm--mt">
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>Razón social, CUIT, origen</td><td>Textos</td><td>Datos generales.</td></tr>
+        <tr><td>Banco, despachante, incoterm, cond. pago, transporte</td><td>Selectores / Enums</td><td>Precarga en OC.</td></tr>
+        <tr><td>Días producción, días tránsito</td><td>Enteros</td><td>Para fechas automáticas.</td></tr>
+        <tr><td>Idioma, instrucciones, tolerancia, umbral, <span class="gtt" data-tip="Personally Identifiable Information: datos personales enmascarados antes de enviar a IA">PII</span></td><td>Varios</td><td>Config VAL por proveedor.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tab-panel" id="panel-err">
+    <p class="meta" style="margin:6px 0 10px"><span class="c-rojo">● Error</span> = bloquea &nbsp;│&nbsp; <span class="c-amber">● Warning</span> = no bloquea</p>
+    <table class="table-sm--mt">
+      <thead><tr><th class="w-40">Tipo</th><th>Situación</th><th>Cuándo ocurre</th><th class="w-100">Rol</th></tr></thead>
+      <tbody>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Carpeta duplicada</td><td>Número (Año/Seq) ya existe</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Saldo insuficiente</td><td>Cantidad a embarcar &gt; saldo disponible</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Embarque sin OC</td><td>No hay OC abierta con saldo &gt; 0</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Proveedor no válido</td><td>Inactivo o inexistente</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>SKU vacío</td><td>Artículo sin código al guardar</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Doc sin clasificar</td><td>Documento sin tipo seleccionado</td><td>Import./Desp.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Archivo &gt; 20 MB</td><td>Tamaño excede límite</td><td>Import./Desp.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Archivo no soportado</td><td>Formato ≠ PDF o Excel (para VAL)</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Archivo corrupto</td><td>PDF/Excel ilegible</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Embarque no asignado</td><td>Despachante accede a embarque ajeno</td><td>Desp.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>DUA o canal vacío</td><td>Campos obligatorios vacíos</td><td>Import./Desp.</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Login incorrecto</td><td>Email o contraseña no coinciden</td><td>Todos</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Cuenta bloqueada</td><td>N intentos fallidos</td><td>Todos</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Sin permisos</td><td>Accede a pantalla no autorizada</td><td>Todos</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Sesión expirada</td><td>Inactividad &gt; tiempo configurable</td><td>Todos</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Datos pago incompletos</td><td>Pago sin fecha o monto</td><td>Tesorería</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Email duplicado</td><td>Usuario con email existente</td><td>Admin</td></tr>
+        <tr><td class="err-dot err-dot--rojo">●</td><td>Rol sin asignar</td><td>Usuario sin rol seleccionado</td><td>Admin</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Confianza insuficiente</td><td>% IA &lt; umbral. Permite revisión manual</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Error OpenAI</td><td>Timeout / 5xx. Permite reintentar</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Sin créditos (429)</td><td>Rate limit. Reintentar después</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Respuesta malformada</td><td>JSON inválido de IA. Reintentar</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Carga masiva con errores</td><td>Filas con datos faltantes/duplicados</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>ETA incompleta</td><td>Embarque activo sin fecha arribo</td><td>Import.</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Discrepancia cantidad</td><td>Recibe ≠ esperado</td><td>Depósito</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Artículo no esperado</td><td>Producto no está en lista</td><td>Depósito</td></tr>
+        <tr><td class="err-dot err-dot--amber">●</td><td>Costeo incompleto</td><td>Exportar SAP sin refs Tx</td><td>Import.</td></tr>
+      </tbody>
+    </table>
+    <p class="note note--mt8">Warnings de VAL nunca bloquean el flujo general. El usuario cancela y sigue operando.</p>
+    </div>
+
+    <div class="tab-panel" id="panel-est">
+    <div class="lifecycle-card" style="margin:6px 0 10px">
+      <div class="lifecycle-label">OC:</div>
+      <span class="c-verde">ABIERTA</span> →
+      <span class="c-accent">CONFIRMACIÓN_VALIDADA</span> →
+      <span class="c-amber">EN_PRODUCCIÓN</span> →
+      <span class="c-amber">PREEMBARQUE_VALIDADO</span> →
+      <span class="c-accent">EN_TRÁNSITO</span> →
+      <span class="c-kraft">EN_DESPACHO</span> →
+      <span class="c-kraft">EN_RECEPCIÓN</span> →
+      <span class="c-violet">COSTEO_REGISTRADO</span> →
+      <span class="c-verde">CERRADA</span> (auto, saldo=0)
+      <br><span class="meta">SAP: Tx 45 (OC) · Tx 55 (Embarque) · Tx 18 (Pre-ingreso)</span>
+    </div>
+    <div class="lifecycle-card">
+      <div class="lifecycle-label">Pago:</div>
+      <span class="c-ink3">ESTIMADO</span> →
+      <span class="c-amber">ALERTA (≤7d)</span> →
+      <span class="c-verde">PAGADO</span>
+      &nbsp;│&nbsp; <span class="c-accent">ANTICIPO</span>
+      &nbsp;│&nbsp; <span class="c-rojo">MORA</span>
+    </div>
+    <table class="table-md--mt">
+      <thead><tr><th>Campo calculado</th><th>Fórmula</th><th>Trigger</th></tr></thead>
+      <tbody>
+        <tr><td>Saldo artículo</td><td>Solicitada − Σ embarcadas</td><td>Cada embarque</td></tr>
+        <tr><td>Cierre OC</td><td>Saldo = 0 → CERRADA</td><td>Saldo llega a 0</td></tr>
+        <tr><td>ETA</td><td>F. embarque + días tránsito</td><td>Registrar embarque</td></tr>
+        <tr><td>Vencimiento pago</td><td>F. B/L + condición pago</td><td>Cargar B/L</td></tr>
+        <tr><td>Alerta vencimiento</td><td>venc. − hoy ≤ 7d → email Tes.</td><td>Diario 08:00</td></tr>
+        <tr><td>Alerta coeficiente</td><td>|coef. − prom. 3 ant.| &gt; umbral</td><td>Registrar coef.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- FUERA DE ALCANCE -->
+  <div class="note note--mt20"><b>Fuera de alcance:</b>
+    <ul class="scope-list">
+      <li>Integración directa con SAP</li>
+      <li>Notas de crédito / devoluciones</li>
+      <li>Cotización o solicitud previa a la OC</li>
+      <li>Importaciones por courier</li>
+      <li>App móvil nativa (sí se soporta web responsive)</li>
+      <li>Tracking automático de navieras</li>
+      <li>Coordinación del transporte por medio del sistema</li>
+      <li>VAL no valida precios/totales (solo SKU + descripción + cantidad)</li>
+      <li>OCR sobre documentos de baja calidad</li>
+      <li>Reemplazar sistema financiero de Tesorería</li>
+    </ul>
+  </div>
+
+</div></section>
+
+
+<!-- 02 GLOSARIO -->
+<section id="glosario"><div class="wrap">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Glosario</h2></div>
+  <p class="sec-sub">Vocabulario agrupado por contexto. En el documento, las siglas con subrayado punteado muestran definición al pasar el cursor.</p>
+  <div class="grid-2">
+    <div class="role-card glos-card--accent"><h4 class="glos-h4--accent">SAP (ERP)</h4>
+      <ul class="glos-list">
+        <li><b>SAP</b> — ERP para costeo, inventario y estados de OC. El sistema NO lo modifica.</li>
+        <li><b>Tx 45</b> — OC creada y cargada como contrato marco.</li>
+        <li><b>Tx 55</b> — Embarque confirmado por proveedor. Marca "en tránsito".</li>
+        <li><b>Tx 18</b> — Pre-ingreso en depósito. Genera el coeficiente de costeo.</li>
+        <li><b>ZMR21</b> — Reporte automático: compara coeficiente actual vs anterior por artículo.</li>
+        <li><b>Contrato marco</b> — Número interno que SAP asigna a la OC para búsquedas.</li>
+      </ul></div>
+    <div class="role-card glos-card--amber"><h4 class="glos-h4--amber">Comercio internacional</h4>
+      <ul class="glos-list">
+        <li><b>FOB</b> (Free On Board) — Dimagraf paga el flete desde origen.</li>
+        <li><b>CIF</b> (Cost, Insurance, Freight) — Proveedor paga logística hasta Buenos Aires.</li>
+        <li><b>Incoterm</b> — Regla que define quién paga flete/seguro.</li>
+        <li><b>ETA</b> (Estimated Time of Arrival) — Fecha estimada de llegada al puerto.</li>
+        <li><b>LCL</b> — Grupaje: carga compartida en contenedor.</li>
+        <li><b>FCL</b> — Contenedor completo exclusivo.</li>
+        <li><b>B/L</b> (Bill of Lading) — Título de propiedad de la carga marítima. Su fecha dispara el vencimiento de pago.</li>
+        <li><b>CRT</b> — Carta de Porte: transporte terrestre (equivale a B/L).</li>
+        <li><b>MIC</b> — Manifiesto Internacional de Carga.</li>
+      </ul></div>
+    <div class="role-card glos-card--kraft"><h4 class="glos-h4--kraft">Aduana y regulatorio</h4>
+      <ul class="glos-list">
+        <li><b>DUA</b> — Declaración Única de Aduanas: documento para nacionalizar la carga.</li>
+        <li><b>NCM</b> — Nomenclatura Común MERCOSUR: código arancelario del producto.</li>
+        <li><b>VEP</b> — Volante Electrónico de Pago: boleta para pagar aranceles ante AFIP.</li>
+        <li><b>SICNEA</b> — Portal AFIP donde se registran importaciones.</li>
+        <li><b>ARCA</b> — Portal AFIP: validación de despacho, canal y aranceles.</li>
+        <li><b>Canal Verde</b> — Liberación rápida sin inspección física.</li>
+        <li><b>Canal Rojo</b> — Inspección con apertura y revisión del contenedor.</li>
+      </ul></div>
+    <div class="role-card glos-card--verde"><h4 class="glos-h4--verde">Proceso interno Dimagraf</h4>
+      <ul class="glos-list">
+        <li><b>OC / Carpeta</b> — Orden de Compra con numeración Año/Secuencia (ej. 2026/437).</li>
+        <li><b>Apertura / Subcarpeta</b> — Embarque parcial de una OC (ej. 437-A). Tiene factura y estado propios.</li>
+        <li><b>W##</b> — Semana del año para planificar pagos (ej. W17).</li>
+        <li><b>"HAY FONDOS"</b> — Saldo a favor con un despachante; funciona como cuenta corriente.</li>
+        <li><b>SKU</b> — Código único de artículo en el sistema.</li>
+        <li><b>UME</b> — Unidad de medida de embarque.</li>
+        <li><b>Condición de pago</b> — Plazo acordado para pagar (ej. 90 días desde fecha B/L).</li>
+        <li><b>Banco (giro de divisas)</b> — Entidad financiera por donde se transfiere al proveedor.</li>
+      </ul></div>
+  </div>
+</div></section>
+
+<!-- 03 VALIDACION -->
+<section id="validacion"><div class="wrap">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Flujo de validación automática</h2></div>
+  <p class="sec-sub">Dos controles hoy manuales que el sistema automatiza: confirmación del proveedor y factura de preembarque vs OC.</p>
+  <table>
+    <thead><tr><th>Paso</th><th>Qué pasa</th><th>Actor</th><th>Entrada</th><th>Salida</th></tr></thead>
+    <tbody>
+      <tr><td><b>1. Importar</b></td><td>Importaciones carga el archivo (PDF o Excel estructurado). El sistema valida formato y dispara el curado del documento.</td><td>Importaciones</td><td>Archivo de confirmación o factura</td><td>Documento listo para extracción</td></tr>
+      <tr><td><b>2. Extraer (IA)</b></td><td>El sistema extrae SKU, descripción y cantidad de cada artículo del documento, con metadata de confianza (% de certeza).</td><td>Sistema (automático)</td><td>Documento curado</td><td>JSON de artículos + % confianza</td></tr>
+      <tr><td><b>3. Obtener OC</b></td><td>Recupera los artículos y cantidades de la OC como fuente de verdad (solo lectura, no modifica la OC).</td><td>Sistema (automático)</td><td>ID de la OC</td><td>JSON de la OC</td></tr>
+      <tr><td><b>4. Comparar</b></td><td>Compara artículo por artículo: SKU exacto, descripción semántica (umbral configurable), cantidad con tolerancia numérica.</td><td>Sistema (automático)</td><td>JSON OC + JSON documento</td><td>Resultado: ✓ correcto / ⚠ diferencia / ✗ faltante o sobrante</td></tr>
+      <tr><td><b>5. Visualizar</b></td><td>El operador ve una tabla comparativa OC vs documento, lado a lado, con indicadores por artículo.</td><td>Importaciones</td><td>Resultado comparativo</td><td>Pantalla lista para decisión</td></tr>
+      <tr><td><b>6. Decidir</b></td><td>El operador aprueba (incluso con diferencias aceptables) o cancela. La decisión queda registrada en log de auditoría con usuario, fecha y motivo.</td><td>Importaciones</td><td>Resultado visualizado</td><td>Decisión registrada + actualización de estado</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Excepciones: si la confianza de extracción está por debajo del umbral configurado → se notifica "documento no procesable" y se pide recarga o revisión manual. Si el servicio de IA falla → se notifica error sin bloquear el flujo general. El Despachante NO tiene acceso a validaciones de confirmación, solo a las de preembarque.</p>
+</div></section>
+
+<!-- 04 PROCESO -->
+<section class="alt" id="proceso"><div class="wrap">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Proceso paso a paso</h2></div>
+  <p class="sec-sub">Proceso cronológico. Cada paso muestra: qué pasa hoy, qué hace el sistema, campos, dependencias externas y puntos de dolor.</p>
+  <div class="tline">
+
+    <!-- F1 OC -->
+    <div class="ev"><div class="when"><div class="step">F1</div><div class="fase">OC</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Comercial</span><span class="arrow">→</span><span class="act">Importaciones</span><span class="arrow">→</span><span class="act">Proveedor</span></div>
+        <div class="txt"><b>Hoy:</b> Comercial genera OC sin formato (Excel/PDF/papel). Importaciones verifica artículos, cantidades, precios y códigos SAP. Si falta código → alta en SAP demora 24-48h y bloquea. Envía al proveedor por correo, luego carga en SAP como contrato marco (<span class="gtt" data-tip="Transaccion SAP: OC creada y cargada como contrato marco">Tx 45</span>).</div>
+        <div class="sys-fields"><b>Sistema:</b><ul><li>Se registra la OC con datos del proveedor (origen, transporte, <span class="gtt" data-tip="Regla comercio intl: define quien paga flete/seguro">Incoterm</span>, condición de pago, banco, despachante). Se precargan desde el maestro.</li><li>La OC recibe una carpeta interna única (Año/Secuencia, ej. 2026/437) que unifica las tres numeraciones actuales.</li><li>Artículos se cargan uno a uno o masivamente desde archivo (código, descripción, cantidad, precio, unidad).</li><li>El sistema calcula y actualiza saldo pendiente por artículo y por OC: al asociar un embarque descuenta cantidades embarcadas.</li><li>Cuando todos los artículos llegan a saldo cero, la OC se cierra automáticamente.</li></ul></div>
+        <div class="dep-ext"><b>Dependencia externa:</b> la OC puede originarse fuera del sistema (correo de Comercial sin formato). El sistema debe permitir carga parcial hasta tener todos los datos.</div>
+        <details class="pain-details"><summary>Puntos de dolor en esta etapa (5)</summary><ul>
+          <li><b>P14</b> La OC que genera Comercial no tiene formato estándar: puede llegar como Excel, PDF, papel o correo.</li>
+          <li><b>P16</b> Dar de alta un artículo o proveedor en SAP demora 24-48h y bloquea el inicio.</li>
+          <li><b>P15</b> Para una misma importación existen tres números sin vínculo:<br>&nbsp;&nbsp;1) Carpeta interna (ej. 2026/437)<br>&nbsp;&nbsp;2) Número de OC en SAP (Tx 45)<br>&nbsp;&nbsp;3) Contrato marco (asignado por SAP)<br>El sistema debe unificarlos bajo un único ID.</li>
+          <li><b>P0</b> Toda la trazabilidad vive en una única planilla Excel de 56 columnas.</li>
+          <li><b>P1</b> La planilla no permite abrir por artículo: el seguimiento es solo a nivel OC/carpeta.</li>
+        </ul></details>
+        
+        
+      </div></div>
+
+    <div class="ev state"><div class="when"><div class="step">—</div></div><div class="dot"><span></span></div><div class="card2"><div class="txt">Estado <span class="st-tag">6 · Pendiente de embarque</span></div></div></div>
+
+    <!-- F2 CONFIRMACION -->
+    <div class="ev"><div class="when"><div class="step">F2</div><div class="fase">Confirmación</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Proveedor</span><span class="arrow">→</span><span class="act">Importaciones</span></div>
+        <div class="txt"><b>Hoy:</b> Proveedor responde por correo con la confirmación del pedido y su referencia interna. Importaciones hace control manual artículo × artículo (código, descripción, cantidad, precio, <span class="gtt" data-tip="Regla comercio intl: define quien paga flete/seguro">incoterm</span>, condición de pago). Si hay diferencias → reclamo por correo hasta resolver. Se marca <span class="gtt" data-tip="Transaccion SAP: embarque confirmado, en transito">Tx 55</span> en SAP.</div>
+        <div class="sys-fields"><b>Sistema (<span class="gtt" data-tip="Validacion Automatica contra OC: pipeline de 3 etapas">VAL</span>):</b><ul><li>El operador sube el archivo de confirmación (PDF o Excel, cualquier layout, puede estar en inglés).</li><li><b>Etapa 1 - Curado:</b> extracción de texto/tablas + enmascaramiento de datos personales antes de enviar a IA.</li><li><b>Etapa 2 - Extracción IA:</b> OpenAI extrae SKU, descripción y cantidad de cada artículo con % de confianza.</li><li><b>Etapa 3 - Comparación:</b> SKU exacto, descripción por similitud semántica (umbral configurable por proveedor), cantidad con tolerancia numérica.</li><li>Resultado por artículo: coincide / difiere / faltante / sobrante.</li><li>El operador aprueba o cancela. Observación obligatoria si hay diferencias.</li><li>Log de auditoría: usuario, resultado por artículo, decisión, % confianza, timestamp.</li></ul></div>
+        <div class="dep-ext"><b>Dependencia externa:</b> la confirmación llega por correo del proveedor sin plazo garantizado. El operador puede cargar datos parciales de la carpeta pero no puede completar la validación hasta recibir el documento. El sistema debe permitir guardar estado parcial.</div>
+        <details class="pain-details"><summary>Puntos de dolor (1)</summary><ul>
+          <li><b>P2</b> Se hace un control manual artículo por artículo entre la OC, SAP y el documento del proveedor. Es repetitivo, lento y propenso a errores.</li>
+        </ul></details>
+        
+        
+      </div></div>
+
+    <!-- F3 PRODUCCION -->
+    <div class="ev"><div class="when"><div class="step">F3</div><div class="fase">Producción</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Importaciones</span><span class="arrow">↔</span><span class="act">Proveedor</span></div>
+        <div class="txt"><b>Hoy:</b> Seguimiento de producción en cuaderno físico. 3×/semana revisión de pendientes, cada 10 días consulta sistemática. Casos críticos por WhatsApp/teléfono. Sin alertas automáticas ni registro digital.</div>
+        <div class="sys-fields"><b>Sistema:</b><ul><li>Se registra estado de producción con fecha comprometida y notas.</li><li>Alertas automáticas cuando la fecha se acerca o supera sin actualización.</li><li>Priorización visual de embarques con demora.</li><li>Historial cronológico con timestamp (no se sobreescribe, se acumula).</li><li>Reemplaza completamente el cuaderno físico.</li></ul></div>
+        <details class="pain-details"><summary>Puntos de dolor (1)</summary><ul>
+          <li><b>P4</b> El seguimiento de producción vive en un cuaderno físico. No hay alertas, no hay registro digital, todo depende de la memoria del operador.</li>
+        </ul></details>
+        
+      </div></div>
+
+    <!-- F4 FACTURA -->
+    <div class="ev"><div class="when"><div class="step">F4</div><div class="fase">Factura</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Proveedor</span><span class="arrow">→</span><span class="act">Importaciones</span></div>
+        <div class="txt"><b>Hoy:</b> Proveedor envía factura (cantidad de ese embarque, puede ser parcial) + documentación (<span class="gtt" data-tip="Bill of Lading: titulo de propiedad de la carga maritima">B/L</span> marítimo o <span class="gtt" data-tip="Carta de Porte: documento transporte terrestre">CRT</span>/MIC terrestre, certificado de origen, packing list). Importaciones controla manualmente NCM, kilajes, volúmenes, bultos. Si es parcial → abre subcarpeta (A, B, C) en Excel aparte. Si es <span class="gtt" data-tip="Free On Board: Dimagraf paga flete">FOB</span> → cotiza 2-3 forwarders. Asigna despachante.</div>
+        <div class="sys-fields"><b>Sistema:</b> <ul><li>Se ejecuta el mismo pipeline VAL que en F2 (curado + extracción IA + comparación contra OC) sobre la factura.</li><li>Si embarque parcial, se crea apertura/subcarpeta (A, B, C). Cada una tiene factura, despachante, coeficiente y estado propios.</li><li>Un despacho puede contener artículos de varias OCs: el sistema descuenta saldos individualmente.</li><li>Documentación adjunta clasificada por tipo con visibilidad por rol.</li></ul><span class="gtt" data-tip="Unidad de medida de embarque">UME</span>, Peso neto/bruto, Medio transporte, B/L-CRT, F. embarque real, Vapor, Empresa transp., Cant. bultos, Nº55 (SAP), Apertura A/B/C, Documentos adjuntos (tipo + rol)</div>
+        <div class="dep-ext"><b>Dependencia externa:</b> factura y documentación llegan del proveedor por correo. El embarque puede ser parcial y no se sabe hasta que llega la factura. El sistema debe permitir crear la apertura A/B/C en cualquier momento y completar datos a medida que llegan.</div>
+        <details class="pain-details"><summary>Puntos de dolor (3)</summary><ul>
+          <li><b>P10</b> Los saldos por OC se controlan en un Excel aparte de la planilla maestra. Riesgo alto de desincronización y error.</li>
+          <li><b>P17</b> Un mismo despacho puede contener artículos de varias OC, pero no hay modelo de datos que lo asocie automáticamente.</li>
+          <li><b>P18</b> Las facturas llegan 100% en PDF por mail. Se cargan campo a campo manualmente sin alerta si el monto difiere de la OC.</li>
+        </ul></details>
+        
+        
+      </div></div>
+
+    <div class="ev state"><div class="when"><div class="step">—</div></div><div class="dot"><span></span></div><div class="card2"><div class="txt">Estado <span class="st-tag">5 · En Tránsito</span></div></div></div>
+
+    <!-- F5 TRANSITO -->
+    <div class="ev"><div class="when"><div class="step">F5</div><div class="fase">Tránsito</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Naviera</span><span class="arrow">→</span><span class="act">Importaciones</span><span class="arrow">→</span><span class="act">Comercial</span></div>
+        <div class="txt"><b>Hoy:</b> La naviera informa el <span class="gtt" data-tip="Estimated Time of Arrival: fecha estimada de llegada">ETA</span> por correo (marítimo 14-35 días). Terrestre (Brasil, 48h) sin tracking. Cada viernes Importaciones arma y sube la Planilla de Arrivals para Comercial (carpeta compartida). Comercial no tiene visibilidad anticipada hasta que ya está embarcado.</div>
+        <div class="sys-fields"><b>Sistema:</b> <ul><li>Reemplaza la Planilla de Arrivals con Matriz de Arribos en tiempo real.</li><li>Comercial la ve como pantalla principal al iniciar sesión (no la grilla de carpetas).</li><li>Muestra: proveedor, artículo, cantidad, medio transporte, ETA estimada, ETA actualizada, estado.</li><li>Importaciones actualiza fechas cuando la naviera informa cambios (sin armar planilla).</li><li>Ordenar por fecha de llegada y por descripción de artículo.</li><li>Alertas automáticas de arribo inminente a Comercial y Tesorería.</li><li>Reportes de Arrivals automáticos (frecuencia configurable).</li><li>Comercial NO ve costos, pagos ni coeficientes.</li></ul></div>
+        <div class="dep-ext"><b>Dependencia externa:</b> la naviera informa ETA por correo (puede cambiar varias veces durante el tránsito). En transporte terrestre (Brasil, 48h) no hay tracking: se coordina por teléfono. El sistema debe permitir actualizar ETA múltiples veces sin perder el histórico.</div>
+        <details class="pain-details"><summary>Puntos de dolor (2)</summary><ul>
+          <li><b>P5</b> La planilla de Arrivals se arma a mano cada viernes. No hay visibilidad en tiempo real entre semanas.</li>
+          <li><b>P23</b> Comercial recibe información solo cuando la carga ya está embarcada. Sin visibilidad anticipada para planificar ventas.</li>
+        </ul></details>
+        
+        
+      </div></div>
+
+    <!-- F6 DESPACHO -->
+    <div class="ev"><div class="when"><div class="step">F6</div><div class="fase">Despacho</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Importaciones</span><span class="arrow">↔</span><span class="act">Despachante</span><span class="arrow">↔</span><span class="act">Tesorería</span></div>
+        <div class="txt"><b>Hoy:</b> Importaciones asigna despachante e informa a qué banco enviar la documentación (banco del giro de divisas). Despachante emite Requerimiento de Fondos por correo. Declara en SICNEA/ARCA, paga aranceles y <span class="gtt" data-tip="Volante Electronico de Pago: boleta AFIP para aranceles">VEP</span>, informa canal (verde = liberación / rojo = inspección), gastos, Nº despacho, fechas. En terrestre, el canal se consulta por WhatsApp. Tesorería transfiere fondos; si transfiere de más queda saldo a favor ("HAY FONDOS").</div>
+        <div class="sys-fields"><b>Sistema:</b> <ul><li>El despachante (usuario externo, acceso limitado) carga directamente: DUA, canal (verde/rojo), gastos AR$, VEP USD, fechas oficialización/salida, Nº despacho.</li><li>No ve datos financieros, costeo ni validaciones de confirmación (solo preembarque).</li><li>Importaciones asigna despachante y define banco del giro de divisas.</li><li>El sistema registra saldos a favor por despachante ("HAY FONDOS") y compara contra requerimientos antes de transferir.</li><li>Elimina dependencia de WhatsApp y correo para datos de despacho.</li></ul></div>
+        <div class="dep-ext"><b>Dependencia externa:</b> el canal aduanero (verde/rojo) lo informa el despachante, a veces por WhatsApp. En despacho terrestre se consulta informalmente. Los gastos, VEP y fechas de oficialización también dependen del despachante. El sistema debe permitir que Importaciones cargue lo que tiene y el despachante complete lo suyo cuando lo sepa, sin bloquear el avance parcial.</div>
+        <details class="pain-details"><summary>Puntos de dolor (3)</summary><ul>
+          <li><b>P13</b> El despachante opera completamente por fuera de la planilla de trazabilidad. Sus datos no quedan registrados de forma estructurada.</li>
+          <li><b>P19</b> Los datos del despachante (canal, oficialización, gastos) llegan por WhatsApp o correo sin estructura ni registro sistemático.</li>
+          <li><b>P20</b> Los saldos a favor con despachantes ("HAY FONDOS") no tienen visibilidad ni conciliación. Se manejan de memoria.</li>
+        </ul></details>
+        
+      </div></div>
+
+    <div class="ev state"><div class="when"><div class="step">—</div></div><div class="dot"><span></span></div><div class="card2"><div class="txt">Estado <span class="st-tag">4 · Arribado Aduana</span> <span class="st-tag">3 · Oficializado</span></div></div></div>
+
+    <!-- F7 RECEPCION -->
+    <div class="ev"><div class="when"><div class="step">F7</div><div class="fase">Recepción</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Importaciones</span><span class="arrow">→</span><span class="act">Depósito</span><span class="arrow">→</span><span class="act">Dirección</span></div>
+        <div class="txt"><b>Hoy:</b> Importaciones coordina camiones a Garín, genera SAP <span class="gtt" data-tip="Transaccion SAP: pre-ingreso en deposito, genera coeficiente">Tx 18</span> (pre-ingreso, genera coeficiente) y envía detalle por correo como pre-aviso. Depósito cuenta bultos y confirma OK por correo (planilla escaneada) o informa discrepancias. Importaciones ingresa conformidad en SAP (puede ser días después). SAP genera <span class="gtt" data-tip="Reporte SAP automatico: coeficiente actual vs anterior">ZMR21</span> (automático) e Importaciones justifica variaciones a Dirección por correo.</div>
+        <div class="sys-fields"><b>Sistema:</b> <ul><li>Importaciones genera pre-ingreso (Tx 18) y el sistema notifica al Depósito: carpeta, proveedor, artículos, cantidades, fecha estimada.</li><li>Depósito confirma recepción desde móvil/tablet: completa o con discrepancias (faltantes, daño, producto equivocado).</li><li>Discrepancia queda vinculada al embarque. No cierra la OC automáticamente.</li><li>Coeficiente de costeo = atributo de la apertura/subcarpeta (ej. 437-A). La madre no tiene coeficiente.</li><li>Detecta variaciones comparándolo contra promedio de últimos 3 ingresos del mismo artículo. Alerta a Dirección si supera umbral.</li><li>Prepara datos para carga manual en SAP: resumen copiable + exportación Excel/CSV.</li></ul></div>
+        <div class="dep-ext"><b>Dependencia externa:</b> el depósito confirma la recepción hoy por correo con planilla escaneada. La conformidad en SAP puede ingresarse días después. Si hay discrepancias (faltantes, daño), quedan abiertas hasta resolución entre Importaciones y el proveedor.</div>
+        <details class="pain-details"><summary>Puntos de dolor (3)</summary><ul>
+          <li><b>P9</b> El depósito confirma por correo con planilla escaneada, sin portal digital ni registro inmediato.</li>
+          <li><b>P11</b> No existe reporte histórico de coeficientes de costo por proveedor o carpeta. No se pueden detectar tendencias.</li>
+          <li><b>P22</b> Las variaciones de costo (1-4%) no generan alertas automáticas ni registro sistemático de desvíos.</li>
+        </ul></details>
+        
+        
+      </div></div>
+
+    <div class="ev state"><div class="when"><div class="step">—</div></div><div class="dot"><span></span></div><div class="card2"><div class="txt">Estado <span class="st-tag">1 · En Stock</span> — disponible para venta</div></div></div>
+
+    <!-- F8 PAGOS -->
+    <div class="ev"><div class="when"><div class="step">F8</div><div class="fase">Pagos</div></div><div class="dot"><span></span></div>
+      <div class="card2">
+        <div class="who2"><span class="act">Importaciones</span><span class="arrow">→</span><span class="act">Tesorería</span><span class="arrow">/</span><span class="act">Dirección</span></div>
+        <div class="txt"><b>Hoy:</b> La fecha de <span class="gtt" data-tip="Bill of Lading: titulo de propiedad de la carga maritima">B/L</span> o <span class="gtt" data-tip="Carta de Porte: documento transporte terrestre">CRT</span> dispara el vencimiento. Importaciones calcula el vencimiento estimado (B/L + condición de pago) y las semanas W## de flete y VEP. Reporte a Tesorería solo cubre 15 días y se elabora manualmente. Para saber si un pago fue ejecutado hay que consultar directamente a Tesorería. Dirección puede decidir adelantar un pago. Cierre administrativo de la carpeta; si la OC se entregó en parciales, la madre permanece abierta.</div>
+        <div class="sys-fields"><b>Sistema:</b> <ul><li>Fecha de B/L o CRT (F4) dispara cálculo automático: vencimiento estimado = fecha B/L + condición de pago (ej. 90 días).</li><li>Calcula semanas de pago (W##) para flete y VEP.</li><li>Con datos reales del despacho, ajusta a vencimiento real.</li><li>Calendario de vencimientos compartido (sin límite de 15 días): Importaciones, Tesorería, Dirección.</li><li>Alertas automáticas cuando vencimiento se acerca (umbral configurable, defecto 7 días).</li><li>Solo Tesorería registra fecha de pago real y banco. Importaciones y Dirección consultan.</li><li>Proyección cash flow: pagos pendientes por proveedor, flete y aduana.</li><li>OC se cierra automáticamente cuando saldos = 0 y pago registrado.</li></ul></div>
+        <div class="dep-ext"><b>Dependencia externa:</b> el pago lo ejecuta Tesorería en su propio sistema financiero (separado). Dirección puede decidir adelantar pagos a proveedores. La fecha de pago real se registra cuando se confirma la ejecución, no cuando se calcula el vencimiento. El sistema debe mostrar el vencimiento como pendiente hasta que Tesorería cargue la ejecución.</div>
+        <details class="pain-details"><summary>Puntos de dolor (2)</summary><ul>
+          <li><b>P7</b> El reporte de pagos a Tesorería cubre solo 15 días y se elabora manualmente. No hay proyección a largo plazo.</li>
+          <li><b>P8</b> Para saber si un pago fue ejecutado, hay que consultar directamente a Tesorería. No hay registro compartido.</li>
+        </ul></details>
+        
+        
+      </div></div>
+
+  </div>
+</div></section>
+
+<!-- 05 DECISIONES -->
+<section class="alt" id="decisiones"><div class="wrap">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Decisiones a cerrar</h2></div>
+  <p class="sec-sub">Definiciones pendientes que impactan el diseño.</p>
+  <div class="flex-col">
+    <div class="note q"><b>Carpetas A/B/C:</b> ¿la madre tiene estado propio o solo agrupa? ¿Los documentos viven en madre, en apertura, o mixto? (El coeficiente ya se definió: es de la apertura)</div>
+    <div class="note q"><b>Anexos:</b> ¿solapa única filtrada por rol, o cada documento dentro de la instancia funcional que lo usa (factura en Validación, B/L en Tránsito)?</div>
+    <div class="note q"><b>Multi-rol visual:</b> el sistema acumula permisos, pero ¿cómo se muestra al usuario qué puede hacer con cada rol activo?</div>
+    <div class="note q"><b>Umbrales de validación:</b> ¿qué % de similitud semántica es aceptable? ¿Qué tolerancia numérica de cantidad? Definir con documentos reales del proveedor.</div>
+    <div class="note q"><b>Columnas mínimas MVP:</b> el sistema permite columnas dinámicas, pero ¿cuáles son obligatorias en la primera versión para cada rol?</div>
+  </div>
+</div></section>
+
+<!-- 06 PLAN UX -->
+<section id="plan"><div class="wrap">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Plan UX — Julio/Agosto 2026</h2></div>
+  <p class="sec-sub">70 horas proyecto · 5h/día · Inicio miércoles 15/7 · Fin lunes 4/8. Lunes: refinamiento + presentación cliente. Ma/Ju/Vi: daily.</p>
+
+  <!-- CALENDARIO -->
+  <div class="grid-5">
+    <!-- Header -->
+    <div class="cal-head">Lunes</div>
+    <div class="cal-head">Martes</div>
+    <div class="cal-head">Miércoles</div>
+    <div class="cal-head">Jueves</div>
+    <div class="cal-head">Viernes</div>
+
+    <!-- Semana 0: Jul 7-11 (pre-trabajo) -->
+    <div class="cal-empty"><div class="cal-label">Lu 6</div><div class="cal-label">—</div></div>
+    <div class="cal-empty"><div class="cal-label">Ma 7</div><div class="cal-label">—</div></div>
+    <div class="cal-pre">
+      <div class="cal-date cal-date--kraft">Mi 8 · fuera de asignación</div>
+      <div class="cal-body--muted">Lectura ERS + CUs. Investigación herramientas.</div>
+    </div>
+    <div class="cal-holiday">
+      <div class="cal-date cal-date--rojo">Ju 9 · FERIADO</div>
+      <div class="cal-body--muted">9 de Julio</div>
+    </div>
+    <div class="cal-holiday">
+      <div class="cal-date cal-date--rojo">Vi 10 · FERIADO</div>
+      <div class="cal-body--muted">Puente</div>
+    </div>
+
+    <!-- Semana 1: Jul 14-18 -->
+    <div class="cal-pre">
+      <div class="cal-date cal-date--kraft">Lu 13 · fuera de asignación</div>
+      <div class="cal-body--muted">Dominio, mapeo de flujos.</div>
+    </div>
+    <div class="cal-pre">
+      <div class="cal-date cal-date--kraft">Ma 14 · fuera de asignación</div>
+      <div class="cal-body--muted">Dominio, herramientas, prep.</div>
+    </div>
+    <div class="cal-day--verde">
+      <div class="cal-date cal-date--verde">Mi 15 · INICIO</div>
+      <div class="cal-body"><b class="c-ink">Onboarding</b><br>Dominio, roles, proceso completo. Análisis de referentes.</div>
+      <div class="cal-hours">5h · acum: 5h</div>
+    </div>
+    <div class="cal-day--verde">
+      <div class="cal-date cal-date--verde">Ju 16 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">Grilla + Detalle OC</b><br>Wireframe grilla carpetas. Detalle OC (datos, artículos, estados). Componentes tabla/filtros.</div>
+      <div class="cal-hours">5h · acum: 10h</div>
+    </div>
+    <div class="cal-day--verde">
+      <div class="cal-date cal-date--verde">Vi 17 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">OC completa</b><br>Carga masiva. Saldos y cierre automático. Paginado.</div>
+      <div class="cal-hours">5h · acum: 15h</div>
+    </div>
+
+    <!-- Semana 2: Jul 21-25 -->
+    <div class="cal-day--accent">
+      <div class="cal-date cal-date--accent">Lu 21 · <span class="c-violet">refin + cliente</span></div>
+      <div class="cal-body"><b class="c-ink">Embarque + aperturas</b><br>Detalle embarque. Subcarpetas A/B/C. Multi-OC. Producción y seguimiento.</div>
+      <div class="cal-hours">5h · acum: 20h</div>
+    </div>
+    <div class="cal-day--accent">
+      <div class="cal-date cal-date--accent">Ma 22 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">VAL: flujo completo</b><br>Upload → curado → extracción → comparación → resultados. Vista comparativa.</div>
+      <div class="cal-hours">5h · acum: 25h</div>
+    </div>
+    <div class="cal-day--accent">
+      <div class="cal-date cal-date--accent">Mi 23</div>
+      <div class="cal-body"><b class="c-ink">VAL: errores y edge cases</b><br>Confianza baja, errores OpenAI. Estados de excepción.</div>
+      <div class="cal-hours">5h · acum: 30h</div>
+    </div>
+    <div class="cal-day--accent">
+      <div class="cal-date cal-date--accent">Ju 24 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">Comercial + Tesorería</b><br>Matriz Arribos (home Comercial). Calendario vencimientos. Cash flow.</div>
+      <div class="cal-hours">5h · acum: 35h</div>
+    </div>
+    <div class="cal-day--accent">
+      <div class="cal-date cal-date--accent">Vi 25 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">Despachante + Depósito</b><br>Despacho aduanero. Recepción depósito (responsive). Discrepancias.</div>
+      <div class="cal-hours">5h · acum: 40h</div>
+    </div>
+
+    <!-- Semana 3: Jul 28 - Aug 1 -->
+    <div class="cal-day--kraft">
+      <div class="cal-date cal-date--kraft">Lu 28 · <span class="c-violet">refin + cliente</span></div>
+      <div class="cal-body"><b class="c-ink">Pagos + documentos</b><br>Pagos en carpeta. Alertas. Gestión documental (tipos, visibilidad por rol).</div>
+      <div class="cal-hours">5h · acum: 45h</div>
+    </div>
+    <div class="cal-day--kraft">
+      <div class="cal-date cal-date--kraft">Ma 29 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">Admin + Reportes</b><br>Usuarios, proveedores, config VAL. Reportes automáticos. Responsive depósito.</div>
+      <div class="cal-hours">5h · acum: 50h</div>
+    </div>
+    <div class="cal-day--kraft">
+      <div class="cal-date cal-date--kraft">Mi 30</div>
+      <div class="cal-body"><b class="c-ink">Test rápido + ajustes</b><br>Test guerrilla con 2-3 usuarios internos (flujo OC + VAL). Iterar sobre hallazgos.</div>
+      <div class="cal-hours">5h · acum: 55h</div>
+    </div>
+    <div class="cal-day--kraft">
+      <div class="cal-date cal-date--kraft">Ju 31 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">Integración cross-rol</b><br>Flujos completos por rol. Consistencia entre pantallas.</div>
+      <div class="cal-hours">5h · acum: 60h</div>
+    </div>
+    <div class="cal-day--kraft">
+      <div class="cal-date cal-date--kraft">Vi 1/8 · <span class="c-amber">daily</span></div>
+      <div class="cal-body"><b class="c-ink">Documentación + revisión</b><br>Documentar decisiones de diseño. Preparar prototipos para handoff.</div>
+      <div class="cal-hours">5h · acum: 65h</div>
+    </div>
+
+    <!-- Semana 4: Aug 4 -->
+    <div class="cal-day--violet">
+      <div class="cal-date cal-date--violet">Lu 4/8 · <span class="c-violet">refin + cliente</span></div>
+      <div class="cal-body"><b class="c-ink">Entrega + handoff</b><br>Presentación final. Prototipos navegables. Handoff a desarrollo.</div>
+      <div class="cal-hours">5h · acum: 70h ✓</div>
+    </div>
+    <div class="cal-empty dim"><div class="cal-label">Ma 5/8</div></div>
+    <div class="cal-empty dim"><div class="cal-label">Mi 6/8</div></div>
+    <div class="cal-empty dim"><div class="cal-label">Ju 7/8</div></div>
+    <div class="cal-empty dim"><div class="cal-label">Vi 8/8</div></div>
+  </div>
+
+  <!-- ENTREGABLES -->
+  <h3 class="h3-sub--first">Entregables</h3>
+  <table class="table-md">
+    <thead><tr><th>Bloque</th><th>Días</th><th>Horas</th><th>Entregable</th></tr></thead>
+    <tbody>
+      <tr><td class="c-verde"><b>Flujo core (OC + Grilla)</b></td><td>Mi 15 – Vi 17</td><td>15h</td><td>Wireframes grilla, detalle OC, carga masiva</td></tr>
+      <tr><td class="c-accent"><b>Embarque + VAL + Roles</b></td><td>Lu 21 – Vi 25</td><td>25h</td><td>Wireframes embarque, VAL, Comercial, Tesorería, Despachante, Depósito</td></tr>
+      <tr><td class="c-kraft"><b>Pagos + Admin + Test</b></td><td>Lu 28 – Vi 1/8</td><td>25h</td><td>Wireframes pagos, admin, reportes. Test guerrilla (2-3 usuarios)</td></tr>
+      <tr><td class="c-violet"><b>Entrega final</b></td><td>Lu 4/8</td><td>5h</td><td>Presentación final. Prototipos navegables. Handoff a desarrollo</td></tr>
+    </tbody>
+  </table>
+
+  <!-- TEST -->
+  <h3 class="h3-sub">Test de usabilidad (Mi 30/7)</h3>
+  <div class="note note--mt0">
+    <b>Formato:</b> Test guerrilla con prototipos navegables (no funcionales). 2-3 usuarios internos (1 perfil Importaciones, 1 Comercial, 1 Tesorería si se puede).<br>
+    <b>Flujos a testear:</b> Crear OC → subir confirmación → validar → ver resultado. Consultar Matriz de Arribos. Registrar pago.<br>
+    <b>Objetivo:</b> Validar navegación, comprensión de estados, y claridad de la vista comparativa VAL antes de handoff.<br>
+    <b>Output:</b> Lista priorizada de hallazgos. Ajustes se aplican Ju 31.
+  </div>
+
+  <!-- CEREMONIAS -->
+  <div class="note"><b>Ceremonias:</b> Lunes = refinamiento + presentación cliente (dentro de las 5h). Martes, Jueves, Viernes = daily (15-30 min). Miércoles = día de foco sin ceremonias.</div>
+
+</div></section>
+
+
+
+
+
+</body></html>

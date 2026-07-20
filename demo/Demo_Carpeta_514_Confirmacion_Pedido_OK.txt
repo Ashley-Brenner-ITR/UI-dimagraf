@@ -1,0 +1,39 @@
+RHEINLAND FILM GMBH
+Order Confirmation - Final Approved Version
+
+Confirmation No.: OC-RFG-2026-514-OK
+Confirmation Date: 2026-05-13
+Customer Reference: Dimagraf / 2026/514
+Supplier Reference: RFG-2026-DGF-514
+
+Supplier
+Rheinland Film GmbH
+Am Industriepark 18
+40221 Duesseldorf
+Germany
+
+Customer
+Dimagraf S.A.
+Buenos Aires
+Argentina
+
+Purchase Order Summary
+Purchase Order / Folder: 2026/514
+PO Date: 2026-04-22
+Incoterm: CIF Buenos Aires
+Currency: EUR
+Requested Shipment Window: June 2026
+
+Confirmed Items
+--------------------------------------------------------------------------
+Item   SAP        Description                          Qty Confirmed   UM
+1      3000034    Film Polyéster Transparente 15µm    18000           M2
+2      3000041    Laminado BOPP Gloss 18µm            22000           M2
+--------------------------------------------------------------------------
+
+Operational Notes
+- Final corrected confirmation after supplier clarification.
+- Quantities match the original purchase order.
+- Ready for operator approval.
+
+End of Document

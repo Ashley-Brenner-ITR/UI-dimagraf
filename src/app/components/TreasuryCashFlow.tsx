@@ -20,7 +20,7 @@ const GREEN = color.brand;
 const VIOLET = '#5b21b6';
 const CANVAS = color.canvas;
 
-export function TreasuryCashFlow() {
+export function TreasuryCashFlow({ readonly = false }: { readonly?: boolean }) {
   const [horizonte, setHorizonte] = useState(30);
   const [pagos, setPagos] = useState<ObligacionPago[]>(OBLIGACIONES_PAGO);
   const [search, setSearch] = useState('');
@@ -321,6 +321,10 @@ export function TreasuryCashFlow() {
                                           {isPaid ? (
                                             <span style={{ fontSize: 12, color: '#1a7a4a', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                               <CheckCircle size={13} /> TRF OK
+                                            </span>
+                                          ) : readonly ? (
+                                            <span style={{ fontSize: 12, color: '#d97706', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                              <Clock size={13} /> Pendiente
                                             </span>
                                           ) : (
                                             <AppButton onClick={() => toggleEstado(p.id)} size="xs" variant="success-soft" style={{ fontSize: 11, padding: '2px 8px', minHeight: 24 }}>

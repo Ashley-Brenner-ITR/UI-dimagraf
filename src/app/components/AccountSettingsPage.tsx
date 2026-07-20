@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Mail, ShieldCheck, LogOut, UserCircle } from 'lucide-react';
+import { ArrowLeft, Mail, ShieldCheck, LogOut, UserCircle, Palette, PanelsTopLeft } from 'lucide-react';
 import type { AppUser, Role } from './mockData';
 import { pageShell } from './chromeStyles';
 import { useIsMobile } from './ui/use-mobile';
@@ -11,6 +11,7 @@ const { ink: INK, muted: MUTED, hairline: HAIRLINE, parchment: PARCHMENT, surfac
 
 export type MailFrequency = 'Diario' | 'Semanal' | 'Mensual';
 export type MailReportKey = 'arrivals' | 'vencimientos' | 'cashflow' | 'auditoria';
+export type VisualTheme = 'normal' | 'wireframe';
 
 export interface MailReportConfig {
   enabled: boolean;
@@ -25,6 +26,8 @@ interface Props {
   currentUser: AppUser;
   mailConfig: MailReportConfig;
   onChangeMailConfig: (next: MailReportConfig) => void;
+  visualTheme: VisualTheme;
+  onChangeVisualTheme: (theme: VisualTheme) => void;
   onSave: (updates: { password?: string; mailConfig: MailReportConfig }) => void;
   onBack: () => void;
   availableRoles?: Role[];
@@ -65,7 +68,7 @@ const ROLE_LABELS: Record<Role, string> = {
   admin: 'Administración',
 };
 
-export function AccountSettingsPage({ activeRole, currentUser, mailConfig, onChangeMailConfig, onSave, onBack, availableRoles = [], onChangeRole, onLogout }: Props) {
+export function AccountSettingsPage({ activeRole, currentUser, mailConfig, onChangeMailConfig, visualTheme, onChangeVisualTheme, onSave, onBack, availableRoles = [], onChangeRole, onLogout }: Props) {
   const isMobile = useIsMobile();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -141,6 +144,46 @@ export function AccountSettingsPage({ activeRole, currentUser, mailConfig, onCha
             </div>
           )}
         </section>
+
+        <section style={{ display: 'grid', gap: 12, padding: isMobile ? 14 : 18, borderRadius: 16, border: `1px solid ${HAIRLINE}`, background: '#fcfcfb' }}>
+          <div style={{ display: 'grid', gap: 4 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>
+              <Palette size={12} /> TEMA
+            </div>
+            <div style={{ fontSize: 12, color: MUTED }}>Elegí la apariencia para revisar las pantallas.</div>
+          </div>
+
+          <div role="radiogroup" aria-label="Tema visual" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+            {([
+              { id: 'normal' as const, label: 'Normal', description: 'Diseño actual de Dimagraf', icon: <Palette size={18} /> },
+              { id: 'wireframe' as const, label: 'Wireframe', description: 'Escala de grises para baja fidelidad', icon: <PanelsTopLeft size={18} /> },
+            ]).map(option => {
+              const selected = visualTheme === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => onChangeVisualTheme(option.id)}
+                  style={{ display: 'grid', gridTemplateColumns: '36px minmax(0, 1fr) 18px', alignItems: 'center', gap: 10, minHeight: 72, padding: '12px 14px', textAlign: 'left', borderRadius: 12, border: `${selected ? 2 : 1}px solid ${selected ? GREEN : HAIRLINE}`, background: selected ? 'rgba(26,92,56,0.06)' : CANVAS, color: selected ? GREEN : INK, cursor: 'pointer' }}
+                >
+                  <span style={{ width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: selected ? 'rgba(26,92,56,0.10)' : PARCHMENT, color: selected ? GREEN : MUTED }}>
+                    {option.icon}
+                  </span>
+                  <span style={{ display: 'grid', gap: 2, minWidth: 0 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{option.label}</span>
+                    <span style={{ fontSize: 12, color: MUTED }}>{option.description}</span>
+                  </span>
+                  <span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${selected ? GREEN : HAIRLINE}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {selected && <span style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN }} />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         <section style={{ display: 'grid', gap: 12, padding: isMobile ? 14 : 18, borderRadius: 16, border: `1px solid ${HAIRLINE}`, background: '#fcfcfb' }}>
           <div style={{ display: 'grid', gap: 4 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>

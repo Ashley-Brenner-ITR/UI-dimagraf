@@ -228,6 +228,9 @@ Cuando haga falta construir o extender UI:
 
 - los selects deben verse como input material/tailwind del sistema
 - misma altura visual que input equivalente
+- borde default igual al de los inputs operativos: contorno inset de `controlBorder`, sin reemplazarlo por un gris alternativo ni por un borde externo mas pesado
+- en filtros y formularios operativos el radio base es medio `10px`; el radio pill queda reservado al buscador u otros casos donde el patron ya lo defina
+- el estado focus u open conserva la misma geometria del campo y solo cambia a borde de marca con halo suave
 - trigger con chevron del sistema
 - contenido en panel claro, borde fino y sombra consistente
 
@@ -237,6 +240,47 @@ Cuando haga falta construir o extender UI:
 - el placeholder vive dentro del trigger y desaparece al seleccionar
 - si el select esta en modal, el content debe respetar z-index del flujo
 - no volver a usar `<select>` nativo en modales o formularios nuevos salvo caso tecnico justificado
+
+## Inputs de fecha y calendario
+
+### Fuente de verdad
+
+- `AppCalendarPopoverPanel.tsx`
+- `AppCalendarTriggerField.tsx`
+- `AppDateField.tsx`
+- `ui/calendar.tsx`
+- `ui/popover.tsx`
+
+### Referencia visual adoptada
+
+- material: el date picker se compone de `field` editable + `calendar` en popover, no de un boton suelto disfrazado de input
+- shadcn/tailwind: el picker se construye por composicion `Popover + Calendar`, manteniendo el campo con look de input del sistema
+
+### Regla visual
+
+- el campo cerrado se ve como cualquier otro input del sistema: mismo alto, mismo borde, mismo foco y mismo color de texto
+- `ETA desde` y `ETA hasta` deben compartir exactamente el mismo shell que los desplegables del toolbar: fondo `surface`, radio medio, altura compacta y borde inset `controlBorder`
+- el buscador no es la referencia de radio para fechas ni selects; solo comparte el color de borde del sistema
+- el icono de calendario vive dentro del campo, no en un bloque separado
+- el chevron de apertura vive al extremo derecho como affordance secundaria
+- el popover debe nacer visualmente desde el chevron del campo y reposicionarse arriba o abajo segun el viewport
+- el header del calendario es liviano: flechas laterales para navegar meses, nombre del mes centrado y acceso directo solo al año
+- no agregar un segundo input o un bloque de filtros dentro del calendario para elegir mes; el salto de mes ocurre con las flechas
+
+### Regla funcional
+
+- el usuario puede escribir manualmente la fecha en formato local `DD/MM/AAAA` o en formato ISO `AAAA-MM-DD`
+- al perder foco o confirmar, el campo normaliza el valor al formato interno del sistema
+- el calendario es una segunda via de seleccion, no la unica
+- el año puede saltarse de forma directa desde su selector dedicado; el mes se recorre con las flechas del header
+- si el valor cambia desde el calendario, el input se actualiza de inmediato
+
+### Regla de implementacion
+
+- no usar `input type="date"` nativo en nuevas pantallas si rompe consistencia visual o no abre el calendario esperado
+- no delegar la UX de mes/año al caption nativo del browser o del calendar si no respeta el lenguaje del sistema
+- si hace falta reutilizar el patron, instanciar `AppDateField` antes que volver a componer `Popover + Calendar` desde cero
+- si una pantalla necesita selector de mes/año sin campo de fecha, reutilizar `AppCalendarTriggerField` junto con `AppCalendarPopoverPanel` para mantener el mismo shell y la misma jerarquia visual
 
 ## Checkboxes y toggles
 
@@ -654,6 +698,8 @@ Cuando haga falta construir o extender UI:
 - vista de arribos y transito
 - KPIs arriba
 - filtros y busqueda en toolbar
+- filtros base: estado, linea, importador, orden ETA y rango ETA
+- el rango `ETA desde / ETA hasta` se usa para acotar cargas por ventana de llegada cuando el usuario necesita concentrarse en una franja temporal
 - agrupacion madre -> hija -> articulos
 
 ### `VencimientosPage.tsx`
@@ -857,3 +903,98 @@ Antes de tocar una pantalla nueva:
 - `ResponsiveTable.tsx`
 - `chromeStyles.ts`
 - `theme.ts`
+
+---
+
+## Matriz de componentes
+
+## Matriz: primitives compartidos
+
+| Componente | Archivo | Estados principales | Variantes / notas |
+|---|---|---|---|
+| `AppButton` | `src/app/components/AppButton.tsx` | default, hover, disabled, icon-only | `primary`, `secondary`, `tertiary`, `danger`, `danger-soft`, `success-soft`, `ghost-light`, `solid-light`; tamaños `sm`, `md`, `lg`, `xl` |
+| `FormField` | `src/app/components/FormField.tsx` | default, help, error | wrapper de label + control + texto auxiliar; se usa con input, textarea y select |
+| `AppInput` | `src/app/components/FormField.tsx` | default, focus, invalid, disabled | input base del sistema, alineado en altura con selects |
+| `AppDateField` | `src/app/components/AppDateField.tsx` | empty, typed, selected, focus, popover open | campo editable + calendario; mes/año con selects del sistema |
+| `SearchField` | `src/app/components/SearchField.tsx` | default, focus, compact | tamaño `default` y `compact`; normaliza acentos y mayúsculas |
+| `FilterToolbar` | `src/app/components/FilterToolbar.tsx` | collapsed, expanded, chip active, chip inactive | admite `trailingActions`, `children` y counts por opción |
+| `AppDialog` | `src/app/components/AppDialog.tsx` | open, close, body-scroll, form mode | shell base de modal; header, body y footer consistentes |
+| `AppPagination` | `src/app/components/AppPagination.tsx` | enabled, disabled, single-page hidden | navegación simple prev/next |
+| `StatusBadge` | `src/app/components/StatusBadge.tsx` | default | tonos `neutral`, `brand`, `success`, `warning`, `danger`, `info`, `violet`; tamaños `sm`, `md` |
+| `NeonBadge` | `src/app/components/NeonBadge.tsx` | default | traduce estados de negocio de carpeta |
+| `CanalBadge` | `src/app/components/NeonBadge.tsx` | default | `Verde`, `Rojo`, `Pendiente` |
+| `MetricCardGrid` | `src/app/components/MetricCardGrid.tsx` | desktop grid, mobile compact | cards KPI con icono tonal |
+| `ResponsiveTable` | `src/app/components/ResponsiveTable.tsx` | desktop table, mobile cards, empty | columnas primarias/secundarias |
+| `SurfaceCard` | `src/app/components/SurfaceCard.tsx` | default | superficie neutra para agrupar contenido |
+| `SectionCard` | `src/app/components/SectionCard.tsx` | default | card de sección, más semántica que `SurfaceCard` |
+| `InfoField` | `src/app/components/InfoField.tsx` | default | lectura simple label/valor |
+| `TransportModeIcon` | `src/app/components/TransportModeIcon.tsx` | marítimo, terrestre, aéreo | no interactivo |
+| `WelcomeBanner` | `src/app/components/WelcomeBanner.tsx` | default | header superior con título, subtítulo y acciones |
+
+## Matriz: controles shadcn usados como sistema
+
+| Componente | Archivo | Estados principales | Variantes / notas |
+|---|---|---|---|
+| `Select` | `src/app/components/ui/select.tsx` | closed, open, selected, disabled | usar con `AppSelectTrigger`, `AppSelectContent`, `AppSelectItem` en flujos del producto |
+| `Calendar` | `src/app/components/ui/calendar.tsx` | current month, selected day, outside day, disabled day | base para selector de fecha/calendario tipo material |
+| `Popover` | `src/app/components/ui/popover.tsx` | open, close | contenedor para selects avanzados y picker flotante |
+| `Tabs` | `src/app/components/ui/tabs.tsx` | active, inactive | navegación secundaria cuando no existe tab flat local |
+| `Alert` | `src/app/components/ui/alert.tsx` | info, warning | usado para mensajes de contexto dentro de vistas |
+
+## Matriz: shell y feedback
+
+| Componente | Archivo | Estados principales | Variantes / notas |
+|---|---|---|---|
+| `Layout` | `src/app/components/Layout.tsx` | sidebar open, sidebar collapsed, mobile nav, role menu open, notifications open | navegación y shell global por rol |
+| `NotificationPanel` | `src/app/components/NotificationPanel.tsx` | unread, read, empty, desktop anchored, mobile drawer | tipos `success`, `info`, `warning`, `error` |
+| `LoadingState` | `src/app/components/LoadingState.tsx` | shimmer, pulse | skeleton global |
+| `ErrorStatePage` | `src/app/components/ErrorStatePage.tsx` | `404`, `500`, `generic` | fallback de error |
+
+## Matriz: acceso y cuenta
+
+| Componente / pantalla | Archivo | Estados principales | Variantes / notas |
+|---|---|---|---|
+| `LoginScreen` | `src/app/components/LoginScreen.tsx` | default, focus, error toast, password visible/oculta | quick-access por usuario demo |
+| `PasswordRecoveryPage` | `src/app/components/PasswordRecoveryPage.tsx` | default, success toast, error toast | vuelve a opener o historial |
+| `AccountSettingsPage` | `src/app/components/AccountSettingsPage.tsx` | perfil, cambio de contraseña, reportes off/on, preview table | cambia disponibilidad por rol |
+
+## Matriz: vistas por rol
+
+| Pantalla | Archivo | Estados principales | Variantes / notas |
+|---|---|---|---|
+| `OperatorDashboard` | `src/app/components/OperatorDashboard.tsx` | tabla de carpetas, filtros, wizard create, carga manual, carga masiva, success | usa `hideImportes` en perfiles de consulta |
+| `CarpetaDetail` | `src/app/components/CarpetaDetail.tsx` | tabs múltiples, readonly, editable, modales por sección, estados vacíos | fuente principal de reglas operativas |
+| `SubcarpetaDetail` | `src/app/components/SubcarpetaDetail.tsx` | tabs múltiples, readonly, incidencias activas, vacío con datos | detalle por embarque |
+| `CommercialArrivals` | `src/app/components/CommercialArrivals.tsx` | KPIs, filtros, agrupación madre/hija, readonly comercial | sin capa financiera |
+| `VencimientosPage` | `src/app/components/VencimientosPage.tsx` | readonly o gestionable | envuelve `VencimientosCalendar` |
+| `VencimientosCalendar` | `src/app/components/VencimientosCalendar.tsx` | calendar view, list view, filters open, selected day, empty day, mobile sheet | selector único de calendario, filtros y detalle diario |
+| `DirectorDashboard` | `src/app/components/DirectorDashboard.tsx` | `kpi`, `audit`, alertas críticas, gráficos | solo lectura |
+| `TreasuryCashFlow` | `src/app/components/TreasuryCashFlow.tsx` | horizonte 7/15/30, búsqueda, subcarpetas colapsadas/expandidas, toggle pago | foco financiero |
+| `WarehouseReception` | `src/app/components/WarehouseReception.tsx` | agenda/checkin, modal de incidencia, vacío | foco depósito |
+| `DispatcherDashboard` | `src/app/components/DispatcherDashboard.tsx` | dashboard, edición aduanera, modal despacho | foco aduana |
+| `AdminDashboard` | `src/app/components/AdminDashboard.tsx` | tabs `users`, `audit`, `articles`, `providers`; CRUD modal | administración general |
+| `DesignSystemPage` | `src/app/components/DesignSystemPage.tsx` | catálogo visual | referencia interna, no negocio |
+
+## Matriz: tabs y secciones internas de negocio
+
+| Contexto | Archivo | Estados principales | Variantes / notas |
+|---|---|---|---|
+| `GeneralTab` | `src/app/components/CarpetaDetail.tsx` | lectura, edición, bloqueo por permiso | datos de cabecera OC |
+| `ArticulosTab` | `src/app/components/CarpetaDetail.tsx` | lista, búsqueda, filtro, expansión, vacío, modal alta/edición, carga masiva | usa toolbar y acciones de artículos |
+| `ProduccionTab` | `src/app/components/CarpetaDetail.tsx` | lectura, edición, control conforme/no conforme | seguimiento proveedor |
+| `SubcarpetasTab` | `src/app/components/CarpetaDetail.tsx` | lista de embarques, límite alcanzado, sin saldo, create modal | embarques parciales |
+| `DocumentosTab` | `src/app/components/CarpetaDetail.tsx` | lista, upload wizard, análisis, vacío, diferencias | anexos y validación |
+| `AduanaTab` | `src/app/components/CarpetaDetail.tsx` | selección de subcarpeta, edición, export SAP | gestión aduanera |
+| `CosteoTab` | `src/app/components/CarpetaDetail.tsx` | selección de subcarpeta, edición, sin aperturas | coeficientes y costos |
+| `PagosTab` | `src/app/components/CarpetaDetail.tsx` | resumen por divisa, nuevo pago, confirmar pago, saldo a favor | flujos de pagos de carpeta |
+| `TransitoSection` | `src/app/components/SubcarpetaDetail.tsx` | lectura, artículos asignados, resumen carga | detalle tránsito |
+| `AduanaSection` | `src/app/components/SubcarpetaDetail.tsx` | lectura | detalle aduanero por embarque |
+| `CosteoSection` | `src/app/components/SubcarpetaDetail.tsx` | lectura, hideImportes | detalle costeo por embarque |
+| `DocumentosSection` | `src/app/components/SubcarpetaDetail.tsx` | lista, vacío | anexos por embarque |
+| `RecepcionSection` | `src/app/components/SubcarpetaDetail.tsx` | incidencias abiertas/cerradas, vacío | recepción física |
+
+## Regla de uso de la matriz
+
+- antes de tocar una pantalla, ubicar primero si el cambio cae en primitive compartido, shell, vista por rol o tab interna
+- si un estado no aparece en la matriz pero existe en código, agregarlo antes o junto con la implementación
+- si una variante visual no tiene fuente de verdad, no crearla sin antes cerrar su pertenencia al sistema

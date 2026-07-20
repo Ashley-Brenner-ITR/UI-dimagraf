@@ -7,6 +7,13 @@ export const theme = {
   radius: { xs: 4, sm: 6, md: 10, lg: 16, modal: 20, pill: 9999 },
   shadow: { soft: '0 4px 14px rgba(16,24,40,0.04)', modal: '0 18px 40px rgba(15,23,42,0.10)', glass: '0 8px 32px rgba(16,24,40,0.08)' },
   breakpoint: { mobile: 768 },
+  shipmentTypography: {
+    label: 9,
+    tableHead: 10.5,
+    companion: 10,
+    value: 11,
+    title: 12,
+  },
 } as const;
 
-export const { color, radius, shadow, breakpoint } = theme;
+export const { color, radius, shadow, breakpoint, shipmentTypography } = theme;

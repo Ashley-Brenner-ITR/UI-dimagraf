@@ -10,7 +10,7 @@ import {
 
 import { cn } from "./utils";
 
-const APP_SELECT_TRIGGER_CLASSNAME = "h-10 rounded-[10px] border-[#c4cad4] bg-[#fdfefe] px-3 text-left text-[14px] font-normal text-[#1d1d1f] shadow-none data-[placeholder]:text-[#667085] focus-visible:border-[#1a5c38] focus-visible:ring-[3px] focus-visible:ring-[rgba(26,92,56,0.12)]";
+const APP_SELECT_TRIGGER_CLASSNAME = "h-10 rounded-[10px] border-transparent bg-[#fdfefe] px-3 text-left text-[14px] font-normal text-[#1d1d1f] shadow-[inset_0_0_0_1px_#c4cad4] data-[placeholder]:text-[#667085] data-[state=open]:border-transparent data-[state=open]:shadow-[inset_0_0_0_1px_#1a5c38] data-[state=open]:ring-[3px] data-[state=open]:ring-[rgba(26,92,56,0.12)] focus-visible:border-transparent focus-visible:shadow-[inset_0_0_0_1px_#1a5c38] focus-visible:ring-[3px] focus-visible:ring-[rgba(26,92,56,0.12)]";
 const APP_SELECT_CONTENT_CLASSNAME = "rounded-[10px] border-[#c4cad4] bg-[#ffffff] p-1 shadow-[0_12px_32px_rgba(15,23,42,0.12)]";
 const APP_SELECT_ITEM_CLASSNAME = "min-h-9 rounded-[8px] px-3 text-[14px] font-normal text-[#1d1d1f] focus:bg-[#eef8f4] focus:text-[#1d1d1f]";
 
@@ -45,7 +45,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-full min-w-0 items-center justify-between gap-2 rounded-md border border-[#d2d2d7] bg-[#f8fafc] pl-3 pr-3 py-2 text-[13px] font-normal text-[#1d1d1f] whitespace-nowrap transition-[border-color,box-shadow,background-color] outline-none data-[placeholder]:text-[#6e6e73] focus-visible:border-[#1a5c38] focus-visible:ring-[3px] focus-visible:ring-[rgba(26,92,56,0.12)] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-10 data-[size=sm]:h-8 *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:truncate *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-[#6e6e73]",
+        "flex w-full min-w-0 items-center justify-between gap-2 pl-3 pr-3 whitespace-nowrap transition-[border-color,box-shadow,background-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-10 data-[size=sm]:h-8 *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:truncate *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

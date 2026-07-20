@@ -1,19 +1,19 @@
-import { useMemo, useState } from 'react';
-import { Download, Package, Clock3, Users, AlertTriangle, Ship, ChevronRight, FolderOpen, Layers, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Download, AlertTriangle, Ship, ChevronLeft, ChevronRight, FolderOpen, Layers, SlidersHorizontal } from 'lucide-react';
 import { getResponsiveTableStyle, pageShell, tableHeadCell, tableScrollArea, tableShell } from './chromeStyles';
-import { MetricCardGrid } from './MetricCardGrid';
 import { X } from 'lucide-react';
 import { CARPETAS, PROVEEDORES } from './mockData';
 import { useIsMobile } from './ui/use-mobile';
 import { TransportModeIcon } from './TransportModeIcon';
 import { normalizeSearchTerm } from './SearchField';
-import { color, radius } from './theme';
+import { color, radius, shipmentTypography } from './theme';
 import { FilterToolbar } from './FilterToolbar';
 import { WelcomeBanner } from './WelcomeBanner';
 import { AppButton } from './AppButton';
+import { AppDateField } from './AppDateField';
 import { SurfaceCard } from './SurfaceCard';
-import { AppInput, FormField } from './FormField';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { FormField } from './FormField';
+import { AppSelectContent, AppSelectItem, AppSelectTrigger, Select, SelectValue } from './ui/select';
 
 const INK = color.ink;
 const MUTED = color.muted;
@@ -24,6 +24,8 @@ const CANVAS = color.canvas;
 const MINT_WASH = color.mintWash;
 const GREEN_HAIRLINE = color.borderTint;
 const GREEN_HAIRLINE_SOFT = color.borderTintSoft;
+const SHIPMENT_TYPE = shipmentTypography;
+const ARRIVALS_PAGE_SIZE = 8;
 const FILTER_FIELD_STYLE: React.CSSProperties = {
   width: '100%',
   minHeight: 40,
@@ -34,15 +36,6 @@ const FILTER_FIELD_STYLE: React.CSSProperties = {
   border: `1px solid ${color.controlBorder}`,
   borderRadius: radius.md,
   outline: 'none',
-};
-const FILTER_SELECT_TRIGGER_STYLE: React.CSSProperties = {
-  width: '100%',
-  minHeight: 40,
-  borderRadius: radius.md,
-  background: color.surface,
-  border: `1px solid ${color.controlBorder}`,
-  padding: '0 12px',
-  color: INK,
 };
 
 interface ArrivalRow {
@@ -75,6 +68,7 @@ interface Props {
 }
 
 type ArrivalStatusFilter = 'Todos' | 'En tránsito' | 'Arribando / arribado';
+type EtaSortOption = 'eta-asc' | 'eta-desc';
 
 function getArrivalStatusLabel(estado: string) {
   return estado === 'En Tránsito' ? 'En tránsito' : 'Arribando / arribado';
@@ -115,11 +109,13 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
   const [lineaFilter, setLineaFilter] = useState('Todos');
   const [importadorFilter, setImportadorFilter] = useState('Todos');
   const [statusFilter, setStatusFilter] = useState<ArrivalStatusFilter>('Todos');
+  const [etaSort, setEtaSort] = useState<EtaSortOption>('eta-asc');
   const [search, setSearch] = useState('');
   const [etaFrom, setEtaFrom] = useState('');
   const [etaTo, setEtaTo] = useState('');
   const [isFlatView, setIsFlatView] = useState(false);
   const [showViewOptions, setShowViewOptions] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
   const arrivals = buildArrivals();
   const TODAY = '2026-05-28';
@@ -137,7 +133,7 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
     const matchEtaFrom = !etaFrom || r.eta >= etaFrom;
     const matchEtaTo = !etaTo || r.eta <= etaTo;
     return matchLinea && matchImportador && matchStatus && matchSearch && matchEtaFrom && matchEtaTo;
-  });
+  }).sort((left, right) => etaSort === 'eta-desc' ? right.eta.localeCompare(left.eta) : left.eta.localeCompare(right.eta));
 
   const daysLeft = (eta: string) =>
     Math.ceil((new Date(eta).getTime() - new Date(TODAY).getTime()) / 86400000);
@@ -189,14 +185,31 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
       carpetaId: c.carpetaId,
       carpetaNumero: c.carpetaNumero,
       proveedor: c.proveedor,
-      subcarpetas: Array.from(c.subMap.values()).sort((a, b) => a.eta.localeCompare(b.eta)),
+      subcarpetas: Array.from(c.subMap.values()).sort((a, b) => etaSort === 'eta-desc' ? b.eta.localeCompare(a.eta) : a.eta.localeCompare(b.eta)),
     }));
-  }, [filtered]);
+  }, [etaSort, filtered]);
 
   const flatShipments = useMemo(
     () => groupedCarpetas.flatMap(c => c.subcarpetas.map(sub => ({ carpetaId: c.carpetaId, carpetaNumero: c.carpetaNumero, proveedor: c.proveedor, sub }))),
     [groupedCarpetas]
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [lineaFilter, importadorFilter, statusFilter, etaSort, search, etaFrom, etaTo]);
+
+  const pageCount = Math.max(1, Math.ceil(flatShipments.length / ARRIVALS_PAGE_SIZE));
+  const safePage = Math.min(currentPage, pageCount);
+  const pageStart = (safePage - 1) * ARRIVALS_PAGE_SIZE;
+  const visiblePageNumbers = Array.from({ length: pageCount }, (_, index) => index + 1).filter(pageNumber => {
+    if (pageCount <= 5) return true;
+    if (pageNumber === 1 || pageNumber === pageCount) return true;
+    return Math.abs(pageNumber - safePage) <= 1;
+  });
+  const paginatedShipments = useMemo(() => {
+    const start = pageStart;
+    return flatShipments.slice(start, start + ARRIVALS_PAGE_SIZE);
+  }, [flatShipments, pageStart]);
 
   const getShipmentMetrics = (sub: GroupedArrivalSub) => {
     const totalCantidad = sub.rows.reduce((sum, row) => sum + row.cantidadViaje, 0);
@@ -207,7 +220,7 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
   };
 
   const compactRows = useMemo(
-    () => flatShipments.map(item => {
+    () => paginatedShipments.map(item => {
       const { totalCantidad, uniqueProducts, lineas, unidades } = getShipmentMetrics(item.sub);
       const dl = daysLeft(item.sub.eta);
       const isOverdue = dl <= 0;
@@ -224,7 +237,7 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
         etaStatus,
       };
     }),
-    [flatShipments]
+    [paginatedShipments]
   );
 
   const renderShipmentCard = (sub: GroupedArrivalSub, carpetaId: string, carpetaNumero: string, key: string, style?: React.CSSProperties) => {
@@ -235,92 +248,76 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
     const etaStatus = isOverdue ? 'Vencido' : isNear ? `Arriba en ${dl} días` : 'En tránsito';
 
     return (
-      <SurfaceCard key={key} as="article" style={{ flex: 1, borderColor: GREEN_HAIRLINE, boxShadow: 'none', borderRadius: 10, margin: 0, ...style }}>
+      <article key={key} style={{ flex: 1, margin: 0, borderTop: `1px solid ${GREEN_HAIRLINE_SOFT}`, ...style }}>
         <button
           type="button"
           onClick={() => onSelectSubcarpeta?.(carpetaId, sub.subcarpetaId)}
           style={{
             display: 'grid',
-            gridTemplateColumns: 'auto minmax(0, 1fr) auto 20px',
-            alignItems: 'start',
-            gap: 8,
+            gridTemplateColumns: 'minmax(0, 1fr) auto 20px',
+            alignItems: 'center',
+            gap: 6,
             width: '100%',
-            padding: isMobile ? '12px 14px' : '12px 16px',
+            padding: isMobile ? '10px 12px' : '9px 12px',
             border: 'none',
             background: 'transparent',
             textAlign: 'left',
-            cursor: 'pointer',
+            cursor: onSelectSubcarpeta ? 'pointer' : 'default',
           }}
         >
-          <div style={{ width: 24, height: 24, borderRadius: 6, background: '#eff4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-            <Ship size={13} style={{ color: '#528bff' }} />
-          </div>
           <div style={{ minWidth: 0, display: 'grid', gap: 4 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onSelectSubcarpeta?.(carpetaId, sub.subcarpetaId);
-                }}
+              <span
                 style={{
-                  padding: 0,
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: 12,
+                  fontSize: SHIPMENT_TYPE.title,
+                  lineHeight: '16px',
                   fontWeight: 600,
                   color: INK,
-                  cursor: onSelectSubcarpeta ? 'pointer' : 'default',
                 }}
               >
                 {sub.subcarpetaNumero}
-              </button>
-              <span style={{ fontSize: 10, color: MUTED }}>de {carpetaNumero}</span>
+              </span>
+              <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: MUTED }}>de {carpetaNumero}</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(6, minmax(0, 1fr))', gap: isMobile ? 8 : 10, minWidth: 0 }}>
-              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Transporte</span>
-                <span style={{ fontSize: 11, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.transporte}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(5, minmax(0, 1fr))', gap: isMobile ? 6 : 8, minWidth: 0 }}>
+              <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
+                <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: isOverdue ? '#c4001a' : isNear ? '#b45309' : INK, fontWeight: isOverdue || isNear ? 600 : 400 }}>{sub.eta || '—'}</span>
               </div>
-              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>ETA</span>
-                <span style={{ fontSize: 11, color: isOverdue ? '#c4001a' : isNear ? '#b45309' : INK, fontWeight: isOverdue || isNear ? 600 : 400 }}>{sub.eta || '—'}</span>
+              <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase' }}>Modo</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <TransportModeIcon transporte={sub.transporte} size={10} minimal />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.transporte}</span>
+                </span>
               </div>
-              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Productos</span>
-                <span style={{ fontSize: 10.5, color: INK }}>{uniqueProducts}</span>
+              <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase' }}>Productos</span>
+                <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: INK }}>{uniqueProducts}</span>
               </div>
-              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Cantidad</span>
-                <span style={{ fontSize: 10.5, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{totalCantidad.toLocaleString()}{unidades.length === 1 ? ` ${unidades[0]}` : ''}</span>
+              <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase' }}>Cantidad</span>
+                <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{totalCantidad.toLocaleString()}{unidades.length === 1 ? ` ${unidades[0]}` : ''}</span>
               </div>
-              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Líneas</span>
-                <span style={{ fontSize: 10.5, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lineas.join(' · ') || '—'}</span>
-              </div>
-              <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>Estado</span>
-                <span style={{ fontSize: 10.5, color: isOverdue ? '#c4001a' : isNear ? '#b45309' : '#1a7a4a', fontWeight: 600, whiteSpace: 'nowrap' }}>{etaStatus}</span>
+              <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                <span style={{ fontSize: SHIPMENT_TYPE.label, lineHeight: 1, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase' }}>Estado</span>
+                <span style={{ fontSize: SHIPMENT_TYPE.companion, lineHeight: 1.2, color: isOverdue ? '#c4001a' : isNear ? '#b45309' : '#1a7a4a', fontWeight: 600, whiteSpace: 'nowrap' }}>{etaStatus}</span>
               </div>
             </div>
           </div>
-          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginTop: 2, fontSize: 10.5, color: MUTED, background: PARCHMENT, border: `1px solid ${HAIRLINE}`, borderRadius: 9999, padding: '3px 8px' }}>
-            {sub.rows.length} ítem{sub.rows.length === 1 ? '' : 's'}
-          </span>
-          <span style={{ width: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
-            <ChevronRight size={14} style={{ color: '#98a2b3', flexShrink: 0 }} />
+          <span style={{ width: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ChevronRight size={12} style={{ color: '#98a2b3', flexShrink: 0 }} />
           </span>
         </button>
-      </SurfaceCard>
+      </article>
     );
   };
 
   return (
     <div style={{ ...pageShell, background: MINT_WASH, borderRadius: 24 }}>
-      <div style={{ padding: isMobile ? '0 12px' : '0 14px' }}>
+      <div style={{ padding: isMobile ? '12px 12px 0' : '16px 14px 0' }}>
         <WelcomeBanner
           title="Arribos"
-          subtitle="Cargas entrantes"
           actions={
             <AppButton variant="secondary" style={{ flexShrink: 0 }} icon={<Download size={14} />}>
               Exportar
@@ -338,24 +335,6 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
             gap: 10,
           }}
         >
-          <MetricCardGrid
-            marginBottom={0}
-            items={[
-              { label: 'Artículos en viaje', value: filtered.length, color: GREEN, icon: <Package size={16} /> },
-              {
-                label: 'Arribos en ≤ 30 días',
-                value: filtered.filter(r => daysLeft(r.eta) <= 30 && daysLeft(r.eta) >= 0).length,
-                color: '#b45309',
-                icon: <Clock3 size={16} />,
-              },
-              {
-                label: 'Proveedores activos',
-                value: new Set(filtered.map(r => r.proveedor)).size,
-                color: INK,
-                icon: <Users size={16} />,
-              },
-            ]}
-          />
           <FilterToolbar
             search={search}
             onSearchChange={setSearch}
@@ -379,59 +358,60 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
             }
           >
             <div style={{ display: 'grid', gap: 12, width: '100%' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: 10, alignItems: 'end' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, minmax(0, 1fr))', gap: 10, alignItems: 'end' }}>
                 <FormField label="Estado">
                   <Select value={statusFilter} onValueChange={value => setStatusFilter(value as ArrivalStatusFilter)}>
-                    <SelectTrigger style={FILTER_SELECT_TRIGGER_STYLE}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
                       <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent style={{ zIndex: 400 }}>
-                      <SelectItem value="Todos">Todos</SelectItem>
-                      <SelectItem value="En tránsito">En tránsito</SelectItem>
-                      <SelectItem value="Arribando / arribado">Arribando / arribado</SelectItem>
-                    </SelectContent>
+                    </AppSelectTrigger>
+                    <AppSelectContent style={{ zIndex: 400 }}>
+                      <AppSelectItem value="Todos">Todos</AppSelectItem>
+                      <AppSelectItem value="En tránsito">En tránsito</AppSelectItem>
+                      <AppSelectItem value="Arribando / arribado">Arribando / arribado</AppSelectItem>
+                    </AppSelectContent>
                   </Select>
                 </FormField>
                 <FormField label="Línea">
                   <Select value={lineaFilter} onValueChange={setLineaFilter}>
-                    <SelectTrigger style={FILTER_SELECT_TRIGGER_STYLE}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
                       <SelectValue placeholder="Todas" />
-                    </SelectTrigger>
-                    <SelectContent style={{ zIndex: 400 }}>
-                      <SelectItem value="Todos">Todas</SelectItem>
-                      <SelectItem value="LCA">LCA</SelectItem>
-                      <SelectItem value="LDA">LDA</SelectItem>
-                    </SelectContent>
+                    </AppSelectTrigger>
+                    <AppSelectContent style={{ zIndex: 400 }}>
+                      <AppSelectItem value="Todos">Todas</AppSelectItem>
+                      <AppSelectItem value="LCA">LCA</AppSelectItem>
+                      <AppSelectItem value="LDA">LDA</AppSelectItem>
+                    </AppSelectContent>
                   </Select>
                 </FormField>
                 <FormField label="Importador">
                   <Select value={importadorFilter} onValueChange={setImportadorFilter}>
-                    <SelectTrigger style={FILTER_SELECT_TRIGGER_STYLE}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
                       <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent style={{ zIndex: 400 }}>
-                      <SelectItem value="Todos">Todos</SelectItem>
-                      <SelectItem value="Dimagraf">Dimagraf</SelectItem>
-                    </SelectContent>
+                    </AppSelectTrigger>
+                    <AppSelectContent style={{ zIndex: 400 }}>
+                      <AppSelectItem value="Todos">Todos</AppSelectItem>
+                      <AppSelectItem value="Dimagraf">Dimagraf</AppSelectItem>
+                    </AppSelectContent>
+                  </Select>
+                </FormField>
+                <FormField label="Orden ETA">
+                  <Select value={etaSort} onValueChange={value => setEtaSort(value as EtaSortOption)}>
+                    <AppSelectTrigger style={{ width: '100%' }}>
+                      <SelectValue />
+                    </AppSelectTrigger>
+                    <AppSelectContent style={{ zIndex: 400 }}>
+                      <AppSelectItem value="eta-asc">Más próxima primero</AppSelectItem>
+                      <AppSelectItem value="eta-desc">Más lejana primero</AppSelectItem>
+                    </AppSelectContent>
                   </Select>
                 </FormField>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'end' }}>
                 <FormField label="ETA desde">
-                  <AppInput
-                    type="date"
-                    value={etaFrom}
-                    onChange={event => setEtaFrom(event.target.value)}
-                    style={FILTER_FIELD_STYLE}
-                  />
+                  <AppDateField value={etaFrom} onValueChange={setEtaFrom} ariaLabel="ETA desde" />
                 </FormField>
                 <FormField label="ETA hasta">
-                  <AppInput
-                    type="date"
-                    value={etaTo}
-                    onChange={event => setEtaTo(event.target.value)}
-                    style={FILTER_FIELD_STYLE}
-                  />
+                  <AppDateField value={etaTo} onValueChange={setEtaTo} ariaLabel="ETA hasta" />
                 </FormField>
               </div>
             </div>
@@ -439,94 +419,88 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
         </div>
 
         {isFlatView ? (
-          <div style={{ ...tableScrollArea, padding: '6px 10px 0', overflowX: 'auto' }}>
-            <table style={{ ...getResponsiveTableStyle(920), tableLayout: 'auto', borderCollapse: 'separate', borderSpacing: '0 2px' }}>
-              <thead>
-                <tr>
-                  <th style={{ ...tableHeadCell, width: 40, padding: '10px 8px 10px 14px', background: '#fafbfd' }} />
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>EMBARQUE</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>CARPETA</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>PROVEEDOR</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>TRANSPORTE</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>ETA</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>PRODUCTOS</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>CANTIDAD</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>LÍNEAS</span></th>
-                  <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em' }}>ESTADO</span></th>
-                  <th style={{ ...tableHeadCell, width: 32, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }} />
+        <div style={{ ...tableScrollArea, padding: '6px 10px 0', overflowX: 'auto' }}>
+          <table style={{ ...getResponsiveTableStyle(920), tableLayout: 'auto', borderCollapse: 'separate', borderSpacing: '0 2px' }}>
+            <thead>
+              <tr>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>EMBARQUE</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>CARPETA</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>PROVEEDOR</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>TRANSPORTE</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>ETA</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>PRODUCTOS</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>CANTIDAD</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>LÍNEAS</span></th>
+                <th style={{ ...tableHeadCell, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }}><span style={{ color: MUTED, fontSize: SHIPMENT_TYPE.tableHead, fontWeight: 700, letterSpacing: '0.06em' }}>ESTADO</span></th>
+                <th style={{ ...tableHeadCell, width: 32, background: '#fafbfd', borderBottom: `1px solid ${HAIRLINE}` }} />
+              </tr>
+            </thead>
+            <tbody>
+              {compactRows.map(item => (
+                <tr key={`${item.carpetaNumero}-${item.sub.subcarpetaNumero}`} style={{ background: CANVAS }}>
+                  <td style={{ padding: '10px 8px 10px 14px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12 }}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectSubcarpeta?.(item.carpetaId, item.sub.subcarpetaId)}
+                      style={{
+                        padding: 0,
+                        border: 'none',
+                        background: 'transparent',
+                        fontWeight: 600,
+                        color: INK,
+                        cursor: onSelectSubcarpeta ? 'pointer' : 'default',
+                      }}
+                    >
+                      {item.sub.subcarpetaNumero}
+                    </button>
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12, color: MUTED }}>
+                    {item.carpetaNumero}
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12, color: INK, whiteSpace: 'nowrap' }}>
+                    {item.proveedor}
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+                      <TransportModeIcon transporte={item.sub.transporte} size={10} minimal />
+                      <span>{item.sub.transporte}</span>
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: item.isOverdue ? '#c4001a' : item.isNear ? '#b45309' : INK, fontWeight: item.isOverdue || item.isNear ? 600 : 400, whiteSpace: 'nowrap' }}>
+                    {item.sub.eta || '—'}
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK }}>
+                    {item.uniqueProducts}
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK, whiteSpace: 'nowrap' }}>
+                    {item.totalCantidad.toLocaleString()}{item.unidades.length === 1 ? ` ${item.unidades[0]}` : ''}
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK, whiteSpace: 'nowrap' }}>
+                    {item.lineas.join(' · ') || '—'}
+                  </td>
+                  <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 600, color: item.isOverdue ? '#c4001a' : item.isNear ? '#b45309' : '#1a7a4a', whiteSpace: 'nowrap' }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: item.isOverdue ? '#c4001a' : item.isNear ? '#b45309' : '#1a7a4a' }} />
+                      {item.etaStatus}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 12px 10px 4px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectSubcarpeta?.(item.carpetaId, item.sub.subcarpetaId)}
+                      aria-label={`Abrir ${item.sub.subcarpetaNumero}`}
+                      style={{ width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0, border: 'none', background: 'transparent', cursor: onSelectSubcarpeta ? 'pointer' : 'default' }}
+                    >
+                      <ChevronRight size={14} style={{ color: '#98a2b3', flexShrink: 0 }} />
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {compactRows.map(item => (
-                  <tr key={`${item.carpetaNumero}-${item.sub.subcarpetaNumero}`} style={{ background: CANVAS }}>
-                    <td style={{ padding: '10px 6px 10px 14px', verticalAlign: 'middle' }}>
-                      <div style={{ width: 24, height: 24, borderRadius: 6, background: '#eff4ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ship size={13} style={{ color: '#528bff' }} />
-                      </div>
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12 }}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectSubcarpeta?.(item.carpetaId, item.sub.subcarpetaId)}
-                        style={{
-                          padding: 0,
-                          border: 'none',
-                          background: 'transparent',
-                          fontWeight: 600,
-                          color: INK,
-                          cursor: onSelectSubcarpeta ? 'pointer' : 'default',
-                        }}
-                      >
-                        {item.sub.subcarpetaNumero}
-                      </button>
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12, color: MUTED }}>
-                      {item.carpetaNumero}
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 12, color: INK, whiteSpace: 'nowrap' }}>
-                      {item.proveedor}
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-                        <TransportModeIcon mode={item.sub.transporte} size={14} />
-                        {item.sub.transporte}
-                      </span>
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: item.isOverdue ? '#c4001a' : item.isNear ? '#b45309' : INK, fontWeight: item.isOverdue || item.isNear ? 600 : 400, whiteSpace: 'nowrap' }}>
-                      {item.sub.eta || '—'}
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK }}>
-                      {item.uniqueProducts}
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK, whiteSpace: 'nowrap' }}>
-                      {item.totalCantidad.toLocaleString()}{item.unidades.length === 1 ? ` ${item.unidades[0]}` : ''}
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5, color: INK, whiteSpace: 'nowrap' }}>
-                      {item.lineas.join(' · ') || '—'}
-                    </td>
-                    <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, fontSize: 11.5 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 600, color: item.isOverdue ? '#c4001a' : item.isNear ? '#b45309' : '#1a7a4a', whiteSpace: 'nowrap' }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: item.isOverdue ? '#c4001a' : item.isNear ? '#b45309' : '#1a7a4a' }} />
-                        {item.etaStatus}
-                      </span>
-                    </td>
-                    <td style={{ padding: '10px 12px 10px 4px', verticalAlign: 'middle', borderBottom: `1px solid ${GREEN_HAIRLINE_SOFT}`, textAlign: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectSubcarpeta?.(item.carpetaId, item.sub.subcarpetaId)}
-                        aria-label={`Abrir ${item.sub.subcarpetaNumero}`}
-                        style={{ padding: 0, border: 'none', background: 'transparent', cursor: onSelectSubcarpeta ? 'pointer' : 'default' }}
-                      >
-                        <ChevronRight size={14} style={{ color: '#98a2b3', flexShrink: 0 }} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
         ) : (
-          <div style={{ display: 'grid', gap: 8, padding: '6px 10px 0' }}>
+          <div style={{ display: 'grid', gap: 0, padding: '6px 10px 0' }}>
             {groupedCarpetas.map(c => (
               <section key={c.carpetaNumero} style={{ display: 'grid', gap: 0 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
@@ -556,8 +530,79 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
         )}
       </div>
 
-      <div style={{ padding: isMobile ? '8px 12px 10px' : '10px 14px 12px', fontSize: 12, color: MUTED }}>
-        {groupedCarpetas.length} carpeta{groupedCarpetas.length === 1 ? '' : 's'} activas · {filtered.length} ítem{filtered.length === 1 ? '' : 's'} en viaje
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(180px, 1fr) auto', alignItems: 'center', gap: isMobile ? 8 : 12, padding: isMobile ? '8px 12px 10px' : '10px 14px 12px', background: 'transparent' }}>
+        <div style={{ fontSize: 12, color: MUTED }}>
+          {groupedCarpetas.length} carpeta{groupedCarpetas.length === 1 ? '' : 's'} activas · {isFlatView ? `${flatShipments.length} embarque${flatShipments.length === 1 ? '' : 's'} en viaje · mostrando ${flatShipments.length === 0 ? 0 : pageStart + 1}-${Math.min(pageStart + paginatedShipments.length, flatShipments.length)}` : `${filtered.length} ítem${filtered.length === 1 ? '' : 's'} en viaje`}
+        </div>
+        {isFlatView && flatShipments.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 4 : 6, flexWrap: 'wrap' }}>
+            <AppButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+              disabled={safePage === 1}
+              aria-label="Página anterior"
+              icon={!isMobile ? <ChevronLeft size={14} /> : undefined}
+              style={{
+                minWidth: isMobile ? 34 : 92,
+                minHeight: isMobile ? 30 : 34,
+                padding: isMobile ? '0 10px' : '0 12px',
+                borderRadius: 8,
+                color: safePage === 1 ? '#98a2b3' : INK,
+              }}
+            >
+              {isMobile ? 'Ant.' : 'Anterior'}
+            </AppButton>
+            {visiblePageNumbers.map((pageNumber, index) => {
+              const previous = visiblePageNumbers[index - 1];
+              const showGap = previous && pageNumber - previous > 1;
+
+              return (
+                <span key={pageNumber} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  {showGap && <span style={{ fontSize: 12, color: MUTED }}>...</span>}
+                  <AppButton
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    onClick={() => setCurrentPage(pageNumber)}
+                    style={{
+                      minWidth: isMobile ? 30 : 34,
+                      minHeight: isMobile ? 30 : 34,
+                      padding: isMobile ? '0 8px' : '0 10px',
+                      borderRadius: 8,
+                      background: safePage === pageNumber ? '#eef2f1' : CANVAS,
+                      borderColor: safePage === pageNumber ? GREEN_HAIRLINE : color.borderTint,
+                      color: safePage === pageNumber ? INK : MUTED,
+                      fontWeight: safePage === pageNumber ? 700 : 600,
+                    }}
+                  >
+                    {pageNumber}
+                  </AppButton>
+                </span>
+              );
+            })}
+            <AppButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={() => setCurrentPage(page => Math.min(pageCount, page + 1))}
+              disabled={safePage === pageCount}
+              aria-label="Página siguiente"
+              icon={!isMobile ? <ChevronRight size={14} /> : undefined}
+              style={{
+                minWidth: isMobile ? 34 : 92,
+                minHeight: isMobile ? 30 : 34,
+                padding: isMobile ? '0 10px' : '0 12px',
+                borderRadius: 8,
+                color: safePage === pageCount ? '#98a2b3' : INK,
+              }}
+            >
+              {isMobile ? 'Sig.' : 'Siguiente'}
+            </AppButton>
+          </div>
+        )}
+      </div>
       {showViewOptions && (
         <>
           <div onClick={() => setShowViewOptions(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', zIndex: 280 }} />
@@ -617,7 +662,6 @@ export function CommercialArrivals({ onSelectSubcarpeta }: Props) {
           </aside>
         </>
       )}
-      </div>
     </div>
   );
 }

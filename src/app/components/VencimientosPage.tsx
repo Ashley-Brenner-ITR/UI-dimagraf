@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import { pageShell } from './chromeStyles';
 import { OBLIGACIONES_PAGO, type ObligacionPago } from './mockData';
 import { VencimientosCalendar } from './VencimientosCalendar';
 import { WelcomeBanner } from './WelcomeBanner';
+import { AppButton } from './AppButton';
 
 const TODAY = new Date('2026-05-28');
 
@@ -22,7 +24,11 @@ export function VencimientosPage({ canManagePayments = false }: Props) {
     <div style={pageShell}>
       <WelcomeBanner
         title="Vencimientos"
-        subtitle="Pagos próximos y proyección"
+        actions={
+          <AppButton variant="secondary" style={{ flexShrink: 0 }} icon={<Download size={14} />}>
+            Exportar
+          </AppButton>
+        }
       />
       <VencimientosCalendar
         pagos={pagos}

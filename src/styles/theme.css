@@ -80,6 +80,17 @@
   --radius: var(--r-lg);
 }
 
+/* Temporary low-fidelity review mode. Remove this rule and the settings control when no longer needed. */
+html[data-preview-theme='wireframe'] {
+  filter: grayscale(1);
+}
+
+html[data-preview-theme='wireframe'] *,
+html[data-preview-theme='wireframe'] *::before,
+html[data-preview-theme='wireframe'] *::after {
+  border-radius: 0 !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

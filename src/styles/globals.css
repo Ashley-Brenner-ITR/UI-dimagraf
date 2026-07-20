@@ -26,6 +26,34 @@ select {
 	cursor: pointer;
 }
 
+.app-date-field__input {
+	cursor: text !important;
+	border: none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	font-weight: 400 !important;
+	letter-spacing: normal !important;
+	box-shadow: none !important;
+}
+
+.app-date-field__input::placeholder {
+	color: #667085 !important;
+	font-weight: 400 !important;
+	letter-spacing: normal !important;
+	opacity: 1;
+}
+
+.app-input {
+	cursor: text !important;
+	transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.app-input:focus,
+.app-input:focus-visible {
+	border-color: #1a5c38 !important;
+	box-shadow: 0 0 0 3px rgba(26, 92, 56, 0.12) !important;
+}
+
 select option {
 	background-color: #ffffff !important;
 	color: #1d1d1f !important;

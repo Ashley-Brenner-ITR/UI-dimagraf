@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle, AlertTriangle, ChevronRight, X, ArrowLeft, Download } from 'lucide-react';
 import { fieldLabel, formInput, formTextarea, getModalDestructiveButtonStyle, getModalSecondaryButtonStyle, getModalShellStyle, getSearchWrapStyle, modalBody, modalCloseButton, modalFooter, modalHeader, modalOverlay, pageActions, pageHeader, pageShell, tableHeadCell, tableHeadRow, tableShell } from './chromeStyles';
-import { CARPETAS, PROVEEDORES, type Subcarpeta, type Articulo } from './mockData';
+import { PROVEEDORES, type Carpeta, type Subcarpeta, type Articulo } from './mockData';
 import { useIsMobile } from './ui/use-mobile';
 import { TransportModeIcon } from './TransportModeIcon';
 import { SearchField, normalizeSearchTerm } from './SearchField';
@@ -26,9 +26,9 @@ interface Reception {
   articulosEmbarque: { articuloId: string; cantidad: number }[];
 }
 
-function buildReceptions(): Reception[] {
+function buildReceptions(carpetasList: Carpeta[]): Reception[] {
   const recs: Reception[] = [];
-  for (const carpeta of CARPETAS) {
+  for (const carpeta of carpetasList) {
     const prov = PROVEEDORES.find(p => p.id === carpeta.proveedorId);
     for (const sub of carpeta.subcarpetas) {
       if (sub.estado === 'En Stock' || sub.estado === 'En Tránsito') continue;
@@ -39,7 +39,7 @@ function buildReceptions(): Reception[] {
   return recs;
 }
 
-export function WarehouseReception() {
+export function WarehouseReception({ carpetasList, onUpdateCarpeta }: { carpetasList: Carpeta[]; onUpdateCarpeta: (updated: Carpeta) => void }) {
   const [view, setView] = useState<WView>('agenda');
   const [selectedRec, setSelectedRec] = useState<Reception | null>(null);
   const [search, setSearch] = useState('');
@@ -50,7 +50,7 @@ export function WarehouseReception() {
   const [incidentComment, setIncidentComment] = useState('');
   const isMobile = useIsMobile();
 
-  const allReceptions = buildReceptions();
+  const allReceptions = buildReceptions(carpetasList);
   const receptions = allReceptions.filter(rec => {
     if (!search) return true;
     const q = normalizeSearchTerm(search);
@@ -66,6 +66,20 @@ export function WarehouseReception() {
   };
 
   const hasDiscrepancy = selectedRec?.articulosEmbarque.some(ae => (cantidades[ae.articuloId] ?? ae.cantidad) !== ae.cantidad) ?? false;
+
+  const confirmReception = () => {
+    if (!selectedRec || hasDiscrepancy) return;
+    const carpeta = carpetasList.find(candidate => candidate.numero === selectedRec.carpetaNumero);
+    if (!carpeta) return;
+    onUpdateCarpeta({
+      ...carpeta,
+      estado: 'En Stock',
+      subcarpetas: carpeta.subcarpetas.map(sub => sub.id === selectedRec.sub.id ? { ...sub, estado: 'En Stock' } : sub),
+      ultimoHito: `Recepción conforme confirmada para ${selectedRec.sub.numero}. Embarque en stock.`,
+    });
+    setSelectedRec(null);
+    setView('agenda');
+  };
 
   return (
     <div style={pageShell}>
@@ -403,6 +417,12 @@ export function WarehouseReception() {
                 </tbody>
               </table>
             )}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <AppButton type="button" disabled={hasDiscrepancy} icon={<CheckCircle size={14} />} onClick={confirmReception}>
+              Confirmar recepción conforme
+            </AppButton>
           </div>
 
         </div>

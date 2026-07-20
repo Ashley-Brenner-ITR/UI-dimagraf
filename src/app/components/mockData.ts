@@ -38,7 +38,7 @@ export interface Articulo {
   precioUnitario: number;
   cantidadAsignada: number;
   origenCarga?: 'Manual' | 'Carga masiva';
-  estadoValidacion?: 'Válido' | 'Con advertencia' | 'Con error' | 'Duplicado';
+  estadoValidacion?: 'Válido' | 'Con advertencia' | 'Con error' | 'Duplicado' | 'No se encuentra en el sistema';
   observacionesImportacion?: string;
   loteImportacion?: string;
 }
@@ -47,12 +47,30 @@ export interface Documento {
   id: string;
   nombre: string;
   referencia?: string;
+  subcarpetaIds?: string[];
   tipo: TipoDocumento;
   tamano: string;
   fecha: string;
   origen?: string;
   visibilidad?: string;
   estadoValidacion?: 'Pendiente' | 'Aprobado' | 'Aprobado con diferencias' | 'Reclamo abierto' | 'Reclamo resuelto';
+  comparacionConfirmacion?: {
+    carpetaDocumento: string;
+    carpetaCoincide: boolean;
+    incotermDocumento: string;
+    incotermCoincide: boolean;
+    monedaDocumento: string;
+    monedaCoincide: boolean;
+    articulos: Array<{
+      codigoSAP: string;
+      descripcion: string;
+      cantidadOC: number;
+      cantidadConfirmada: number | null;
+      umOC: string;
+      umConfirmada: string;
+      resultado: 'Coincide' | 'Diferencia' | 'No informado' | 'No pertenece a la OC';
+    }>;
+  };
 }
 
 export interface Incidencia {
@@ -850,6 +868,8 @@ export const INITIAL_NOTIFICATIONS: AppNotification[] = [
   { id: 'n5', timestamp: '2026-06-02T11:48:17', type: 'info',    title: 'Documento cargado',        message: 'PackingList_NEO-2026-0311.pdf → 2026/441-A',             read: true,  role: 'operator',   entityId: 'c2' },
   { id: 'n6', timestamp: '2026-06-01T10:00:00', type: 'success', title: 'Carpeta creada',           message: 'Carpeta 2026/461 abierta · Andino Insumos S.A.',         read: true,  role: 'operator',   entityId: 'c5' },
   { id: 'n7', timestamp: '2026-05-30T08:00:00', type: 'warning', title: 'Vencimiento próximo',      message: 'Pago EUR 85.500 vence el 01/06/2026 (carpeta 2026/437)', read: true,  role: 'treasury'                 },
+  { id: 'n8', timestamp: '2026-06-03T07:30:00', type: 'warning', title: 'Vencimiento próximo',      message: 'Pago EUR 85.500 vence el 01/06/2026 (carpeta 2026/437)', read: false, role: 'operator'                 },
+  { id: 'n9', timestamp: '2026-06-02T10:00:00', type: 'info',    title: 'Producción demorada',      message: 'Proveedor Rheinland Film GmbH informa retraso 7 días en carpeta 2026/452.', read: false, role: 'operator', entityId: 'c3' },
 ];
 
 export const ARTICULOS_CATALOGO: ArticuloCatalogo[] = [

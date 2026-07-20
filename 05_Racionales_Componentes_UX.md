@@ -62,3 +62,37 @@ El ciclo de vida del expediente de importación determina qué rol puede editar 
 | **Comercial** | General, Artículos, Embarques, Anexos | - Solo Consulta (Solo Lectura) | - No puede realizar modificaciones.<br>- Su pantalla principal al iniciar sesión es la **Matriz de Arribos** para monitorear el stock que ingresará próximamente. |
 | **Depósito (Garín)** | General, Embarques, Receptions, Anexos | - Registrar recepción física<br>- Cargar incidencias (roturas, faltantes) | - Edita la recepción una vez que el estado del embarque es *Oficializado*.<br>- Registra sobrantes o daños de mercadería para la posterior auditoría de Importaciones. |
 | **Dirección** | Todas las solapas | - Solo Consulta / Aprobación | - Acceso total de consulta a métricas de desvío de coeficiente de costo e informes globales. No realiza carga operativa. |
+
+---
+
+## 5. Componentes Compartidos Incorporados en Carpetas y Arribos
+
+### `TransportModeIcon`
+Se consolidó un único componente para representar el tipo de transporte en `Carpetas`, `Arribos` y los listados de detalle:
+1. **Forma consistente**: el contenedor es cuadrado con bordes suaves, no circular, para seguir el patrón visual del resto de la aplicación.
+2. **Color por modo, con jerarquía secundaria**: terrestre, aéreo y marítimo mantienen familias cromáticas distintas, pero con saturación baja. El objetivo es que el icono identifique el modo logístico sin competir visualmente con los estados operativos (`Vencido`, `En tránsito`, `Rojo`, `Verde`, etc.), que deben leerse primero.
+3. **Dos variantes de uso**: la variante estándar mantiene el contenedor cuadrado para contexts de detalle o listados ricos, mientras que la variante `minimal` deja solo el glifo coloreado para usarlo inline junto al campo `Modo`.
+4. **Escala reutilizable**: el mismo componente funciona en filas compactas, cards y tablas sin recrear lógica local de iconografía.
+
+### Patrón de filas y cards de embarques
+En las vistas de `Carpetas` y `Arribos` se fijó un patrón común para evitar deriva entre pantallas:
+1. **Iconografía no líder**: se retiraron los iconos de apertura de `Carpeta` y de `Transporte` de la primera columna visual. En las vistas operativas, el único icono persistente de transporte queda junto al valor del campo `Modo`, para no robar jerarquía al número de carpeta o embarque.
+2. **Chevron centrado**: la acción de avance queda en una celda fija y centrada verticalmente, separada del bloque de estado para que no parezca otro dato.
+3. **Espaciado interno controlado**: cada bloque `label/value` mantiene separación explícita entre rótulo y dato, evitando que ETA, modo, cantidades o proveedor queden “pegados” en cards compactas o listados densos.
+4. **Estado por encima del decorativo**: badges, dots y colores de estado tienen prioridad visual sobre iconos de transporte o acentos estructurales, porque comunican riesgo y urgencia operativa.
+5. **Cards madres más bajas**: en `Carpetas`, el estado `Pendiente de embarque` se ubica inline junto al monto cuando aplica, evitando una línea adicional que aumente la altura de la tarjeta.
+
+### Escala tipográfica compartida de embarques
+Se incorporó una escala única en `theme.ts` para unificar jerarquías visuales entre `Carpetas`, `Arribos` y `CarpetaDetail`:
+1. **`title`**: número principal de carpeta o embarque.
+2. **`value`**: dato operativo base dentro de grillas y cards.
+3. **`companion`**: metadatos secundarios como `de 2026/437`, conteos o líneas de apoyo.
+4. **`label`**: rótulos en mayúscula como `ETA`, `Modo`, `Cantidad`, `Actualiz.`.
+5. **`tableHead`**: encabezados de tablas compactas.
+
+El objetivo de esta escala es que el usuario reconozca la misma jerarquía de lectura aunque cambie de pantalla o de densidad de vista.
+
+### Componentes base reutilizados en este flujo
+1. **`WelcomeBanner`**: conserva encabezados limpios y evita meter KPIs decorativos en una zona cuyo foco principal es el contexto y la acción primaria.
+2. **`FilterToolbar`**: mantiene una entrada consistente para búsqueda y filtros avanzados sin duplicar shells o bordes extras entre pantallas operativas.
+3. **Paginado inline compartido**: `Arribos` adoptó el mismo patrón de resumen + navegación de `Carpetas` para no forzar al usuario a reaprender controles según la vista.
